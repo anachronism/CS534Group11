@@ -5,7 +5,7 @@
 #						Commercial and residential zones within 2 tiles get -20.
 #						Cannot build directly on top of X.
 #					S with scenic view.			
-#						REsidential zones within 2 tiles get + 10.
+#						Residential zones within 2 tiles get + 10.
 #						Can be built on, but removes benefit.
 #					0...9:
 #						Cost to build on square. 
@@ -23,3 +23,12 @@
 # Following is a rectangular map of terrain to place the town.
 # Run for ~ 10 seconds.
 # Output to file (map score, time score was first achieved, a marked map).
+
+
+# Things to do:
+# Parse file that is the input.
+# Be able to generate random maps for starting.
+# A cost calculation function.
+# Hill climbing algorithm.
+# Genetic algorithm.
+# Output file production.
