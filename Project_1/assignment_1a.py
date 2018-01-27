@@ -29,15 +29,13 @@ parser.add_argument('--alg',dest='algMethod',nargs=1, type=int, default=1,choice
 											''')
 
 args = parser.parse_args()
-print(args.nQueens)
-print(args.algMethod)
-
 # TODO: Generate Start state based on nQueens.
+startState = [None]
 
 if args.algMethod == 1:
 	retVals = a_star(args.nQueens,startState)
 else:
-	retVals = hill_climb(args,nQueens,startState)
+	retVals = hill_climb(args.nQueens,startState)
 
 # TODO: print return values.
 
