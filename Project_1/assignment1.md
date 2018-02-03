@@ -6,7 +6,7 @@ Due:  Feb 12 @ 11:59 p.m.
 This assignment will require you to explore a variety of search techniques on two problems.  Note:  in addition to the programming component of developing the algorithms, there is a moderate amount of analysis/writeup required as well.  If you finish your code just before the deadline, you will not finish the assignment.  Start early.  
 ### Part 1.  Heavy N-queens problem
 The problem
-For this problem, you will work on a variant of the N-queens problem we discussed in class.  The queen pieces are very heavy, and therefore difficult to move.  The cost to move a queen is 10 plus the square of the number of tiles you move it.  So to move a queen upwards 4 squares in a column costs 10 + 42 = 26.  Otherwise, the rules are identical to the N-queens problem.  
+For this problem, you will work on a variant of the N-queens problem we discussed in class.  The queen pieces are very heavy, and therefore difficult to move.  The cost to move a queen is 10 plus the square of the number of tiles you move it.  So to move a queen upwards 4 squares in a column costs 10 + 4^2 = 26.  Otherwise, the rules are identical to the N-queens problem.  
 #### Approaches
 You will use two approaches for this problem:  A* and greedy hill climbing with restarts.
 
@@ -17,6 +17,7 @@ If attacking queens:  10 + num of attacked queens
 Note:  it is not immediately clear if this heuristic is admissible.  Moving one queen can reduce the cost dramatically (as we talked about in class).  However, given the fixed cost of 10 to move a queen, perhaps no situation arises where the true cost is less than the heuristic value.  For extra credit, prove either that the heuristic is admissible or produce a counterexample to demonstrate that it is not.
 
 For hill climbing with restarts, you should use the same heuristic function as for A* and perform greedy hill climbing.  If you have not found a solution, and fewer than 10 seconds have elapsed since the program started running, you should do another iteration of hill climbing with a random start state.  
+
 #### Program behavior 
 Your program should take as input the N value for the N-queens problem and the type of search to conduct (1 for A-star, 2 for greedy hill climbing).  For example, passing in a “30” results in a 30-queens puzzle.  You can take input as command-line input, or read it from a file if command-line input is difficult for the language you are using.  Just explain how in your writeup.
   
@@ -34,6 +35,7 @@ How large of a puzzle can your program typically solve within 10 seconds using A
 What is the effective branching factor of each approach?  For this computation, perform 10 runs of a puzzle half the maximum size you calculated for step #1.  
 Which approach comes up with cheaper solution paths?  Why?
 Which approach typically takes less time?
+
 ### Part 2.  Urban planning
 #### The problem
 For this problem, you will use hill climbing and genetic algorithms to determine the ideal location of industry, commerce, and residential sections a city.  You will input a map with the following symbols:
@@ -56,7 +58,7 @@ Your program will read in a file where the first 3 lines are the number of indus
 The score for this map
 At what time that score was first achieved.
 The map, with the various industrial, commercial, and residential sites marked.  
-Writeup
+### Writeup
 You should analyze your program’s behavior to answer the following questions:
 Explain how your genetic algorithm works.  You must describe your selection, crossover, elitism, culling, and mutation approaches.  
 Create a graph of program performance vs. time.  Run your program 10 times and plot how well hill climbing and genetic algorithms perform after 0.1, 0.25, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9 and 10 seconds.  If you only had 0.25 seconds to make a decision, which technique would you use?  Does your answer change if you have 10 seconds? 

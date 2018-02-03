@@ -16,13 +16,14 @@ def hill_climb(nQueens,boardState):
 	# TODO: Actually implement hill_climb
 	print('hill climbing will go here')
 
-
+def get_heuristic(boardState):
+	# TODO: actually get heuristic.
 #def assignment_1a(n_queens,type_search):
 
 
 parser = argparse.ArgumentParser(description='''CS 534 Assignment 1 Part 1.''')
 parser.add_argument('--n',dest='nQueens',nargs=1, type=int, default=8, help='''
-											Number of queens.
+										s	Number of queens.
 											''')
 parser.add_argument('--alg',dest='algMethod',nargs=1, type=int, default=1,choices=[1,2], help='''
 											Algorithm to use. a 1 specifies A*, a 2 specifies greedy hill climbing.
@@ -30,7 +31,10 @@ parser.add_argument('--alg',dest='algMethod',nargs=1, type=int, default=1,choice
 
 args = parser.parse_args()
 # TODO: Generate Start state based on nQueens.
+# Store in a 2D array.
 startState = [None]
+
+# TODO: have heuristic function.
 
 if args.algMethod == 1:
 	retVals = a_star(args.nQueens,startState)
