@@ -57,23 +57,27 @@ calculateStateScore(Matrix2)
 
 
 
-cnt = 0
-#read in first three line
-with open('sample2.txt','r') as f:
-	iCount = f.readline()[0]
-	cCount = f.readline()[0]
-	rCount = f.readline()[0]
-#read in the map part of the file not fully working last value of every row includes '\n'
-with open('sample2.txt','r') as f:
-	for i in xrange(3):
-		f.next()
-	for line in f:
-		row = line.split(',')
-		cnt = cnt+1
-		print(row, len(row))
+def readFile(fileLoc):
+	cnt = 0
+	#read in first three line
+	with open(fileLoc,'r') as f:
+		iCount = f.readline()[0]
+		cCount = f.readline()[0]
+		rCount = f.readline()[0]
+	#read in the map part of the file not fully working last value of every row includes '\n'
+	with open(fileLoc,'r') as f:
+		for i in xrange(3):
+			f.next()
+		for line in f:
+			row = (line.strip('\n')).split(',')
+			cnt = cnt+1
+			print(row, len(row))
+			
 
-print("stats", iCount,cCount,rCount)
+	print("stats", iCount,cCount,rCount)
+	return [cnt,iCount,cCount,rCount]
 
+fileResults = readFile('sample2.txt')
 
 loc1 = [2,5]
 loc2 = [3,1]
