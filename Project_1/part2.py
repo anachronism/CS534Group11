@@ -65,8 +65,9 @@ def readFile(fileLoc):
 			print(row, len(row))
 			mapOut.append(row)
 			
-
+	mapOut = numpy.array(mapOut)
 	print("stats", iCount,cCount,rCount)
+	print(mapOut.shape)
 	return [mapOut,iCount,cCount,rCount]
 
 '''
@@ -80,6 +81,10 @@ Matrix2[3,2] = TOXIC
 calculateStateScore(Matrix2)    
 
 fileResults = readFile('sample2.txt')
+
+mapIn = fileResults[0];
+print(fileResults[0])
+print(fileResults[0].shape)
 
 loc1 = [2,5]
 loc2 = [3,1]
