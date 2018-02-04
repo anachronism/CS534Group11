@@ -2,6 +2,11 @@
 #recalculate 1 new board for each structure each board holds the cost of moving one structure to every empty square.
 
 
+IND = 100
+COM = 200
+RES = 300
+TOXIC = 400
+
 import numpy
 
 Matrix2 = numpy.zeros((6, 5))
@@ -27,6 +32,9 @@ def calculateStateScore(state):
 				rList.append((i,j))
 			if (state[i,j] == 300):
 				cList.append((i,j))
+			if (state[i,j] == 300):
+				cList.append((i,j))
+	
 	print(len(iList))		
 	#for j in range(len(iList))
 	print("rlist",rList)
@@ -36,15 +44,12 @@ def getManhDist(loc1,loc2):
 	 distance = abs(loc1[0]-loc2[0])+abs(loc1[1]-loc2[1])
 	 return distance
 
-ind = 100
-com = 200
-res = 300
-toxic = 400
 
-Matrix2[2,1] = ind
-Matrix2[5,4] = com
-Matrix2[1,4] = res
-Matrix2[3,2] = toxic
+
+Matrix2[2,1] = IND
+Matrix2[5,4] = COM
+Matrix2[1,4] = RES
+Matrix2[3,2] = TOXIC
 
 calculateStateScore(Matrix2)    
 
