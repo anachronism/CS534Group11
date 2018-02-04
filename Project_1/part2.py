@@ -52,7 +52,7 @@ def getManhDist(loc1,loc2):
 	 	distance = abs(loc1[0]-loc2[0])+abs(loc1[1]-loc2[1])
 	 return distance
 
-
+#gets location in state, size of state (columns, rows) returns list of locations containing building within distance 2 of loc1
 def getINDWithin2(loc1, state, columns, rows):
 	siteList = []
 	b = 0;
@@ -77,13 +77,41 @@ def getINDWithin2(loc1, state, columns, rows):
 
 Matrix2[3,1] = TOXIC
 Matrix2[1,1] = IND
+
+# Takes a string containing the file location, and returns the location counts and the map stored in the file.
+def readFile(fileLoc):
+	cnt = 0
+	#read in first three line
+	with open(fileLoc,'r') as f:
+		iCount = f.readline()[0]
+		cCount = f.readline()[0]
+		rCount = f.readline()[0]
+	#read in the map part of the file not fully working last value of every row includes '\n'
+	mapOut = []
+
+	with open(fileLoc,'r') as f:
+		for i in xrange(3):
+			f.next()
+		for line in f:
+			row = (line.strip('\n')).split(',')
+			cnt = cnt+1
+			print(row, len(row))
+			mapOut.append(row)
+			
+
+	print("stats", iCount,cCount,rCount)
+	return [mapOut,iCount,cCount,rCount]
+
+'''
+ START OF 'MAIN'
+'''
+Matrix2[2,1] = IND
 Matrix2[5,4] = COM
 Matrix2[1,4] = RES
 Matrix2[3,2] = TOXIC
 Matrix2[2,2] = SCENIC
 
 calculateStateScore(Matrix2)    
-
 
 
 
@@ -104,6 +132,7 @@ with open('sample2.txt','r') as f:
 
 #print("stats", iCount,cCount,rCount)
 
+fileResults = readFile('sample2.txt')
 
 loc1 = [2,5]
 loc2 = [3,1]
