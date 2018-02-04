@@ -45,18 +45,7 @@ def getManhDist(loc1,loc2):
 	 distance = abs(loc1[0]-loc2[0])+abs(loc1[1]-loc2[1])
 	 return distance
 
-
-
-Matrix2[2,1] = IND
-Matrix2[5,4] = COM
-Matrix2[1,4] = RES
-Matrix2[3,2] = TOXIC
-
-calculateStateScore(Matrix2)    
-
-
-
-
+# Takes a string containing the file location, and returns the location counts and the map stored in the file.
 def readFile(fileLoc):
 	cnt = 0
 	#read in first three line
@@ -79,6 +68,16 @@ def readFile(fileLoc):
 
 	print("stats", iCount,cCount,rCount)
 	return [mapOut,iCount,cCount,rCount]
+
+'''
+ START OF 'MAIN'
+'''
+Matrix2[2,1] = IND
+Matrix2[5,4] = COM
+Matrix2[1,4] = RES
+Matrix2[3,2] = TOXIC
+
+calculateStateScore(Matrix2)    
 
 fileResults = readFile('sample2.txt')
 
