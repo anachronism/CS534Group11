@@ -65,6 +65,8 @@ def readFile(fileLoc):
 		cCount = f.readline()[0]
 		rCount = f.readline()[0]
 	#read in the map part of the file not fully working last value of every row includes '\n'
+	mapOut = []
+
 	with open(fileLoc,'r') as f:
 		for i in xrange(3):
 			f.next()
@@ -72,10 +74,11 @@ def readFile(fileLoc):
 			row = (line.strip('\n')).split(',')
 			cnt = cnt+1
 			print(row, len(row))
+			mapOut.append(row)
 			
 
 	print("stats", iCount,cCount,rCount)
-	return [cnt,iCount,cCount,rCount]
+	return [mapOut,iCount,cCount,rCount]
 
 fileResults = readFile('sample2.txt')
 
