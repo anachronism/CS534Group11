@@ -24,7 +24,7 @@ def calculateStateScore(state):
 			if (state[i,j] == 70):
 				rList.append((i,j))
 			
-	print("rlist",rList)
+	print("rlist",rList) test 
 
 
 def getManhDist(loc1,loc2):
