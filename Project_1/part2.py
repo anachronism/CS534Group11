@@ -6,6 +6,7 @@ IND = 100
 COM = 200
 RES = 300
 TOXIC = 400
+SCENIC = 500
 
 import numpy
 
@@ -16,40 +17,70 @@ def calculateStateScore(state):
 	columns = len(state[0])
 	rows = len(state)
 	print(state)
-	print(columns,rows)
+	#print(columns,rows)
 	totalScore=0
 	
 	iList = []
 	cList = []
 	rList = []
  	tList = []
- 
+ 	sList = []
+
 	for j in range(columns):
 		for i in range(rows):
-			if (state[i,j] == 100):
+			if (state[i,j] == IND):
 				iList.append((i,j))
-			if (state[i,j] == 200):
+			if (state[i,j] == COM):
 				rList.append((i,j))
-			if (state[i,j] == 300):
+			if (state[i,j] == RES):
 				cList.append((i,j))
-			if (state[i,j] == 300):
-				cList.append((i,j))
+			if (state[i,j] == TOXIC):
+				tList.append((i,j))
+			if (state[i,j] == TOXIC):
+				sList.append((i,j))
 	
-	print(len(iList))		
-	#for j in range(len(iList))
-	print("rlist",rList)
+	#print(len(iList))		
+	#print("rlist",rList)
+
+	print(getINDWithin2(iList[0],state, columns,rows))
 
 
 def getManhDist(loc1,loc2):
-	 distance = abs(loc1[0]-loc2[0])+abs(loc1[1]-loc2[1])
+	 if(loc1[0] == loc2[0] and loc1[1] == loc2[1] ):
+	 	distance = 1000000
+	 else:
+	 	distance = abs(loc1[0]-loc2[0])+abs(loc1[1]-loc2[1])
 	 return distance
 
 
+def getINDWithin2(loc1, state, columns, rows):
+	siteList = []
+	b = 0;
+	b = 4;
+	
+	for j in range(rows):
+		for i in range(columns):
+			if(getManhDist(loc1, [j,i]) <= 2 and state[j,i]):
+				siteList.append([j,i])
+    
+    
+	leftCIndex = (loc1[0] - 2) if (loc1[0] - 2) > 0 else 0
+	rightCIndex = (loc1[0] + 2) if (loc1[0] + 2) < (rows-1) else (rows-1)
+	
+	topRIndex = (loc1[1] - 2) if (loc1[1] - 2) > 0 else 0
+	bottomRIndex = (loc1[1] + 2) if (loc1[1] + 2) < (columns-1) else (columns-1)
+	
+	
+	print(loc1)
+	#siteList = state[leftCIndex:rightCIndex,topRIndex:bottomRIndex]
+	return siteList
 
-Matrix2[2,1] = IND
+Matrix2[3,1] = TOXIC
+Matrix2[1,1] = IND
 Matrix2[5,4] = COM
 Matrix2[1,4] = RES
 Matrix2[3,2] = TOXIC
+Matrix2[2,2] = SCENIC
 
 calculateStateScore(Matrix2)    
 
@@ -69,9 +100,9 @@ with open('sample2.txt','r') as f:
 	for line in f:
 		row = line.split(',')
 		cnt = cnt+1
-		print(row, len(row))
+		#print(row, len(row))
 
-print("stats", iCount,cCount,rCount)
+#print("stats", iCount,cCount,rCount)
 
 
 loc1 = [2,5]
