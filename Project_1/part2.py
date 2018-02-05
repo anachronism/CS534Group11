@@ -44,6 +44,7 @@ def calculateStateScore(state):
 
 	print(getINDWithin2(iList[0],state))
 
+# Gets numpy list of tuples that contains the locations of toxic waste sites.
 
 def getManhDist(loc1,loc2):
 	 if(loc1[0] == loc2[0] and loc1[1] == loc2[1] ):
@@ -96,13 +97,24 @@ def readFile(fileLoc):
 			f.next()
 		for line in f:
 			row = (line.strip('\n')).split(',')
+
 			cnt = cnt+1
-			print(row, len(row))
-			mapOut.append(row)
+			print(row)
+			for index,elt in enumerate(row):
+				if elt == 'X':
+					row[index] = TOXIC
+				else:
+					if elt == 'S':
+						row[index] = SCENIC	 
+
+			print(list(map(int,row)), len(row))
+			mapOut.append(list(map(int,row)))
 			
+	mapOut = numpy.array(mapOut)
 
 	print("stats", iCount,cCount,rCount)
-	return [mapOut,iCount,cCount,rCount]
+	print(mapOut.shape)
+	return [mapOut,int(iCount),int(cCount),int(rCount)]
 
 '''
  START OF 'MAIN'
@@ -135,6 +147,10 @@ with open('sample2.txt','r') as f:
 #print("stats", iCount,cCount,rCount)
 
 fileResults = readFile('sample2.txt')
+
+mapIn = fileResults[0];
+print(fileResults[0])
+print(fileResults[0].shape)
 
 loc1 = [2,5]
 loc2 = [3,1]
