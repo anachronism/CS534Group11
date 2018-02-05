@@ -1,23 +1,25 @@
 #start by placing all structures randomly on the board
 #recalculate 1 new board for each structure each board holds the cost of moving one structure to every empty square.
 
+import numpy
+from random import *
 
 IND = 100
 COM = 200
 RES = 300
 TOXIC = 400
 SCENIC = 500
+TOTALSCORE = 0
+iCount =0
+cCount = 0
+rCount = 0
 
-import numpy
-
-Matrix2 = numpy.zeros((6, 5))
 
 #function takes in map(state) calculates score of the map
 def calculateStateScore(state):
 	columns = len(state[0])
 	rows = len(state)
-	print(state)
-	#print(columns,rows)
+	
 	totalScore=0
 	
 	iList = []
@@ -36,13 +38,13 @@ def calculateStateScore(state):
 				cList.append((i,j))
 			if (state[i,j] == TOXIC):
 				tList.append((i,j))
-			if (state[i,j] == TOXIC):
+			if (state[i,j] == SCENIC):
 				sList.append((i,j))
 	
 	#print(len(iList))		
 	#print("rlist",rList)
 
-	print(getINDWithin2(iList[0],state))
+	print("TESTING", getStructsWithin(sList[0],state,3))
 
 # Gets numpy list of tuples that contains the locations of toxic waste sites.
 
@@ -54,32 +56,27 @@ def getManhDist(loc1,loc2):
 	 return distance
 
 #gets location in state returns list of locations containing building within distance 2 of loc1
-def getINDWithin2(loc1, state):
+def getStructsWithin(loc1, state, dist):
+	
 	columns = len(state[0])
 	rows = len(state)
 	siteList = []
-	b = 0;
-	b = 4;
-	
 	for j in range(rows):
 		for i in range(columns):
-			if(getManhDist(loc1, [j,i]) <= 2 and state[j,i]):
+			if(getManhDist(loc1, [j,i]) <= dist and state[j,i]>10):
+				print(i,j)
 				siteList.append([j,i])
     
     
-	leftCIndex = (loc1[0] - 2) if (loc1[0] - 2) > 0 else 0
-	rightCIndex = (loc1[0] + 2) if (loc1[0] + 2) < (rows-1) else (rows-1)
+	# leftCIndex = (loc1[0] - 2) if (loc1[0] - 2) > 0 else 0
+	# rightCIndex = (loc1[0] + 2) if (loc1[0] + 2) < (rows-1) else (rows-1)
 	
-	topRIndex = (loc1[1] - 2) if (loc1[1] - 2) > 0 else 0
-	bottomRIndex = (loc1[1] + 2) if (loc1[1] + 2) < (columns-1) else (columns-1)
+	# topRIndex = (loc1[1] - 2) if (loc1[1] - 2) > 0 else 0
+	# bottomRIndex = (loc1[1] + 2) if (loc1[1] + 2) < (columns-1) else (columns-1)
 	
 	
-	print(loc1)
 	#siteList = state[leftCIndex:rightCIndex,topRIndex:bottomRIndex]
 	return siteList
-
-Matrix2[3,1] = TOXIC
-Matrix2[1,1] = IND
 
 # Takes a string containing the file location, and returns the location counts and the map stored in the file.
 def readFile(fileLoc):
@@ -99,7 +96,7 @@ def readFile(fileLoc):
 			row = (line.strip('\n')).split(',')
 
 			cnt = cnt+1
-			print(row)
+			#print(row)
 			for index,elt in enumerate(row):
 				if elt == 'X':
 					row[index] = TOXIC
@@ -107,65 +104,72 @@ def readFile(fileLoc):
 					if elt == 'S':
 						row[index] = SCENIC	 
 
-			print(list(map(int,row)), len(row))
+			#print(list(map(int,row)), len(row))
 			mapOut.append(list(map(int,row)))
 			
 	mapOut = numpy.array(mapOut)
 
-	print("stats", iCount,cCount,rCount)
-	print(mapOut.shape)
+	#print("stats", iCount,cCount,rCount)
+	#print(mapOut.shape)
 	return [mapOut,int(iCount),int(cCount),int(rCount)]
+
+def getListOfEmptyLocations(siteMap):
+	columns = len(siteMap[0])
+	rows = len(siteMap)
+	emptySiteList = []
+	for j in range(rows):
+		for i in range(columns):
+			if(siteMap[j,i] <= 10):
+				emptySiteList.append([j,i])
+	return emptySiteList
+
+def populateSiteMap(siteMap):
+	emptySpaceList = []
+	emptySpaceList = getListOfEmptyLocations(siteMap)
+	for i in range(iCount):
+		emptySpaceCnt = len(emptySpaceList)
+		randNum = randint(1,emptySpaceCnt)
+		location = emptySpaceList[randNum]
+		TOTALSCORE = TOTALSCORE + siteMap[location[0],location[1]]
+		siteMap[location[0],location[1]] = IND
+		del emptySpaceList[randNum]
+
+	for i in range(cCount):
+		emptySpaceCnt = len(emptySpaceList)
+		randNum = randint(1,emptySpaceCnt)
+		location = emptySpaceList[randNum]
+		TOTALSCORE = TOTALSCORE + siteMap[location[0],location[1]]
+		siteMap[location[0],location[1]] = COM
+		del emptySpaceList[randNum]
+
+
+	for i in range(rCount):
+		emptySpaceCnt = len(emptySpaceList)
+		randNum = randint(1,emptySpaceCnt)
+		location = emptySpaceList[randNum]
+		TOTALSCORE = TOTALSCORE + siteMap[location[0],location[1]]
+		siteMap[location[0],location[1]] = RES
+		del emptySpaceList[randNum]
+	
+	print(siteMap)
+	print(TOTALSCORE)
 
 '''
  START OF 'MAIN'
 '''
-Matrix2[2,1] = IND
-Matrix2[5,4] = COM
-Matrix2[1,4] = RES
-Matrix2[3,2] = TOXIC
-Matrix2[2,2] = SCENIC
 
-calculateStateScore(Matrix2)    
+Matrix2 = numpy.zeros((6, 5))
 
 
-
-cnt = 0
-#read in first three line
-with open('sample2.txt','r') as f:
-	iCount = f.readline()[0]
-	cCount = f.readline()[0]
-	rCount = f.readline()[0]
-#read in the map part of the file not fully working last value of every row includes '\n'
-with open('sample2.txt','r') as f:
-	for i in xrange(3):
-		f.next()
-	for line in f:
-		row = line.split(',')
-		cnt = cnt+1
-		#print(row, len(row))
-
-#print("stats", iCount,cCount,rCount)
-
-fileResults = readFile('sample2.txt')
-
-mapIn = fileResults[0];
-print(fileResults[0])
-print(fileResults[0].shape)
-
-loc1 = [2,5]
-loc2 = [3,1]
-
-f = open("sample2.txt","r")
-iCount = f.read(1)
-cCount = f.read(4)
-rCount = f.read(5)
-
-f.close()
-
-#print(iCount,cCount,rCount)
+(siteMap, iCount, cCount, rCount) = readFile("sample2.txt")
 
 
-print(getManhDist(loc1,loc2))
+#print(getListOfEmptyLocations(siteMap))
+print(siteMap)
+populateSiteMap(siteMap)
+#calculateStateScore(siteMap)    
+
+
 
 
 
