@@ -1,6 +1,6 @@
 #start by placing all structures randomly on the board
 #recalculate 1 new board for each structure each board holds the cost of moving one structure to every empty square.
-
+import copy
 import numpy
 from random import *
 
@@ -13,7 +13,7 @@ TOTALSCORE = 0
 iCount =0
 cCount = 0
 rCount = 0
-
+UNBUILTMAP = []
 
 #function takes in map(state) calculates score of the map
 def calculateStateScore(state):
@@ -122,12 +122,12 @@ def getListOfEmptyLocations(siteMap):
 			if(siteMap[j,i] <= 10):
 				emptySiteList.append([j,i])
 	return emptySiteList
-
-def populateSiteMap(siteMap):
+#at random populate unbuilt spaces with structures listed in first 3 lines of the data input file
+def populateSiteMap(siteMap, TOTALSCORE):
 	emptySpaceList = []
 	emptySpaceList = getListOfEmptyLocations(siteMap)
 	for i in range(iCount):
-		emptySpaceCnt = len(emptySpaceList)
+		emptySpaceCnt = len(emptySpaceList)-1
 		randNum = randint(1,emptySpaceCnt)
 		location = emptySpaceList[randNum]
 		TOTALSCORE = TOTALSCORE + siteMap[location[0],location[1]]
@@ -135,7 +135,7 @@ def populateSiteMap(siteMap):
 		del emptySpaceList[randNum]
 
 	for i in range(cCount):
-		emptySpaceCnt = len(emptySpaceList)
+		emptySpaceCnt = len(emptySpaceList)-1
 		randNum = randint(1,emptySpaceCnt)
 		location = emptySpaceList[randNum]
 		TOTALSCORE = TOTALSCORE + siteMap[location[0],location[1]]
@@ -144,16 +144,14 @@ def populateSiteMap(siteMap):
 
 
 	for i in range(rCount):
-		emptySpaceCnt = len(emptySpaceList)
+		emptySpaceCnt = len(emptySpaceList)-1
 		randNum = randint(1,emptySpaceCnt)
 		location = emptySpaceList[randNum]
 		TOTALSCORE = TOTALSCORE + siteMap[location[0],location[1]]
 		siteMap[location[0],location[1]] = RES
 		del emptySpaceList[randNum]
 	
-	print(siteMap)
-	print(TOTALSCORE)
-
+	return [siteMap,TOTALSCORE]
 '''
  START OF 'MAIN'
 '''
@@ -161,12 +159,21 @@ def populateSiteMap(siteMap):
 Matrix2 = numpy.zeros((6, 5))
 
 
-(siteMap, iCount, cCount, rCount) = readFile("sample2.txt")
 
+(UNBUILTMAP, iCount, cCount, rCount) = readFile("sample2.txt")
 
-#print(getListOfEmptyLocations(siteMap))
+siteMap = copy.deepcopy(UNBUILTMAP)
+(siteMap, TOTALSCORE) = populateSiteMap(siteMap, TOTALSCORE)
+
 print(siteMap)
-populateSiteMap(siteMap)
+print("\n")
+
+print(UNBUILTMAP)
+print("\n")
+
+print(siteMap)
+print("\n")
+print(TOTALSCORE)
 #calculateStateScore(siteMap)    
 
 
