@@ -42,7 +42,7 @@ def calculateStateScore(state):
 	#print(len(iList))		
 	#print("rlist",rList)
 
-	print(getINDWithin2(iList[0],state, columns,rows))
+	print(getINDWithin2(iList[0],state))
 
 
 def getManhDist(loc1,loc2):
@@ -52,8 +52,10 @@ def getManhDist(loc1,loc2):
 	 	distance = abs(loc1[0]-loc2[0])+abs(loc1[1]-loc2[1])
 	 return distance
 
-#gets location in state, size of state (columns, rows) returns list of locations containing building within distance 2 of loc1
-def getINDWithin2(loc1, state, columns, rows):
+#gets location in state returns list of locations containing building within distance 2 of loc1
+def getINDWithin2(loc1, state):
+	columns = len(state[0])
+	rows = len(state)
 	siteList = []
 	b = 0;
 	b = 4;
