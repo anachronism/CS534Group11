@@ -160,7 +160,7 @@ def getListOfEmptyLocations(siteMap):
 	emptySiteList = []
 	for j in range(rows):
 		for i in range(columns):
-			if(siteMap[j,i] <= 10):
+			if(siteMap[j,i] <= 10 or siteMap[j,i] == SCENIC): 
 				emptySiteList.append([j,i])
 	return emptySiteList
 #at random populate unbuilt spaces with structures listed in first 3 lines of the data input file
@@ -211,6 +211,12 @@ Matrix2 = numpy.zeros((6, 5))
 siteMap = copy.deepcopy(UNBUILTMAP)
 siteMap, buildingCost = populateSiteMap(siteMap)[0:2]
 
+# While loop logic
+#===================
+# 1) Figure out potential state.
+# 2) Calculate building cost
+# 3) Calculate state score
+# 4) 
 calculateStateScore(siteMap)
 print(siteMap)
 print("\n")

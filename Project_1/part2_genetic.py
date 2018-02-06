@@ -12,19 +12,11 @@ SCENIC = 500
 # randomCrossover()
 
 class GeneticChild:
-     def __init__(self, mapIn, locations,utilVal):
-		self.map = populateSiteMap(mapIn)
-		self.locations = locations
+     def __init__(self, mapIn,utilVal):
+		self.map,self.buildCost,self.locations = p2.populateSiteMap(mapIn)
 		self.utilVal = utilVal
 
-		self.listAvoid = []
-		# Make list of sites that must be avoided
-		toxic_sites = numpy.where(mapIn == TOXIC)
-		for elt,ind in enumerate(toxic_sites[0]):
-			self.listAvoid.append([toxic_sites[0][ind],toxic_sites[1][ind]]) 
 
-
-     def updateLocations(self,newLocations)
 
 
 
@@ -108,6 +100,6 @@ Part 2 genetic testing
 '''
 random.seed()
 originalMap,iCount,cCount,rCount = p2.readFile('sample2.txt')
+test = GeneticChild(originalMap,5)
 
-
-geneticStateSearch(originalMap,iCount,cCount,rCount,listAvoid, 1)
+# geneticStateSearch(originalMap,iCount,cCount,rCount,listAvoid, 1)
