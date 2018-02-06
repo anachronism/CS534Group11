@@ -25,8 +25,8 @@ def calculateStateScore(state):
 	iList = []
 	cList = []
 	rList = []
- 	tList = []
- 	sList = []
+	tList = []
+	sList = []
 
 	for j in range(columns):
 		for i in range(rows):
@@ -98,10 +98,10 @@ def readFile(fileLoc):
 			cnt = cnt+1
 			#print(row)
 			for index,elt in enumerate(row):
-				if elt == 'X':
+				if elt == 'X' or elt == 'X\r':
 					row[index] = TOXIC
 				else:
-					if elt == 'S':
+					if elt == 'S' or elt == 'S\r':
 						row[index] = SCENIC	 
 
 			#print(list(map(int,row)), len(row))
