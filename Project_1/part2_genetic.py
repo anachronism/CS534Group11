@@ -13,7 +13,7 @@ SCENIC = 500
 
 class GeneticChild:
      def __init__(self, mapIn, locations,utilVal):
-		self.map = mapIn
+		self.map = populateSiteMap(mapIn)
 		self.locations = locations
 		self.utilVal = utilVal
 
@@ -107,7 +107,7 @@ def geneticStateSearch(mapIn,iCount,cCount,rCount,listAvoid,timeToRun):
 Part 2 genetic testing
 '''
 random.seed()
-mapIn,iCount,cCount,rCount = p2.readFile('sample2.txt')
+originalMap,iCount,cCount,rCount = p2.readFile('sample2.txt')
 
 
-geneticStateSearch(mapIn,iCount,cCount,rCount,listAvoid, 1)
+geneticStateSearch(originalMap,iCount,cCount,rCount,listAvoid, 1)

@@ -167,11 +167,13 @@ def getListOfEmptyLocations(siteMap):
 def populateSiteMap(siteMap):
 	emptySpaceList = []
 	buildingCost = 0
+	occupiedLocations = []
 	emptySpaceList = getListOfEmptyLocations(siteMap)
 	for i in range(iCount):
 		emptySpaceCnt = len(emptySpaceList)-1
 		randNum = randint(1,emptySpaceCnt)
 		location = emptySpaceList[randNum]
+		occupiedLocations.append(location)
 		buildingCost = buildingCost + siteMap[location[0],location[1]]
 		siteMap[location[0],location[1]] = IND
 		del emptySpaceList[randNum]
@@ -180,6 +182,7 @@ def populateSiteMap(siteMap):
 		emptySpaceCnt = len(emptySpaceList)-1
 		randNum = randint(1,emptySpaceCnt)
 		location = emptySpaceList[randNum]
+		occupiedLocations.append(location)
 		buildingCost = buildingCost + siteMap[location[0],location[1]]
 		siteMap[location[0],location[1]] = COM
 		del emptySpaceList[randNum]
@@ -189,11 +192,12 @@ def populateSiteMap(siteMap):
 		emptySpaceCnt = len(emptySpaceList)-1
 		randNum = randint(1,emptySpaceCnt)
 		location = emptySpaceList[randNum]
+		occupiedLocations.append(location)
 		buildingCost = buildingCost + siteMap[location[0],location[1]]
 		siteMap[location[0],location[1]] = RES
 		del emptySpaceList[randNum]
 	
-	return [siteMap,buildingCost]
+	return [siteMap,buildingCost,occupiedLocations]
 '''
  START OF 'MAIN'
 '''
@@ -205,7 +209,7 @@ Matrix2 = numpy.zeros((6, 5))
 (UNBUILTMAP, iCount, cCount, rCount) = readFile("sample2.txt")
 
 siteMap = copy.deepcopy(UNBUILTMAP)
-(siteMap, buildingCost) = populateSiteMap(siteMap)
+siteMap, buildingCost = populateSiteMap(siteMap)[0:2]
 
 calculateStateScore(siteMap)
 print(siteMap)
