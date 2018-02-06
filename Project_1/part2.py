@@ -164,14 +164,15 @@ def getListOfEmptyLocations(siteMap):
 				emptySiteList.append([j,i])
 	return emptySiteList
 #at random populate unbuilt spaces with structures listed in first 3 lines of the data input file
-def populateSiteMap(siteMap, TOTALSCORE):
+def populateSiteMap(siteMap):
 	emptySpaceList = []
+	buildingCost = 0
 	emptySpaceList = getListOfEmptyLocations(siteMap)
 	for i in range(iCount):
 		emptySpaceCnt = len(emptySpaceList)-1
 		randNum = randint(1,emptySpaceCnt)
 		location = emptySpaceList[randNum]
-		TOTALSCORE = TOTALSCORE + siteMap[location[0],location[1]]
+		buildingCost = buildingCost + siteMap[location[0],location[1]]
 		siteMap[location[0],location[1]] = IND
 		del emptySpaceList[randNum]
 
@@ -179,7 +180,7 @@ def populateSiteMap(siteMap, TOTALSCORE):
 		emptySpaceCnt = len(emptySpaceList)-1
 		randNum = randint(1,emptySpaceCnt)
 		location = emptySpaceList[randNum]
-		TOTALSCORE = TOTALSCORE + siteMap[location[0],location[1]]
+		buildingCost = buildingCost + siteMap[location[0],location[1]]
 		siteMap[location[0],location[1]] = COM
 		del emptySpaceList[randNum]
 
@@ -188,11 +189,11 @@ def populateSiteMap(siteMap, TOTALSCORE):
 		emptySpaceCnt = len(emptySpaceList)-1
 		randNum = randint(1,emptySpaceCnt)
 		location = emptySpaceList[randNum]
-		TOTALSCORE = TOTALSCORE + siteMap[location[0],location[1]]
+		buildingCost = buildingCost + siteMap[location[0],location[1]]
 		siteMap[location[0],location[1]] = RES
 		del emptySpaceList[randNum]
 	
-	return [siteMap,TOTALSCORE]
+	return [siteMap,buildingCost]
 '''
  START OF 'MAIN'
 '''
@@ -204,7 +205,7 @@ Matrix2 = numpy.zeros((6, 5))
 (UNBUILTMAP, iCount, cCount, rCount) = readFile("sample2.txt")
 
 siteMap = copy.deepcopy(UNBUILTMAP)
-(siteMap, TOTALSCORE) = populateSiteMap(siteMap, TOTALSCORE)
+(siteMap, buildingCost) = populateSiteMap(siteMap)
 
 calculateStateScore(siteMap)
 print(siteMap)
