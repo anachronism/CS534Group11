@@ -11,12 +11,32 @@ SCENIC = 500
 
 # randomCrossover()
 
+class GeneticChild:
+     def __init__(self, mapIn, locations,utilVal):
+		self.map = mapIn
+		self.locations = locations
+		self.utilVal = utilVal
+
+		self.listAvoid = []
+		# Make list of sites that must be avoided
+		toxic_sites = numpy.where(mapIn == TOXIC)
+		for elt,ind in enumerate(toxic_sites[0]):
+			self.listAvoid.append([toxic_sites[0][ind],toxic_sites[1][ind]]) 
+
+
+     def updateLocations(self,newLocations)
+
+
+
 '''
 Start: k list of random, valid states.
 calculate fitness scores for these k states.
 pick two states.
 execute 
 '''
+
+
+
 def geneticStateSearch(mapIn,iCount,cCount,rCount,listAvoid,timeToRun):
 	k = 100
 	k2 = numpy.floor(k/20)	
@@ -27,8 +47,10 @@ def geneticStateSearch(mapIn,iCount,cCount,rCount,listAvoid,timeToRun):
 	numCols = mapIn.shape[1]
 
 	# Gen locations is a iCount+cCount+rCount x k matrix containing tuples
+	### TODO: Eventually make this a class.
 	genLocations = numpy.zeros((k,numRows,numCols))
 	genScores = numpy.zeros(k)
+
 	tmpListAvoid = numpy.ones(iCount+cCount+rCount,dtype=(int,2))
 
 	firstRun = True
@@ -63,7 +85,7 @@ def geneticStateSearch(mapIn,iCount,cCount,rCount,listAvoid,timeToRun):
 							pass #print tmpLocation
 
 				# Get score for the randomly generated maps.
-				
+				genScores
 			# print(genLocations)
 			firstRun = False
 
@@ -85,10 +107,7 @@ def geneticStateSearch(mapIn,iCount,cCount,rCount,listAvoid,timeToRun):
 Part 2 genetic testing
 '''
 random.seed()
-listAvoid = []
 mapIn,iCount,cCount,rCount = p2.readFile('sample2.txt')
-toxic_sites = numpy.where(mapIn == TOXIC)
-for elt,ind in enumerate(toxic_sites[0]):
-	listAvoid.append([toxic_sites[0][ind],toxic_sites[1][ind]]) 
+
 
 geneticStateSearch(mapIn,iCount,cCount,rCount,listAvoid, 1)
