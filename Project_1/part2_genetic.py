@@ -11,12 +11,32 @@ SCENIC = 500
 
 # randomCrossover()
 
+class GeneticChild:
+     def __init__(self, mapIn, locations,utilVal):
+		self.map = mapIn
+		self.locations = locations
+		self.utilVal = utilVal
+
+		self.listAvoid = []
+		# Make list of sites that must be avoided
+		toxic_sites = numpy.where(mapIn == TOXIC)
+		for elt,ind in enumerate(toxic_sites[0]):
+			self.listAvoid.append([toxic_sites[0][ind],toxic_sites[1][ind]]) 
+
+
+     def updateLocations(self,newLocations)
+
+
+
 '''
 Start: k list of random, valid states.
 calculate fitness scores for these k states.
 pick two states.
 execute 
 '''
+
+
+
 def geneticStateSearch(mapIn,iCount,cCount,rCount,listAvoid,timeToRun):
 	k = 100
 	k2 = numpy.floor(k/20)	
@@ -27,40 +47,48 @@ def geneticStateSearch(mapIn,iCount,cCount,rCount,listAvoid,timeToRun):
 	numCols = mapIn.shape[1]
 
 	# Gen locations is a iCount+cCount+rCount x k matrix containing tuples
-	genLocations = numpy.zeros((k,iCount+cCount+rCount), dtype=(int,2))
-	#tmpListAvoid = numpy.ones(iCount+cCount+rCount,dtype=(int,2))
+	### TODO: Eventually make this a class.
+	genLocations = numpy.zeros((k,numRows,numCols))
+	genScores = numpy.zeros(k)
+
+	tmpListAvoid = numpy.ones(iCount+cCount+rCount,dtype=(int,2))
 
 	firstRun = True
 	timeRun = 0.0
 	initTime = time.time()
 
 	while timeRun < timeToRun:
-		# Go through the actual process of generating children and picking and mutation etc
-		
+		## First Population: Generate random states and save. 		
 		if firstRun == True:
-			cnt_avoid = 0
 			# Generate  k states randomly	
 			for i in range(0,k):
 				tmpListAvoid = list(listAvoid)
+
+				# Generate random locations
 				for j in range(0,iCount+cCount+rCount):
 					valid = False
 					while valid == False:
-						tmpLocation= (random.randint(0,numRows),random.randint(0,numCols))#genLocations[i,j] 
-						# Check location's validity.
-						# print tmpLocation
-						#print(tmpListAvoid)
-						if tmpLocation in tmpListAvoid:
-							cnt_avoid = cnt_avoid + 1
-							#print('avoiding',cnt_avoid)
-							pass
-						else:
-							# leave the while and add current location to random.
+						tmpLocation= [random.randint(0,numRows-1),random.randint(0,numCols-1)]#genLocations[i,j]
+						if not (tmpLocation in tmpListAvoid):
+							# leave the while and add current location to mapping.
 							valid = True
 							tmpListAvoid.append(tmpLocation)
-							genLocations[i,j] = tmpLocation
+							
+							if j < iCount:
+								genLocations[i,tmpLocation[0],tmpLocation[1]] = IND
+							elif j < iCount + cCount:
+								genLocations[i,tmpLocation[0],tmpLocation[1]] = COM
+							else: # if j < iCount + cCount + rCount
+								genLocations[i,tmpLocation[0],tmpLocation[1]] = RES
+							# print 'not passing'
+						else:
+							pass #print tmpLocation
 
-			# print(genLocations[1,:])
+				# Get score for the randomly generated maps.
+				genScores
+			# print(genLocations)
 			firstRun = False
+
 		else:
 			pass
 			# Select k2 most fit states to save
@@ -79,11 +107,7 @@ def geneticStateSearch(mapIn,iCount,cCount,rCount,listAvoid,timeToRun):
 Part 2 genetic testing
 '''
 random.seed()
-listAvoid = [];
 mapIn,iCount,cCount,rCount = p2.readFile('sample2.txt')
-toxic_sites = numpy.where(mapIn == TOXIC)
-for elt,ind in enumerate(toxic_sites[0]):
-	listAvoid.append((toxic_sites[0][ind],toxic_sites[1][ind])) 
 
-print(listAvoid[0][:]) # somehow make this into something that works with the other thing.
+
 geneticStateSearch(mapIn,iCount,cCount,rCount,listAvoid, 1)
