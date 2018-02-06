@@ -20,31 +20,31 @@ def calculateStateScore(state):
 	columns = len(state[0])
 	rows = len(state)
 	
-	totalScore=0
+	stateScore = 0
 	
-	iList = []
-	cList = []
-	rList = []
- 	tList = []
- 	sList = []
- 	TOTALSCORE = 0
+	# iList = []
+	# cList = []
+	# rList = []
+ # 	tList = []
+ # 	sList = []
+ 	
 	for j in range(columns):
 		for i in range(rows):
 			if (state[i,j] == IND):
-				TOTALSCORE =  calcScoreForIND([i,j],state, TOTALSCORE)
-				print("_______", TOTALSCORE)
+				stateScore =  calcScoreForIND([i,j],state, stateScore)
+				print("_______", stateScore)
 			if (state[i,j] == COM):
-				TOTALSCORE = calcScoreForCOM([i,j],state, TOTALSCORE)
-				print("_______", TOTALSCORE)
+				stateScore = calcScoreForCOM([i,j],state, stateScore)
+				print("_______", stateScore)
 				#print("TOTALSCORE", TOTALSCORE, "_______", calcScoreForCOM([i,j],state, TOTALSCORE))
 				#rList.append((i,j))
 			if (state[i,j] == RES):
-				TOTALSCORE = calcScoreForRES([i,j],state, TOTALSCORE)
-				print("_______", TOTALSCORE)
+				stateScore = calcScoreForRES([i,j],state, stateScore)
+				print("_______", stateScore)
 				#print("TOTALSCORE", TOTALSCORE, "_______",calcScoreForRES([i,j],state, TOTALSCORE))
 				#rList.append((i,j))
 
-	
+	return stateScore
 	#print(len(iList))		
 	#print("rlist",rList)
 
@@ -55,46 +55,46 @@ def calculateStateScore(state):
 #within 2 toxic -10
 #within 2 another ind +3
 #within 3 res -5
-def calcScoreForIND(INDlocation, state, TOTALSCORE):
+def calcScoreForIND(INDlocation, state, stateScore):
 	nearByBuildings = getStructsWithin(INDlocation, state, 3)
 	for j in range(len(nearByBuildings)):
 		if(nearByBuildings[j][1]==TOXIC and nearByBuildings[j][0] <= 2):
-			TOTALSCORE = TOTALSCORE - 10
+			stateScore = stateScore - 10
 	#		print("__________________________", TOTALSCORE)
 		if(nearByBuildings[j][1]==IND and nearByBuildings[j][0] <= 2):
-			TOTALSCORE = TOTALSCORE + 1.5
+			stateScore = stateScore + 1.5
 	#		print("__________________________", TOTALSCORE)
 		if(nearByBuildings[j][1]==RES and nearByBuildings[j][0] <= 2):
-			TOTALSCORE = TOTALSCORE - 5
+			stateScore = stateScore - 5
 	#		print("__________________________", TOTALSCORE)
-	return TOTALSCORE
+	return stateScore
 #Res scoring
 #within 2 toxic -20
 #within 2 scenic +10
 #within 3 com +5
 #within 3 ind -5
-def calcScoreForRES(RESlocation, state, TOTALSCORE):
+def calcScoreForRES(RESlocation, state, stateScore):
 	nearByBuildings = getStructsWithin(RESlocation, state, 3)
 	for j in range(len(nearByBuildings)):
 		if(nearByBuildings[j][1]==TOXIC and nearByBuildings[j][0] <= 2):
-			TOTALSCORE = TOTALSCORE - 20
+			stateScore = stateScore - 20
 		if(nearByBuildings[j][1]==SCENIC and nearByBuildings[j][0] <= 2):
-			TOTALSCORE = TOTALSCORE + 10
+			stateScore = stateScore + 10
 		if(nearByBuildings[j][1]==COM and nearByBuildings[j][0] <= 3):
-			TOTALSCORE = TOTALSCORE + 5
-	return TOTALSCORE
+			stateScore = stateScore + 5
+	return stateScore
 #COM scoring
 #within 2 toxic -20
 #within 3 res +5
 #within com -5 
-def calcScoreForCOM(COMlocation, state, TOTALSCORE):
+def calcScoreForCOM(COMlocation, state, stateScore):
 	nearByBuildings = getStructsWithin(COMlocation, state, 3)
 	for j in range(len(nearByBuildings)):
 		if(nearByBuildings[j][1]==TOXIC and nearByBuildings[j][0] <= 2):
-			TOTALSCORE = TOTALSCORE - 20
+			stateScore = stateScore - 20
 		if(nearByBuildings[j][1]==COM and nearByBuildings[j][0] <= 2):
-			TOTALSCORE = TOTALSCORE - 2.5
-	return TOTALSCORE
+			stateScore = stateScore - 2.5
+	return stateScore
 # Gets numpy list of tuples that contains the locations of toxic waste sites.
 
 def getManhDist(loc1,loc2):
@@ -209,13 +209,6 @@ siteMap = copy.deepcopy(UNBUILTMAP)
 calculateStateScore(siteMap)
 print(siteMap)
 print("\n")
-
-print(UNBUILTMAP)
-print("\n")
-
-print(siteMap)
-print("\n")
-print(TOTALSCORE)
 
 
 
