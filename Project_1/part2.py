@@ -17,8 +17,8 @@ UNBUILTMAP = []
 
 #function takes in map(state) calculates score of the map
 def calculateStateScore(state):
-	columns = len(state[0])
-	rows = len(state)
+	columns = len(state)
+	rows = len(state[0])
 	
 	stateScore = 0
 	
@@ -28,28 +28,22 @@ def calculateStateScore(state):
  # 	tList = []
  # 	sList = []
  	
-	for j in range(columns):
-		for i in range(rows):
+	for i in range(columns):
+		for j in range(rows):
+			#print(i,j)
 			if (state[i,j] == IND):
+				#print("100",i,j, stateScore)
 				stateScore =  calcScoreForIND([i,j],state, stateScore)
-				print("_______", stateScore)
+				print(stateScore)
 			if (state[i,j] == COM):
+				#print("200", i,j, stateScore)
 				stateScore = calcScoreForCOM([i,j],state, stateScore)
-				print("_______", stateScore)
-				#print("TOTALSCORE", TOTALSCORE, "_______", calcScoreForCOM([i,j],state, TOTALSCORE))
-				#rList.append((i,j))
+				print(stateScore)
 			if (state[i,j] == RES):
+				#print("300 at",i,j, "stateScore:",stateScore)
 				stateScore = calcScoreForRES([i,j],state, stateScore)
-				print("_______", stateScore)
-				#print("TOTALSCORE", TOTALSCORE, "_______",calcScoreForRES([i,j],state, TOTALSCORE))
-				#rList.append((i,j))
-
+				print(stateScore)
 	return stateScore
-	#print(len(iList))		
-	#print("rlist",rList)
-
-	#print("TESTING", getStructsWithin(iList[0],state,3))
-	#state[iList[0][0],iList[0][1]] = state[iList[0][0],iList[0][1]]+1
 	 
 #IND scoring
 #within 2 toxic -10
@@ -112,11 +106,11 @@ def getStructsWithin(loc1, state, dist):
 	nearByBuildings = []
 	for j in range(rows):
 		for i in range(columns):
-			if(getManhDist(loc1, [j,i]) <= dist and state[j,i]> 0):
+			if(getManhDist(loc1, [j,i]) <= dist and state[j,i]> 10):
 			#	print(i,j)
 				holdDist =getManhDist(loc1, [j,i]) 
 				nearByBuildings.append([holdDist, state[j,i]])
-	
+	print(nearByBuildings)
 	return nearByBuildings
 
 # Takes a string containing the file location, and returns the location counts and the map stored in the file.
@@ -199,7 +193,6 @@ def populateSiteMap(siteMap):
 '''
 
 Matrix2 = numpy.zeros((6, 5))
-
 
 
 (UNBUILTMAP, iCount, cCount, rCount) = readFile("sample2.txt")
