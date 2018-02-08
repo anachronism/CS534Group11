@@ -25,8 +25,9 @@ DEBUGSTATESCORE = 0
 def calculateStateScore(state):
 	columns = len(state)
 	rows = len(state[0])
-	print(state)
-	print("\n")
+	if DEBUGSTATESCORE:
+		print(state)
+		print("\n")
 	stateScore = 0
 	
 	for i in range(columns):
@@ -156,6 +157,29 @@ def readFile(fileLoc):
 	#print(mapOut.shape)
 	return [mapOut,int(iCount),int(cCount),int(rCount)]
 
+# Given a string that has the file location, a score, a map, and a time, creates a file containing it.
+def writeFile(fileLoc, score, mapIn, timeFound):
+	with open(fileLoc,'w') as f:
+		f.write('Score achieved: '+ str(score) +'\n')
+		f.write('Time solution was found: %.2f Seconds \n'%+ timeFound)
+		for row in range(0,mapIn.shape[0]):
+			for col in range(0,mapIn.shape[1]):
+				if mapIn[row,col] == IND:
+					f.write(' I ')
+				elif mapIn[row,col] == COM:
+					f.write(' C ')
+				elif mapIn[row,col] == RES:
+					f.write(' R ')
+				elif mapIn[row,col] == TOXIC:
+					f.write(' X ')
+				elif mapIn[row,col] == SCENIC:
+					f.write(' S ')
+				else:
+					f.write(' ' + str(mapIn[row,col]) + ' ')
+                                                
+			f.write('\n')
+		f.close()
+
 def getListOfEmptyLocations(siteMap):
 	columns = len(siteMap[0])
 	rows = len(siteMap)
@@ -232,7 +256,7 @@ def getLocationsOfAllBuildings(state):
 	
 	for i in range(columns):
 		for j in range(rows):
- 			if (state[i,j] == IND): 
+			if (state[i,j] == IND): 
 				buildingList.append([state[i,j],i,j ])
 			if (state[i,j] == RES):
 				buildingList.append([state[i,j],i,j ])
