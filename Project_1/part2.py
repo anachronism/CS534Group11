@@ -227,7 +227,7 @@ def getLocationsOfAllBuildings(state):
 	stateScore = 0
 	columns = len(state)
 	rows = len(state[0])
-	print(state)
+	#print(state)
 	stateScore = 0
 	
 	for i in range(columns):
@@ -244,21 +244,42 @@ def getLocationsOfAllBuildings(state):
 def moveBuildingThroughMap(buildingList, state):
 	columns = len(state)
 	rows = len(state[0])
+	originalState = copy.deepcopy(state)
 	print(state)
+	print("\n")
 	stateScore = 0
-	movingBuilding = buildingList[0]
-	i = movingBuilding[1]
-	j = movingBuilding[2]
-	state[i,j] = 0
-
-	for i in range(columns):
-		for j in range(rows):
-			if (state[i,j] < 10):
-				holdLocationValue = state[i,j]
-				state[i,j] = movingBuilding[0]
-				print(calculateStateScore(state))
-				state[i,j] = holdLocationValue
-
+	buildingNum = len(buildingList)-1			
+	count = 0
+	holdLastScore = calculateStateScore(state)
+		
+	for k in range(buildingNum):
+		count = count +1
+		print("___________________",count)
+		movingBuilding = buildingList[0]
+		i = movingBuilding[1]
+		j = movingBuilding[2]
+		state[i,j] = 0
+		bestState = copy.deepcopy(state)
+		print("holdScoreStart", holdLastScore)
+		for i in range(columns):
+			for j in range(rows):
+				if (state[i,j] < 10):
+					holdLocationValue = state[i,j]
+					state[i,j] = movingBuilding[0]
+					currentScore = calculateStateScore(state)
+					print(holdLastScore,currentScore)
+						
+					if (holdLastScore < currentScore):
+						bestState = copy.deepcopy(state)
+						holdLastScore = currentScore
+					state[i,j] = holdLocationValue
+		del buildingList[0]			
+	
+	print("BEST SCORE")
+	print(holdLastScore)
+	
+	print("BEST STATE")
+	print(bestState)
 
 '''
  START OF 'MAIN'
@@ -277,14 +298,22 @@ siteMap, buildingCost = populateSiteMap(siteMap)[0:2]
 # 2) Calculate building cost
 # 3) Calculate state score
 # 4) 
-calculateStateScore(UNBUILTMAP)
+print("INITIAL STATE")
 print(UNBUILTMAP)
 print("\n")
+print("INITIAL SCORE", calculateStateScore(UNBUILTMAP))
+#print(UNBUILTMAP)
+#print("\n")
 
 
 buildingList = getLocationsOfAllBuildings(UNBUILTMAP)
 
 moveBuildingThroughMap(buildingList, UNBUILTMAP)
+
+print("INITIAL STATE")
+print(UNBUILTMAP)
+
+
 #calculateStateScore(siteMap)    
 
 
