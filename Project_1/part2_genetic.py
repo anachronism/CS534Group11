@@ -156,24 +156,38 @@ def geneticStateSearch(originalMap,params):
 			if DEBUG_GENETICS:
 				print lastScores
 			zippedScores = zip(range(0,params.k),lastScores)
-			lastScores_save = lastScores[:] 
+			lastScores_save = lastScores[:]
+			lastScores_elite = lastScores[0:params.k2]
 			zippedScores.sort(key=lambda x: x[1])
 			lastScores = []
 
 			## Elitism: Save the k2 most fit states.	
 			#print 'SAVE'
+			inds_elite = range(0,params.k2)
+			
 			for i in range(1,params.k2+1):
+
 				ind_elite = (zippedScores[params.k-i])[0]
+				greaterThanElite =   lastScores_elite < lastScores_save[ind_elite]
 				
-				lastScores.append((zippedScores[params.k-i])[1])
-				if DEBUG_GENETICS:
-					print 'old time: ',ind_elite,lastGen[ind_elite].timeFound
-				currentGen.append(lastGen[ind_elite])
-				if DEBUG_GENETICS:
-					print 'new append: ',currentGen[-1].timeFound
+				#print type(greaterThanElite), greaterThanElite
+				if (ind_elite < k2):
+					lastScores.append((zippedScores[params.k-i])[1])
+					currentGen.append(lastGen[ind_elite])
+				elif (type(greaterThanElite) != bool) and (any(greaterThanElite)):
+					print "replacing"
+					lastScores.append((zippedScores[params.k-i])[1])
+					currentGen.append(lastGen[ind_elite])
+                                                
+				else:
+					lastScores.append(lastScores_elite[0])
+					currentGen.append(lastGen[inds_elite[0]])
+					del inds_elite[0]
+					del lastScores_elite[0]
+				
 
 			if DEBUG_GENETICS:
-				print 'length currentGen: ',len(currentGen)
+				print 'Time Found: ',currentGen[0].timeFound
                         
 			## Culling: remove the N least fit states.
 			#print 'POP'
@@ -205,9 +219,13 @@ def geneticStateSearch(originalMap,params):
 
 		# Update the current time
 		timeRun = time.time() - initTime
+		
 	zippedScores = zip(range(0,params.k),lastScores)
 	zippedScores.sort(key=lambda x: x[1])
-	return lastGen[(zippedScores[params.k-1])[0]]
+	if (zippedScores[params.k-1])[1] > lastScores[0]:
+		return lastGen[(zippedScores[params.k-1])[0]],(zippedScores[params.k-1])[0]
+	else:
+		return lastGen[0],0
 
 '''
 Part 2 genetic testing
@@ -223,7 +241,7 @@ numCull = 5
 originalMap,iCount,cCount,rCount = readFile('sample2.txt')
 paramsIn = GeneticParams(iCount,cCount,rCount,pMutate,pCross,timeToRun,k,k2,numCull)
 
-result = geneticStateSearch(originalMap,paramsIn)
+result,ind = geneticStateSearch(originalMap,paramsIn)
 if DEBUG_GENETICS:
-	print 'Util: ',result.utilVal,' Time: ',result.timeFound
+	print 'Util: ',result.utilVal,' Time: ',result.timeFound,' Index: ',ind
 	print result.map
