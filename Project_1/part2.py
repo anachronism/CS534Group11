@@ -213,10 +213,10 @@ def changeSiteMap(siteMap,locationsList):
 		siteMap[location[0],location[1]] = COM
 
 	for i in range(iCount + cCount,iCount + cCount + rCount):
-		locations = locationsList[i]
+		location = locationsList[i]
 		buildingCost = buildingCost + siteMap[location[0],location[1]]
 		siteMap[location[0],location[1]] = RES
-		
+
 	return [siteMap,buildingCost]
 
 

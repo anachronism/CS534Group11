@@ -9,12 +9,11 @@ TOXIC = 400
 SCENIC = 500
 
 
-# randomCrossover()
 ## Class containing one map candidate.
 class GeneticChild:
 
 	def __init__(self, mapIn,buildCost,locations):
-		self.map = mapIn
+		self.map = copy.deepcopy(mapIn)
 		self.buildCost = buildCost
 		self.locations = locations
 		self.utilVal = calculateStateScore(self.map) - self.buildCost
@@ -32,6 +31,8 @@ class GeneticChild:
 		cls.map = copy.deepcopy(mapIn)
 		cls.locations = locations
 		cls.map, cls.buildCost = changeSiteMap(cls.map,cls.locations)
+		# print cls.locations
+		# print cls.map
 		return cls(cls.map,cls.buildCost,cls.locations)
 
 
@@ -52,10 +53,11 @@ def generateRandomLocation(mapIn,listInvalid):
 	return randLoc
 
 
-def runCrossover(parent1, parent2, mapIn,probMutate):
+def runCrossover(parent1, parent2, mapIn,probMutate,probCross):
 	# Combine the two randomly.
 	locations_1 = []
 	locations_2 = []
+
 	for i in range(0,len(parent1.locations)):
 		## Check if the location will mutate for either child, and picking parents.  
 		randMutate1 = random.random()
@@ -69,7 +71,7 @@ def runCrossover(parent1, parent2, mapIn,probMutate):
 		# Else, if parent 1 is randomly chosen, make sure that the location it has is 
 		# Unoccupied, and then add it. Otherwise, just mutate.
 		else:	
-			if randParent < 0.5:
+			if randParent < probCross:
 				if checkValidLocation(parent1.locations[i],mapIn,locations_1):
 					locations_1.append(parent1.locations[i])
 				else:
@@ -88,7 +90,7 @@ def runCrossover(parent1, parent2, mapIn,probMutate):
 		# Else, if parent 1 is randomly chosen, make sure that the location it has is 
 		# Unoccupied, and then add it. Otherwise, just mutate.
 		else:	
-			if randParent < 0.5:
+			if randParent < probCross:
 				if checkValidLocation(parent2.locations[i],mapIn,locations_2):
 					locations_2.append(parent2.locations[i])
 				else:
@@ -107,20 +109,13 @@ def runCrossover(parent1, parent2, mapIn,probMutate):
 
 	return child1, child2
 
-'''
-Start: k list of random, valid states.
-calculate fitness scores for these k states.
-pick two states.
-execute 
-'''
-
-
 
 def geneticStateSearch(originalMap,iCount,cCount,rCount,timeToRun):
 	k = 100
 	k2 = 6	
 	numCull = 5 ### Or maybe make it so that it's a threshold
 	pMutate = 0.06
+	pCross = 0.5
 
 	numRows = originalMap.shape[0]
 	numCols = originalMap.shape[1]
@@ -144,46 +139,68 @@ def geneticStateSearch(originalMap,iCount,cCount,rCount,timeToRun):
 		else:
 			currentGen = []
 			toPop = []
-			# Select k2 most fit states to save
-			zippedScores = zip(range(0,k),lastScores) 
+
+			# Sort a list of the last scores, and save the indices that they correspond to.
+			print lastScores
+			zippedScores = zip(range(0,k),lastScores)
+			lastScores_save = lastScores[:] 
 			zippedScores.sort(key=lambda x: x[1])
 			lastScores = []
-			print 'SAVE'
+
+			## Elitism: Save the k2 most fit states.	
+			#print 'SAVE'
 			for i in range(1,k2+1):
 				ind_elite = (zippedScores[k-i])[0]
 				lastScores.append((zippedScores[k-i])[1])
-				print ((zippedScores[k-i])[1])
+				# print ((zippedScores[k-i])[1])
 				#print lastGen[ind_elite].utilVal
 				currentGen.append(lastGen[ind_elite])
 			
-			## 
-			# cull from last gen
-			print 'POP'
+			## Culling: remove the N least fit states.
+			#print 'POP'
 			for i in range(0,numCull):
 				toPop.append((zippedScores[i])[0])
 			
+
 			for index in sorted(toPop,reverse=True):
 				del lastGen[index]
+				del lastScores_save[index]
 
-			### TODO: ACTUALLY IMPLEMENT CROSSOVER
-			# Use crossover etc to make k-k2 states
-			print 'crossover'
+			# Recreate zipped list for crossover
+			zippedScores = zip(range(0,k-numCull),lastScores_save)
+			zippedScores.sort(key=lambda x:x[1])
+
+			## Crossover:
+			#print 'crossover'
 			for i in range(0,int(math.ceil((k-k2)/2))):
 				# draw random number to pick states.
 				### TODO: MAKE SOMEWHAT WEIGHTED.
-				indParents = random.sample(range(0,(k-k2)-1),2)
-				child1, child2 = runCrossover(lastGen[indParents[0]],lastGen[indParents[1]],originalMap,pMutate)
+				### THIS IS STILL NOT WORKING
+				zipParent1 = abs(random.triangular(-(len(zippedScores)-1),len(zippedScores)-1))
+				zipParent2 = abs(random.triangular(-(len(zippedScores)-1),len(zippedScores)-1))
+
+				zipParent1 = int(round(zipParent1))
+				zipParent2 = int(round(zipParent2))
+				#print zipParent1-zipParent2
 				
+				# indParent1 = zippedScores[zipParent1][0]
+				# indParent2 = zippedScores[zipParent2][0]
+				
+				indParent1,indParent2 = random.sample(range(0,k-k2),2)
+
+				# print indParent1
+
+				#print indParent1
+
+				child1, child2 = runCrossover(lastGen[indParent1],lastGen[indParent2],originalMap,pMutate,pCross)
+				#print child1.map
 				lastScores.append(child1.utilVal)
 				currentGen.append(child1)
 				lastScores.append(child2.utilVal)
 				currentGen.append(child2)
-				# weight towards states w/ better fitness.
-				# Combining 2 states makes 2 successors.
-				# Randomly change some bits in some states.
-			lastGen = copy.deepcopy(currentGen)
-			## TODO: UPDATE LAST SCORE
-			
+				
+			lastGen = currentGen[:]
+				
 
 		# Update the current time
 		timeRun = time.time() - initTime
@@ -194,6 +211,4 @@ Part 2 genetic testing
 '''
 random.seed()
 originalMap,iCount,cCount,rCount = readFile('sample2.txt')
-# test = GeneticChild.fromRandom(originalMap)
-# print test.utilVal
 geneticStateSearch(originalMap,iCount,cCount,rCount, 10)
