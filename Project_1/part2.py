@@ -25,8 +25,9 @@ DEBUGSTATESCORE = 0
 def calculateStateScore(state):
 	columns = len(state)
 	rows = len(state[0])
-	print(state)
-	print("\n")
+	if DEBUGSTATESCORE:
+                print(state)
+                print("\n")
 	stateScore = 0
 	
 	for i in range(columns):

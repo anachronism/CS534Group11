@@ -1,4 +1,5 @@
 import numpy
+from collections import namedtuple
 from part2 import * # This import is only until we actually incorporate together.
 import random,time,copy,math
 
@@ -8,32 +9,37 @@ RES = 300
 TOXIC = 400
 SCENIC = 500
 
+DEBUG_GENETICS = 1
+# Named Tuple containing genetic search parameters.
+GeneticParams = namedtuple("GeneticParams", "iCount cCount rCount pMutate pCross timeToRun k k2 numCull")
 
 ## Class containing one map candidate.
 class GeneticChild:
-
-	def __init__(self, mapIn,buildCost,locations):
-		self.map = copy.deepcopy(mapIn)
+	def __init__(self, mapIn,buildCost,locations,timeFound):
+		self.map = mapIn#copy.deepcopy(mapIn)
 		self.buildCost = buildCost
 		self.locations = locations
+		self.timeFound = timeFound
 		self.utilVal = calculateStateScore(self.map) - self.buildCost
 
 	## Mutliple inits, depending on if a list of locations is provided or not.
 	@classmethod
-	def fromRandom(cls, mapIn):
+	def fromRandom(cls, mapIn, timeFound):
      	# Can maybe skip this first step, and just feed mapIn into it.
 		cls.map =  copy.deepcopy(mapIn)
+		cls.timeFound = copy.deepcopy(timeFound)
 		cls.map,cls.buildCost,cls.locations = populateSiteMap(cls.map)
-		return cls(cls.map,cls.buildCost,cls.locations)
+		return cls(cls.map,cls.buildCost,cls.locations,cls.timeFound)
 
 	@classmethod
-	def fromLocations(cls, mapIn, locations):
+	def fromLocations(cls, mapIn, locations,timeFound):
 		cls.map = copy.deepcopy(mapIn)
 		cls.locations = locations
+		cls.timeFound = copy.deepcopy(timeFound)
 		cls.map, cls.buildCost = changeSiteMap(cls.map,cls.locations)
 		# print cls.locations
 		# print cls.map
-		return cls(cls.map,cls.buildCost,cls.locations)
+		return cls(cls.map,cls.buildCost,cls.locations,cls.timeFound)
 
 
 ## UTILITY FUNCTIONS
@@ -53,7 +59,7 @@ def generateRandomLocation(mapIn,listInvalid):
 	return randLoc
 
 
-def runCrossover(parent1, parent2, mapIn,probMutate,probCross):
+def runCrossover(parent1, parent2, mapIn,params,initTime):
 	# Combine the two randomly.
 	locations_1 = []
 	locations_2 = []
@@ -66,12 +72,12 @@ def runCrossover(parent1, parent2, mapIn,probMutate,probCross):
 
 		## Evaluate the location for the first child.
 		# If it should mutate, then add a random location.
-		if randMutate1 > 1 - probMutate:
+		if randMutate1 > 1 - params.pMutate:
 			locations_1.append(generateRandomLocation(mapIn,locations_1))
 		# Else, if parent 1 is randomly chosen, make sure that the location it has is 
 		# Unoccupied, and then add it. Otherwise, just mutate.
 		else:	
-			if randParent < probCross:
+			if randParent < params.pCross:
 				if checkValidLocation(parent1.locations[i],mapIn,locations_1):
 					locations_1.append(parent1.locations[i])
 				else:
@@ -85,12 +91,12 @@ def runCrossover(parent1, parent2, mapIn,probMutate,probCross):
 
 		## Evaluate the location for the second child.
 		# If it should mutate, then add a random location.
-		if randMutate2 > 1 - probMutate:
+		if randMutate2 > 1 - params.pMutate:
 			locations_2.append(generateRandomLocation(mapIn,locations_2))
 		# Else, if parent 1 is randomly chosen, make sure that the location it has is 
 		# Unoccupied, and then add it. Otherwise, just mutate.
 		else:	
-			if randParent < probCross:
+			if randParent < params.pCross:
 				if checkValidLocation(parent2.locations[i],mapIn,locations_2):
 					locations_2.append(parent2.locations[i])
 				else:
@@ -102,113 +108,122 @@ def runCrossover(parent1, parent2, mapIn,probMutate,probCross):
 				else:
 					locations_2.append(generateRandomLocation(mapIn,locations_2))
 
-	## Now that both lists are populated, make new classes. 
-	child1 = GeneticChild.fromLocations(mapIn,locations_1)
-	child2 = GeneticChild.fromLocations(mapIn, locations_2)
+	## Now that both lists are populated, make new classes.
+	tCreate = time.time() - initTime
+	child1 = GeneticChild.fromLocations(mapIn,locations_1,tCreate)
+	tCreate = time.time() - initTime
+	child2 = GeneticChild.fromLocations(mapIn, locations_2,tCreate)
 	# RETURN GeneticChild CLASSES 
 
 	return child1, child2
 
 
-def geneticStateSearch(originalMap,iCount,cCount,rCount,timeToRun):
-	k = 100
-	k2 = 6	
-	numCull = 5 ### Or maybe make it so that it's a threshold
-	pMutate = 0.06
-	pCross = 0.5
-
-	numRows = originalMap.shape[0]
-	numCols = originalMap.shape[1]
+def geneticStateSearch(originalMap,params):
+   
+	# In the current state, these values aren't used, since the count is kept globally.
+	# However, in the case of extrapolation of this code, it would be useful to have these counts
+	# stored.
+	iCount = params.iCount
+	cCount = params.cCount
+	rCount = params.rCount
 
 	firstRun = True
 	timeRun = 0.0
 	initTime = time.time()
+
 	lastGen = []
 	currentGen =[]
 	lastScores = []
 
-	while timeRun < timeToRun:
+	while timeRun < params.timeToRun:
+
 		## First Population: Generate random states and save. 		
 		if firstRun == True:
 			# Generate  k states randomly	
-			for i in range(0,k):
-				lastGen.append(GeneticChild.fromRandom(originalMap))
+			for i in range(0,params.k):
+				tCreate = time.time() - initTime
+				lastGen.append(GeneticChild.fromRandom(originalMap,tCreate))
 				lastScores.append(lastGen[i].utilVal)
 			print 'End of first run:',len(lastScores)
 			firstRun = False
+
+		## Rest of the generations:
 		else:
 			currentGen = []
 			toPop = []
 
 			# Sort a list of the last scores, and save the indices that they correspond to.
-			print lastScores
-			zippedScores = zip(range(0,k),lastScores)
+			if DEBUG_GENETICS:
+				print lastScores
+			zippedScores = zip(range(0,params.k),lastScores)
 			lastScores_save = lastScores[:] 
 			zippedScores.sort(key=lambda x: x[1])
 			lastScores = []
 
 			## Elitism: Save the k2 most fit states.	
 			#print 'SAVE'
-			for i in range(1,k2+1):
-				ind_elite = (zippedScores[k-i])[0]
-				lastScores.append((zippedScores[k-i])[1])
-				# print ((zippedScores[k-i])[1])
-				#print lastGen[ind_elite].utilVal
+			for i in range(1,params.k2+1):
+				ind_elite = (zippedScores[params.k-i])[0]
+				
+				lastScores.append((zippedScores[params.k-i])[1])
+				if DEBUG_GENETICS:
+					print 'old time: ',ind_elite,lastGen[ind_elite].timeFound
 				currentGen.append(lastGen[ind_elite])
-			
+				if DEBUG_GENETICS:
+					print 'new append: ',currentGen[-1].timeFound
+
+			if DEBUG_GENETICS:
+				print 'length currentGen: ',len(currentGen)
+                        
 			## Culling: remove the N least fit states.
 			#print 'POP'
-			for i in range(0,numCull):
+			for i in range(0,params.numCull):
 				toPop.append((zippedScores[i])[0])
-			
-
 			for index in sorted(toPop,reverse=True):
 				del lastGen[index]
 				del lastScores_save[index]
 
 			# Recreate zipped list for crossover
-			zippedScores = zip(range(0,k-numCull),lastScores_save)
+			zippedScores = zip(range(0,params.k-params.numCull),lastScores_save)
 			zippedScores.sort(key=lambda x:x[1])
 
 			## Crossover:
 			#print 'crossover'
-			for i in range(0,int(math.ceil((k-k2)/2))):
+			for i in range(0,int(math.ceil((params.k-params.k2)/2))):
 				# draw random number to pick states.
 				### TODO: MAKE SOMEWHAT WEIGHTED.
-				### THIS IS STILL NOT WORKING
-				zipParent1 = abs(random.triangular(-(len(zippedScores)-1),len(zippedScores)-1))
-				zipParent2 = abs(random.triangular(-(len(zippedScores)-1),len(zippedScores)-1))
+				indParent1,indParent2 = random.sample(range(0,params.k-params.k2),2)
 
-				zipParent1 = int(round(zipParent1))
-				zipParent2 = int(round(zipParent2))
-				#print zipParent1-zipParent2
-				
-				# indParent1 = zippedScores[zipParent1][0]
-				# indParent2 = zippedScores[zipParent2][0]
-				
-				indParent1,indParent2 = random.sample(range(0,k-k2),2)
-
-				# print indParent1
-
-				#print indParent1
-
-				child1, child2 = runCrossover(lastGen[indParent1],lastGen[indParent2],originalMap,pMutate,pCross)
-				#print child1.map
+				child1, child2 = runCrossover(lastGen[indParent1],lastGen[indParent2],originalMap,params,initTime)
 				lastScores.append(child1.utilVal)
 				currentGen.append(child1)
 				lastScores.append(child2.utilVal)
 				currentGen.append(child2)
-				
+			# CHECK IF THIS COPY REDOES TIME	
 			lastGen = currentGen[:]
 				
 
 		# Update the current time
 		timeRun = time.time() - initTime
-
+	zippedScores = zip(range(0,params.k),lastScores)
+	zippedScores.sort(key=lambda x: x[1])
+	return lastGen[(zippedScores[params.k-1])[0]]
 
 '''
 Part 2 genetic testing
 '''
 random.seed()
+pMutate = 0.06
+pCross = 0.5
+timeToRun = 5
+k = 100
+k2 = 6
+numCull = 5
+
 originalMap,iCount,cCount,rCount = readFile('sample2.txt')
-geneticStateSearch(originalMap,iCount,cCount,rCount, 10)
+paramsIn = GeneticParams(iCount,cCount,rCount,pMutate,pCross,timeToRun,k,k2,numCull)
+
+result = geneticStateSearch(originalMap,paramsIn)
+if DEBUG_GENETICS:
+	print 'Util: ',result.utilVal,' Time: ',result.timeFound
+	print result.map
