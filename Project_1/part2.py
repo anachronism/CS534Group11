@@ -15,6 +15,8 @@ cCount = 0
 rCount = 0
 UNBUILTMAP = []
 
+DEBUGSTATESCORE = 0
+
 #function takes in map(state) calculates score of the map
 def calculateStateScore(state):
 	columns = len(state)
@@ -34,15 +36,18 @@ def calculateStateScore(state):
 			if (state[i,j] == IND):
 				print("100",i,j)
 				stateScore =  calcScoreForIND([i,j],state, stateScore)
-				print(stateScore)
+				if DEBUGSTATESCORE:
+					print(stateScore)
 			if (state[i,j] == COM):
 				print("200", i,j)
 				stateScore = calcScoreForCOM([i,j],state, stateScore)
-				print(stateScore)
+				if DEBUGSTATESCORE:
+					print(stateScore)
 			if (state[i,j] == RES):
 				print("300",i,j)
 				stateScore = calcScoreForRES([i,j],state, stateScore)
-				print(stateScore)
+				if DEBUGSTATESCORE:
+					print(stateScore)
 	return stateScore
 	 
 #IND scoring
@@ -110,7 +115,8 @@ def getStructsWithin(loc1, state, dist):
 			#	print(i,j)
 				holdDist =getManhDist(loc1, [j,i]) 
 				nearByBuildings.append([holdDist, state[j,i]])
-	print(nearByBuildings)
+	if DEBUGSTATESCORE:
+		print(nearByBuildings)
 	return nearByBuildings
 
 # Takes a string containing the file location, and returns the location counts and the map stored in the file.
@@ -192,6 +198,28 @@ def populateSiteMap(siteMap):
 		del emptySpaceList[randNum]
 	
 	return [siteMap,buildingCost,occupiedLocations]
+
+# Fill a map with given locations
+def changeSiteMap(siteMap,locationsList):
+	buildingCost = 0
+	for i in range(0,iCount):
+		location = locationsList[i]
+		buildingCost = buildingCost + siteMap[location[0],location[1]]
+		siteMap[location[0],location[1]] = IND
+
+	for i in range(iCount, iCount + cCount):
+		location = locationsList[i]
+		buildingCost = buildingCost + siteMap[location[0],location[1]]
+		siteMap[location[0],location[1]] = COM
+
+	for i in range(iCount + cCount,iCount + cCount + rCount):
+		locations = locationsList[i]
+		buildingCost = buildingCost + siteMap[location[0],location[1]]
+		siteMap[location[0],location[1]] = RES
+		
+	return [siteMap,buildingCost]
+
+
 '''
  START OF 'MAIN'
 '''
