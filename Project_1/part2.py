@@ -14,40 +14,39 @@ iCount =0
 cCount = 0
 rCount = 0
 UNBUILTMAP = []
-
+	
+iList = []
+cList = []
+rList = []
+buildingList = []
 DEBUGSTATESCORE = 0
 
 #function takes in map(state) calculates score of the map
 def calculateStateScore(state):
 	columns = len(state)
 	rows = len(state[0])
-	
+	print(state)
+	print("\n")
 	stateScore = 0
 	
-	# iList = []
-	# cList = []
-	# rList = []
- # 	tList = []
- # 	sList = []
- 	
 	for i in range(columns):
 		for j in range(rows):
 			#print(i,j)
 			if (state[i,j] == IND):
-				print("100",i,j)
 				stateScore =  calcScoreForIND([i,j],state, stateScore)
 				if DEBUGSTATESCORE:
 					print(stateScore)
+					print("100",i,j)
 			if (state[i,j] == COM):
-				print("200", i,j)
 				stateScore = calcScoreForCOM([i,j],state, stateScore)
 				if DEBUGSTATESCORE:
 					print(stateScore)
+					print("200", i,j)
 			if (state[i,j] == RES):
-				print("300",i,j)
 				stateScore = calcScoreForRES([i,j],state, stateScore)
 				if DEBUGSTATESCORE:
 					print(stateScore)
+					print("300",i,j)
 	return stateScore
 	 
 #IND scoring
@@ -59,13 +58,16 @@ def calcScoreForIND(INDlocation, state, stateScore):
 	for j in range(len(nearByBuildings)):
 		if(nearByBuildings[j][1]==TOXIC and nearByBuildings[j][0] <= 2):
 			stateScore = stateScore - 10
-			print("____","TOXIC","____", stateScore)
+			if DEBUGSTATESCORE:
+				print("____","TOXIC","____", stateScore)
 		if(nearByBuildings[j][1]==IND and nearByBuildings[j][0] <= 2):
 			stateScore = stateScore + 1.5
-			print("____","IND","____", stateScore)
+			if DEBUGSTATESCORE:
+				print("____","IND","____", stateScore)
 		if(nearByBuildings[j][1]==RES and nearByBuildings[j][0] <= 3):
 			stateScore = stateScore - 5
-			print("____","RES","____", stateScore)
+			if DEBUGSTATESCORE:
+				print("____","RES","____", stateScore)
 	return stateScore
 #Res scoring
 #within 2 toxic -20
@@ -220,6 +222,44 @@ def changeSiteMap(siteMap,locationsList):
 	return [siteMap,buildingCost]
 
 
+def getLocationsOfAllBuildings(state):
+	buildingParam = []
+	stateScore = 0
+	columns = len(state)
+	rows = len(state[0])
+	print(state)
+	stateScore = 0
+	
+	for i in range(columns):
+		for j in range(rows):
+ 			if (state[i,j] == IND): 
+				buildingList.append([state[i,j],i,j ])
+			if (state[i,j] == RES):
+				buildingList.append([state[i,j],i,j ])
+			if (state[i,j] == COM):
+				buildingList.append([state[i,j],i,j ])
+	return buildingList
+
+
+def moveBuildingThroughMap(buildingList, state):
+	columns = len(state)
+	rows = len(state[0])
+	print(state)
+	stateScore = 0
+	movingBuilding = buildingList[0]
+	i = movingBuilding[1]
+	j = movingBuilding[2]
+	state[i,j] = 0
+
+	for i in range(columns):
+		for j in range(rows):
+			if (state[i,j] < 10):
+				holdLocationValue = state[i,j]
+				state[i,j] = movingBuilding[0]
+				print(calculateStateScore(state))
+				state[i,j] = holdLocationValue
+
+
 '''
  START OF 'MAIN'
 '''
@@ -231,7 +271,6 @@ Matrix2 = numpy.zeros((6, 5))
 
 siteMap = copy.deepcopy(UNBUILTMAP)
 siteMap, buildingCost = populateSiteMap(siteMap)[0:2]
-
 # While loop logic
 #===================
 # 1) Figure out potential state.
@@ -243,7 +282,9 @@ print(UNBUILTMAP)
 print("\n")
 
 
+buildingList = getLocationsOfAllBuildings(UNBUILTMAP)
 
+moveBuildingThroughMap(buildingList, UNBUILTMAP)
 #calculateStateScore(siteMap)    
 
 
