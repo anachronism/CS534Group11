@@ -32,15 +32,15 @@ def calculateStateScore(state):
 		for j in range(rows):
 			#print(i,j)
 			if (state[i,j] == IND):
-				#print("100",i,j, stateScore)
+				print("100",i,j)
 				stateScore =  calcScoreForIND([i,j],state, stateScore)
 				print(stateScore)
 			if (state[i,j] == COM):
-				#print("200", i,j, stateScore)
+				print("200", i,j)
 				stateScore = calcScoreForCOM([i,j],state, stateScore)
 				print(stateScore)
 			if (state[i,j] == RES):
-				#print("300 at",i,j, "stateScore:",stateScore)
+				print("300",i,j)
 				stateScore = calcScoreForRES([i,j],state, stateScore)
 				print(stateScore)
 	return stateScore
@@ -54,13 +54,13 @@ def calcScoreForIND(INDlocation, state, stateScore):
 	for j in range(len(nearByBuildings)):
 		if(nearByBuildings[j][1]==TOXIC and nearByBuildings[j][0] <= 2):
 			stateScore = stateScore - 10
-	#		print("__________________________", TOTALSCORE)
+			print("____","TOXIC","____", stateScore)
 		if(nearByBuildings[j][1]==IND and nearByBuildings[j][0] <= 2):
 			stateScore = stateScore + 1.5
-	#		print("__________________________", TOTALSCORE)
-		if(nearByBuildings[j][1]==RES and nearByBuildings[j][0] <= 2):
+			print("____","IND","____", stateScore)
+		if(nearByBuildings[j][1]==RES and nearByBuildings[j][0] <= 3):
 			stateScore = stateScore - 5
-	#		print("__________________________", TOTALSCORE)
+			print("____","RES","____", stateScore)
 	return stateScore
 #Res scoring
 #within 2 toxic -20
@@ -199,7 +199,7 @@ def populateSiteMap(siteMap):
 Matrix2 = numpy.zeros((6, 5))
 
 
-(UNBUILTMAP, iCount, cCount, rCount) = readFile("sample2.txt")
+(UNBUILTMAP, iCount, cCount, rCount) = readFile("sample_Ilya.txt")
 
 siteMap = copy.deepcopy(UNBUILTMAP)
 siteMap, buildingCost = populateSiteMap(siteMap)[0:2]
@@ -210,8 +210,8 @@ siteMap, buildingCost = populateSiteMap(siteMap)[0:2]
 # 2) Calculate building cost
 # 3) Calculate state score
 # 4) 
-calculateStateScore(siteMap)
-print(siteMap)
+calculateStateScore(UNBUILTMAP)
+print(UNBUILTMAP)
 print("\n")
 
 
