@@ -9,12 +9,11 @@ RES = 300
 TOXIC = 400
 SCENIC = 500
 
-DEBUG_GENETICS = 1
-### STILL TODO: WEIGHT THE RANDOM DRAW TO PREFER SAMPLES WITH BETTER FITNESS SCORES
+DEBUG_GENETICS = 0
 
 ## STRUCTS:
 # Named Tuple containing genetic search parameters.
-GeneticParams = namedtuple("GeneticParams", "iCount cCount rCount pMutate pCross nPartitions timeToRun k k2 numCull")
+GeneticParams = namedtuple("GeneticParams", "iCount cCount rCount pMutate pCross nTournament timeToRun k k2 numCull")
 
 # Class containing one map candidate.
 class GeneticChild:
@@ -144,7 +143,8 @@ def geneticStateSearch(originalMap,params):
 				tCreate = time.time() - initTime
 				lastGen.append(GeneticChild.fromRandom(originalMap,tCreate))
 				lastScores.append(lastGen[i].utilVal)
-			print 'End of first run:',len(lastScores)
+			if DEBUG_GENETICS:
+				print 'End of first run:',len(lastScores)
 			firstRun = False
 
 		# Rest of the generations:
@@ -208,27 +208,26 @@ def geneticStateSearch(originalMap,params):
 			# Crossover:
 			
 			for i in range(0,int(math.ceil((params.k-params.k2)/2))):
-				# draw random number to pick states.
-				### TODO: MAKE SOMEWHAT WEIGHTED.
-				# USING TOURNAMENT SELECTION
-				
+
+				# Using Tournament-based selection.			
 				# Find Parent 1
-				potentialInds = random.sample(range(0,params.k-params.numCull),k=params.nPartitions)
+				potentialInds = random.sample(range(0,params.k-params.numCull),k=params.nTournament)
 				zippedScores = zip(potentialInds,(lastScores_save[i] for i in potentialInds))
 				zippedScores.sort(key = lambda x:x[1])
-				indParent1 = zippedScores[params.nPartitions-1][0]	
+				indParent1 = zippedScores[params.nTournament-1][0]	
 
-				potentialInds = random.sample(range(0,params.k-params.numCull),k=params.nPartitions)
+                                # Find parent 2
+				potentialInds = random.sample(range(0,params.k-params.numCull),k=params.nTournament)
 				zippedScores = zip(potentialInds,(lastScores_save[i] for i in potentialInds))
 				zippedScores.sort(key = lambda x:x[1])
-				indParent2 = zippedScores[params.nPartitions-1][0]	
+				indParent2 = zippedScores[params.nTournament-1][0]	
 
-                                # If the second parent happesn to be the same as the first, repeat until it isnt.
+                                # If the second parent happens to be the same as the first, repeat draw until it isnt.
 				while indParent2 == indParent1:
-					potentialInds = random.sample(range(0,params.k-params.numCull),k=params.nPartitions)
+					potentialInds = random.sample(range(0,params.k-params.numCull),k=params.nTournament)
 					zippedScores = zip(potentialInds,(lastScores_save[i] for i in potentialInds))
 					zippedScores.sort(key = lambda x:x[1])
-					indParent2 = zippedScores[params.nPartitions-1][0]  
+					indParent2 = zippedScores[params.nTournament-1][0]  
 
 				#indParent1,indParent2 = random.sample(range(0,params.k-params.k2),2)
 
@@ -259,15 +258,16 @@ Part 2 genetic testing
 random.seed()
 pMutate = 0.06
 pCross = 0.5
-nSelectPartitions = 15
+nTournamentParticipants = 5#15 # A value of 1 here is effectively random sampling.
 timeToRun = 5
 k = 100
 k2 = 6 # As of now, k2 must be an even number greater than 0. Both 0 and odd numbers are edge cases that can be dealt with.
-numCull = 5 
-outputLoc = 'hw1p2_genetic.txt'
+numCull = 5
+inputLoc = 'sample1.txt'
+outputLoc = 'hw1p2_genetic_sample1.txt'
 
-originalMap,iCount,cCount,rCount = readFile('sample2.txt')
-paramsIn = GeneticParams(iCount,cCount,rCount,pMutate,pCross,nSelectPartitions,timeToRun,k,k2,numCull)
+originalMap,iCount,cCount,rCount = readFile(inputLoc)
+paramsIn = GeneticParams(iCount,cCount,rCount,pMutate,pCross,nTournamentParticipants,timeToRun,k,k2,numCull)
 result,ind = geneticStateSearch(originalMap,paramsIn)
 if DEBUG_GENETICS:
 	print 'Util: ',result.utilVal,' Time: ',result.timeFound,' Index: ',ind
