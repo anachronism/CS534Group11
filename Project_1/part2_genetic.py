@@ -213,7 +213,7 @@ def geneticStateSearch(originalMap,params):
 				currentGen.append(child1)
 				lastScores.append(child2.utilVal)
 				currentGen.append(child2)
-			# CHECK IF THIS COPY REDOES TIME	
+			
 			lastGen = currentGen[:]
 				
 
@@ -235,13 +235,15 @@ pMutate = 0.06
 pCross = 0.5
 timeToRun = 5
 k = 100
-k2 = 6
-numCull = 5
+k2 = 6 # As of now, k2 must be an even number greater than 0. Both 0 and odd numbers are edge cases that can be dealt with.
+numCull = 5 
+outputLoc = 'hw1p2_genetic.txt'
 
 originalMap,iCount,cCount,rCount = readFile('sample2.txt')
 paramsIn = GeneticParams(iCount,cCount,rCount,pMutate,pCross,timeToRun,k,k2,numCull)
-
 result,ind = geneticStateSearch(originalMap,paramsIn)
 if DEBUG_GENETICS:
 	print 'Util: ',result.utilVal,' Time: ',result.timeFound,' Index: ',ind
 	print result.map
+
+writeFile(outputLoc,result.utilVal,result.map,result.timeFound)
