@@ -2,6 +2,7 @@
 #recalculate 1 new board for each structure each board holds the cost of moving one structure to every empty square.
 import copy
 import numpy
+import time
 from random import *
 
 IND = 100
@@ -14,41 +15,44 @@ iCount =0
 cCount = 0
 rCount = 0
 UNBUILTMAP = []
-	
+BESTSTATE = []
+BESTSCORE = -10000	
 iList = []
 cList = []
 rList = []
-buildingList = []
 DEBUGSTATESCORE = 0
-
 #function takes in map(state) calculates score of the map
 def calculateStateScore(state):
+	global UNBUILTMAP
 	columns = len(state)
 	rows = len(state[0])
 	if DEBUGSTATESCORE:
 		print(state)
 		print("\n")
 	stateScore = 0
-	
+	buildScore = 0
 	for i in range(columns):
 		for j in range(rows):
 			#print(i,j)
 			if (state[i,j] == IND):
 				stateScore =  calcScoreForIND([i,j],state, stateScore)
+				buildScore = buildScore + UNBUILTMAP[i,j]
 				if DEBUGSTATESCORE:
 					print(stateScore)
 					print("100",i,j)
 			if (state[i,j] == COM):
 				stateScore = calcScoreForCOM([i,j],state, stateScore)
+				buildScore = buildScore + UNBUILTMAP[i,j]
 				if DEBUGSTATESCORE:
 					print(stateScore)
 					print("200", i,j)
 			if (state[i,j] == RES):
 				stateScore = calcScoreForRES([i,j],state, stateScore)
+				buildScore = buildScore + UNBUILTMAP[i,j]
 				if DEBUGSTATESCORE:
 					print(stateScore)
 					print("300",i,j)
-	return stateScore
+	return [stateScore, buildScore]
 	 
 #IND scoring
 #within 2 toxic -10
@@ -265,77 +269,173 @@ def getLocationsOfAllBuildings(state):
 	return buildingList
 
 
-def moveBuildingThroughMap(buildingList, state):
+def moveBuildingThroughMap(movingBuilding, State, bestscore):
+	state = copy.deepcopy(State)
 	columns = len(state)
 	rows = len(state[0])
-	originalState = copy.deepcopy(state)
-	print(state)
-	print("\n")
-	stateScore = 0
-	buildingNum = len(buildingList)-1			
-	count = 0
-	holdLastScore = calculateStateScore(state)
-		
-	for k in range(buildingNum):
-		count = count +1
-		print("___________________",count)
-		movingBuilding = buildingList[0]
-		i = movingBuilding[1]
-		j = movingBuilding[2]
-		state[i,j] = 0
-		bestState = copy.deepcopy(state)
-		print("holdScoreStart", holdLastScore)
-		for i in range(columns):
-			for j in range(rows):
-				if (state[i,j] < 10):
-					holdLocationValue = state[i,j]
-					state[i,j] = movingBuilding[0]
-					currentScore = calculateStateScore(state)
-					print(holdLastScore,currentScore)
-						
-					if (holdLastScore < currentScore):
-						bestState = copy.deepcopy(state)
-						holdLastScore = currentScore
-					state[i,j] = holdLocationValue
-		del buildingList[0]			
-	
-	print("BEST SCORE")
-	print(holdLastScore)
-	
-	print("BEST STATE")
-	print(bestState)
 
+	#orignal location of the building to be moved
+	orig_i = movingBuilding[1]
+	orig_j = movingBuilding[2]
+	holdI = movingBuilding[1]
+	holdJ = movingBuilding[2]
+	#bestState = copy.deepcopy(state)
+	
+	state[orig_i,orig_j] = UNBUILTMAP[orig_i,orig_j]
+
+
+	bestBuildingLocation = []
+	score = []
+	
+	for i in range(columns):
+		for j in range(rows):
+			if (state[i,j] < 100):
+				holdLocationValue = state[i,j]
+				state[i,j] = movingBuilding[0]
+				score = calculateStateScore(state)
+				currentScore = score[0] - score[1]
+					
+				if (currentScore > bestscore):
+					# bestState = copy.deepcopy(state)
+					# bestscore = currentScore
+					# BESTSCORE = bestscore
+					bestscore = currentScore
+					holdI = i
+					holdJ = j
+				state[i,j] = holdLocationValue
+	#bestState[holdI,holdJ]
+	state[holdI,holdJ] = movingbuilding[0]
+	# print("_____________i,j", holdI,holdJ)
+	# state[holdI, holdJ] = movingbuilding[0]
+	print("BEST SCORE_________________")
+	print(bestscore)
+	
+	print("BEST STATE___________________________")
+	print(state)
+
+	
+	return [state, bestscore]
+	
 '''
  START OF 'MAIN'
 '''
 
-Matrix2 = numpy.zeros((6, 5))
+
+# your code
+
+# (UNBUILTMAP, iCount, cCount, rCount) = readFile("sample2.txt")
+
+# siteMap = copy.deepcopy(UNBUILTMAP)
 
 
-(UNBUILTMAP, iCount, cCount, rCount) = readFile("sample_Ilya.txt")
+# [siteMap, buildingCost] = populateSiteMap(siteMap)[0:2]
+# BESTSTATE = copy.deepcopy(UNBUILTMAP)
 
-siteMap = copy.deepcopy(UNBUILTMAP)
+# buildingList = getLocationsOfAllBuildings(siteMap)
+# print("__________________________________________", len(buildingList))
+
+
+start_time = time.time()
+elapsed_time = time.time() - start_time
+
+#while (elapsed_time < 2):
+listofScores = []
+siteMap = []
+UNBUILTMAP = []
+holdScore = []
+buildingList = []
+best_Score = -10000
+
+(UNBUILTMAP, iCount, cCount, rCount) = readFile("sample2.txt")
+
+(siteMap, iCount, cCount, rCount) = readFile("bestValue.txt")
+
+print calculateStateScore(siteMap)
+100/0
+
+count = 0 
+
+(UNBUILTMAP, iCount, cCount, rCount) = readFile("sample2.txt")
+buildingList = []
+(siteMap, iCount, cCount, rCount) = readFile("sample2.txt")
 siteMap, buildingCost = populateSiteMap(siteMap)[0:2]
+BESTSTATE = copy.deepcopy(siteMap)
+holdScore = calculateStateScore(siteMap)
+BESTSCORE = holdScore[0] - holdScore[1]
+buildingList = getLocationsOfAllBuildings(siteMap)
+	
+
+elapsed_time = time.time() - start_time
+
+while (elapsed_time < 5):
+	elapsed_time = time.time() - start_time
+	count = count + 1
+	# count = count +1
+	# if (len(buildingList) > 10):
+	# 	print(len(buildingList))
+	# 	print "\n"
+	# 	100/0
+	for i in range(len(buildingList)):
+		movingbuilding = buildingList[i]
+		[siteMap,best_Score] = moveBuildingThroughMap(movingbuilding, siteMap, best_Score)
+		# print "\n"
+		# print "\n"
+		# print best_Score
+		# print "\n"
+		# print calculateStateScore(siteMap)
+		listofScores.append(best_Score)
+	if(best_Score > BESTSCORE):
+		BESTSTATE = []
+		BESTSTATE = copy.deepcopy(siteMap)
+		BESTSCORE = best_Score
+	
+	buildingList = []
+	(siteMap, iCount, cCount, rCount) = readFile("sample2.txt")
+	siteMap, buildingCost = populateSiteMap(siteMap)[0:2]
+	buildingList = getLocationsOfAllBuildings(siteMap)
+	
+listofScores.append(best_Score)
+print(listofScores)
+print siteMap
+print "\n"
+print best_Score	
+
+columns = len(BESTSTATE)
+rows = len(BESTSTATE[0])
+
+f1 = open('bestValue.txt', 'w')
+f1.write(str(iCount) + "\n")
+f1.write(str(cCount)+ "\n")
+f1.write(str(rCount) + "\n")
+
+for i in range(columns):
+	for j in range(rows):
+		if (j != (rows-1)):
+			f1.write(str(BESTSTATE[i,j]) + ",")
+		else:
+			f1.write(str(BESTSTATE[i,j]) + "\n")
+f1.close()	
+#test = 1/0
+
 # While loop logic
 #===================
 # 1) Figure out potential state.
 # 2) Calculate building cost
 # 3) Calculate state score
 # 4) 
-print("INITIAL STATE")
-print(UNBUILTMAP)
-print("\n")
-print("INITIAL SCORE", calculateStateScore(UNBUILTMAP))
+# print("INITIAL STATE")
+# print(UNBUILTMAP)
+# print("\n")
+# print("INITIAL SCORE", calculateStateScore(UNBUILTMAP))
 #print(UNBUILTMAP)
 #print("\n")
 
 
-buildingList = getLocationsOfAllBuildings(UNBUILTMAP)
+#[bestState, buildingList, buildingNum, holdLastScore] =  moveBuildingThroughMap(buildingList, UNBUILTMAP)
+#[bestState, buildingList, buildingNum, holdLastScore] =  moveBuildingThroughMap(buildingList, UNBUILTMAP)
 
-moveBuildingThroughMap(buildingList, UNBUILTMAP)
-
-print("INITIAL STATE")
-print(UNBUILTMAP)
+# print("INITIAL STATE")
+# print(UNBUILTMAP)
 
 
 #calculateStateScore(siteMap)    

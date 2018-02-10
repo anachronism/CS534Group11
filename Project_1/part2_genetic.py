@@ -22,7 +22,7 @@ class GeneticChild:
 		self.buildCost = buildCost
 		self.locations = locations
 		self.timeFound = timeFound
-		self.utilVal = calculateStateScore(self.map) - self.buildCost
+		self.utilVal = calculateStateScore(self.map)[] - self.buildCost
 
 	# Mutliple inits, depending on if a list of locations is provided or not.
 	@classmethod
