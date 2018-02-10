@@ -339,7 +339,7 @@ start_time = time.time()
 elapsed_time = time.time() - start_time
 
 cycleCount = 0 
-numberOfRestarts = 25
+numberOfRestarts = 1000
 
 
 #while (elapsed_time < 2):
