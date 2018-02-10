@@ -27,7 +27,7 @@ DEBUGSTATESCORE = 0
 #function takes in map(state) calculates score of the map
 DEBUG_GENETICS = 0
 
-algRun = 'HillClimb'#'Genetic'
+algRun = 'Genetic'
 inputLoc = 'sample2.txt'
 timeToRun = 1
 seed() # Seed RNG
@@ -380,6 +380,13 @@ def moveBuildingThroughMap(movingBuilding, State, bestscore):
 
 
 # Main GA algorithms
+# Implementation of selection:
+def tournamentSelection(scores, params):
+	potentialInds = sample(range(0,params.k-params.numCull),k=params.nTournament)
+	zippedScores = zip(potentialInds,(scores[i] for i in potentialInds))
+	zippedScores.sort(key = lambda x:x[1])
+	return zippedScores[params.nTournament-1][0]
+
 def runCrossover(parent1, parent2, mapIn,params,initTime):
 	# Combine the two randomly.
 	locations_1 = []
@@ -534,25 +541,13 @@ def geneticStateSearch(originalMap,params):
 
 				# Using Tournament-based selection.			
 				# Find Parent 1
-				potentialInds = sample(range(0,params.k-params.numCull),k=params.nTournament)
-				zippedScores = zip(potentialInds,(lastScores_save[i] for i in potentialInds))
-				zippedScores.sort(key = lambda x:x[1])
-				indParent1 = zippedScores[params.nTournament-1][0]	
-
+				indParent1 = tournamentSelection(lastScores_save,params)
+ 
                 # Find parent 2
-				potentialInds = sample(range(0,params.k-params.numCull),k=params.nTournament)
-				zippedScores = zip(potentialInds,(lastScores_save[i] for i in potentialInds))
-				zippedScores.sort(key = lambda x:x[1])
-				indParent2 = zippedScores[params.nTournament-1][0]	
-
+				indParent2 = tournamentSelection(lastScores_save,params)
                 # If the second parent happens to be the same as the first, repeat draw until it isnt.
 				while indParent2 == indParent1:
-					potentialInds = sample(range(0,params.k-params.numCull),k=params.nTournament)
-					zippedScores = zip(potentialInds,(lastScores_save[i] for i in potentialInds))
-					zippedScores.sort(key = lambda x:x[1])
-					indParent2 = zippedScores[params.nTournament-1][0]  
-
-				#indParent1,indParent2 = random.sample(range(0,params.k-params.k2),2)
+					indParent2 = tournamentSelection(lastScores_save,params)
 
 				child1, child2 = runCrossover(lastGen[indParent1],lastGen[indParent2],originalMap,params,initTime)
 				lastScores.append(child1.utilVal)
