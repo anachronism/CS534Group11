@@ -1,9 +1,11 @@
 #start by placing all structures randomly on the board
 #recalculate 1 new board for each structure each board holds the cost of moving one structure to every empty square.
-import copy
+import copy,time,math
 import numpy
-import time
 from random import *
+from collections import namedtuple
+
+
 
 IND = 100
 COM = 200
@@ -22,6 +24,255 @@ cList = []
 rList = []
 DEBUGSTATESCORE = 0
 #function takes in map(state) calculates score of the map
+
+
+DEBUG_GENETICS = 1
+
+## STRUCTS:
+# Named Tuple containing genetic search parameters.
+GeneticParams = namedtuple("GeneticParams", "iCount cCount rCount pMutate pCross nTournament timeToRun k k2 numCull")
+
+# Class containing one map candidate.
+class GeneticChild:
+	def __init__(self, mapIn,buildCost,locations,timeFound):
+		self.map = mapIn
+		#self.buildCost = buildCost
+		self.locations = locations
+		self.timeFound = timeFound
+		#print self.locations
+		self.utilVal = calculateStateScore(self.map)[0] - self.buildCost
+	# Mutliple inits, depending on if a list of locations is provided or not.
+	@classmethod
+	def fromRandom(cls, mapIn, timeFound):
+     	# Can maybe skip this first step, and just feed mapIn into it.
+		cls.map =  copy.deepcopy(mapIn)
+		cls.timeFound = copy.deepcopy(timeFound)
+		cls.map,cls.buildCost,cls.locations = populateSiteMap(cls.map)
+		#print cls.buildCost
+		return cls(cls.map,cls.buildCost,cls.locations,cls.timeFound)
+
+	@classmethod
+	def fromLocations(cls, mapIn, locations,timeFound):
+		cls.map = copy.deepcopy(mapIn)
+		cls.locations = locations
+		#print cls.locations
+		cls.timeFound = copy.deepcopy(timeFound)
+		cls.map, cls.buildCost = changeSiteMap(cls.map,cls.locations)
+		#\print cls.buildCost
+		return cls(cls.map,cls.buildCost,cls.locations,cls.timeFound)
+
+
+## UTILITY FUNCTIONS
+def checkValidLocation(potentialLoc,mapIn,listInvalid):
+	if potentialLoc in listInvalid:
+		return False
+	elif mapIn[potentialLoc[0],potentialLoc[1]] == TOXIC:
+		return False
+	else:
+		return True
+
+def generateRandomLocation(mapIn,listInvalid):
+	f_validLocation = False
+	while not f_validLocation:
+		randLoc = [randint(0,mapIn.shape[0]-1),randint(0,mapIn.shape[1]-1)]
+		f_validLocation = checkValidLocation(randLoc,mapIn,listInvalid)
+	return randLoc
+
+## MAIN FUNCTIONS
+def runCrossover(parent1, parent2, mapIn,params,initTime):
+	# Combine the two randomly.
+	locations_1 = []
+	locations_2 = []
+
+	for i in range(0,len(parent1.locations)):
+		# Check if the location will mutate for either child, and picking parents.  
+		randMutate1 = random()
+		randMutate2 = random()
+		randParent = random()
+
+		# Evaluate the location for the first child.
+		# If it should mutate, then add a random location.
+		if randMutate1 > 1 - params.pMutate:
+			locations_1.append(generateRandomLocation(mapIn,locations_1))
+		# Else, if parent 1 is randomly chosen, make sure that the location it has is 
+		# Unoccupied, and then add it. Otherwise, just mutate.
+		else:	
+			if randParent < params.pCross:
+				if checkValidLocation(parent1.locations[i],mapIn,locations_1):
+					locations_1.append(parent1.locations[i])
+				else:
+					locations_1.append(generateRandomLocation(mapIn,locations_1))
+
+			else:
+				if checkValidLocation(parent2.locations[i],mapIn,locations_1):
+					locations_1.append(parent2.locations[i])
+				else:
+					locations_1.append(generateRandomLocation(mapIn,locations_1))
+
+		# Evaluate the location for the second child.
+		# If it should mutate, then add a random location.
+		if randMutate2 > 1 - params.pMutate:
+			locations_2.append(generateRandomLocation(mapIn,locations_2))
+		# Else, if parent 1 is randomly chosen, make sure that the location it has is 
+		# Unoccupied, and then add it. Otherwise, just mutate.
+		else:	
+			if randParent < params.pCross:
+				if checkValidLocation(parent2.locations[i],mapIn,locations_2):
+					locations_2.append(parent2.locations[i])
+				else:
+					locations_2.append(generateRandomLocation(mapIn,locations_2))
+
+			else:
+				if checkValidLocation(parent1.locations[i],mapIn,locations_2):
+					locations_2.append(parent1.locations[i])
+				else:
+					locations_2.append(generateRandomLocation(mapIn,locations_2))
+
+	# Now that both lists are populated, make new classes.
+	tCreate = time.time() - initTime
+	child1 = GeneticChild.fromLocations(mapIn,locations_1,tCreate)
+	tCreate = time.time() - initTime
+	child2 = GeneticChild.fromLocations(mapIn, locations_2,tCreate)
+	
+	return child1, child2
+
+
+def geneticStateSearch(originalMap,params):
+   
+	# In the current state, these values aren't used, since the count is kept globally.
+	# However, in the case of extrapolation of this code, it would be useful to have these counts
+	# stored.
+	iCount = params.iCount
+	cCount = params.cCount
+	rCount = params.rCount
+
+	firstRun = True
+	timeRun = 0.0
+	initTime = time.time()
+
+	lastGen = []
+	currentGen =[]
+	lastScores = []
+
+	while timeRun < params.timeToRun:
+
+		# First Population: Generate random states and save. 		
+		if firstRun == True:
+			# Generate  k states randomly	
+			for i in range(0,params.k):
+				tCreate = time.time() - initTime
+				lastGen.append(GeneticChild.fromRandom(originalMap,tCreate))
+				lastScores.append(lastGen[i].utilVal)
+			if DEBUG_GENETICS:
+				print 'End of first run:',len(lastScores)
+			firstRun = False
+
+		# Rest of the generations:
+		else:
+			currentGen = []
+			toPop = []
+
+			# Sort a list of the last scores, and save the indices that they correspond to.
+			if DEBUG_GENETICS:
+				print lastScores
+			zippedScores = zip(range(0,params.k),lastScores)
+			lastScores_save = lastScores[:]
+			zippedScores.sort(key=lambda x: x[1])
+			lastScores = []
+
+			# Elitism: Save the k2 most fit states.	
+			lastScores_elite = lastScores_save[0:params.k2]
+			inds_elite = range(0,params.k2)
+			
+			for i in range(1,params.k2+1):
+				# With this sort, the objects that are first looked at have the highest
+				# index, which aren't the ones that were saved. If it has the same fitness value as
+				# the elite values, don't update. Otherwise, do update. 
+
+				ind_elite = (zippedScores[params.k-i])[0]
+				greaterThanElite = lastScores_elite < lastScores_save[ind_elite]
+				# If it's an index within the elite, just copy over.
+				# This may copy a wrong child eventually, but that's not a bad fail case.
+				# It has potential to copy the best result multiple times. 
+				if (ind_elite < k2):
+					lastScores.append((zippedScores[params.k-i])[1])
+					currentGen.append(lastGen[ind_elite])
+                                # If it's greater than any of the elements that was saved, save it instead. 
+				elif (type(greaterThanElite) != bool) and (any(greaterThanElite)):
+					if DEBUG_GENETICS:
+						print "replacing"
+					lastScores.append((zippedScores[params.k-i])[1])
+					currentGen.append(lastGen[ind_elite])
+
+                                # Else, carry over best elite value.                
+				else:
+					lastScores.append(lastScores_elite[0])
+					currentGen.append(lastGen[inds_elite[0]])
+					del inds_elite[0]
+					del lastScores_elite[0]
+				
+			if DEBUG_GENETICS:
+				print 'Time Found: ',currentGen[0].timeFound
+                        
+			# Culling: remove the N least fit states.
+			for i in range(0,params.numCull):
+				toPop.append((zippedScores[i])[0])
+			for index in sorted(toPop,reverse=True):
+				del lastGen[index]
+				del lastScores_save[index]
+
+			# Recreate zipped list for crossover
+			zippedScores = zip(range(0,params.k-params.numCull),lastScores_save)
+			zippedScores.sort(key=lambda x:x[1])
+
+			# Crossover:
+			
+			for i in range(0,int(math.ceil((params.k-params.k2)/2))):
+
+				# Using Tournament-based selection.			
+				# Find Parent 1
+				potentialInds = sample(range(0,params.k-params.numCull),k=params.nTournament)
+				zippedScores = zip(potentialInds,(lastScores_save[i] for i in potentialInds))
+				zippedScores.sort(key = lambda x:x[1])
+				indParent1 = zippedScores[params.nTournament-1][0]	
+
+                                # Find parent 2
+				potentialInds = sample(range(0,params.k-params.numCull),k=params.nTournament)
+				zippedScores = zip(potentialInds,(lastScores_save[i] for i in potentialInds))
+				zippedScores.sort(key = lambda x:x[1])
+				indParent2 = zippedScores[params.nTournament-1][0]	
+
+                                # If the second parent happens to be the same as the first, repeat draw until it isnt.
+				while indParent2 == indParent1:
+					potentialInds = sample(range(0,params.k-params.numCull),k=params.nTournament)
+					zippedScores = zip(potentialInds,(lastScores_save[i] for i in potentialInds))
+					zippedScores.sort(key = lambda x:x[1])
+					indParent2 = zippedScores[params.nTournament-1][0]  
+
+				#indParent1,indParent2 = random.sample(range(0,params.k-params.k2),2)
+
+				child1, child2 = runCrossover(lastGen[indParent1],lastGen[indParent2],originalMap,params,initTime)
+				lastScores.append(child1.utilVal)
+				currentGen.append(child1)
+				lastScores.append(child2.utilVal)
+				currentGen.append(child2)
+
+			# Copy created children to become the next old generation
+			lastGen = currentGen[:]
+				
+		# Update the current time
+		timeRun = time.time() - initTime
+
+	# If the last generation made a result better than the saved best result, return that.	
+	zippedScores = zip(range(0,params.k),lastScores)
+	zippedScores.sort(key=lambda x: x[1])
+	if (zippedScores[params.k-1])[1] > lastScores[0]:
+		return lastGen[(zippedScores[params.k-1])[0]],(zippedScores[params.k-1])[0]
+	# Otherwise, just return best saved result.
+	else:
+		return lastGen[0],0
+
+
 def calculateStateScore(state):
 	global UNBUILTMAP
 	columns = len(state)
@@ -37,19 +288,19 @@ def calculateStateScore(state):
 			#print(i,j)
 			if (state[i,j] == IND):
 				stateScore =  calcScoreForIND([i,j],state, stateScore)
-				buildScore = buildScore + UNBUILTMAP[i,j]
+				buildScore = buildScore + UNBUILTMAP[i][j]
 				if DEBUGSTATESCORE:
 					print(stateScore)
 					print("100",i,j)
 			if (state[i,j] == COM):
 				stateScore = calcScoreForCOM([i,j],state, stateScore)
-				buildScore = buildScore + UNBUILTMAP[i,j]
+				buildScore = buildScore + UNBUILTMAP[i][j]
 				if DEBUGSTATESCORE:
 					print(stateScore)
 					print("200", i,j)
 			if (state[i,j] == RES):
 				stateScore = calcScoreForRES([i,j],state, stateScore)
-				buildScore = buildScore + UNBUILTMAP[i,j]
+				buildScore = buildScore + UNBUILTMAP[i][j]
 				if DEBUGSTATESCORE:
 					print(stateScore)
 					print("300",i,j)
@@ -333,8 +584,43 @@ def moveBuildingThroughMap(movingBuilding, State, bestscore):
 
 # buildingList = getLocationsOfAllBuildings(siteMap)
 # print("__________________________________________", len(buildingList))
+algRun = 'Genetic'
+iCount = None
+cCount = None
+rCount = None
+if algRun == 'Genetic':
+	pMutate = 0.06
+	pCross = 0.5
+	nTournamentParticipants = 5#15 # A value of 1 here is effectively random sampling.
+	timeToRun = 0.5
+	k = 100
+	k2 = 6 # As of now, k2 must be an even number greater than 0. Both 0 and odd numbers are edge cases that can be dealt with.
+	numCull = 5
+	inputLoc = 'sample1.txt'
+	outputLoc = 'hw1p2_genetic_sample1.txt'
 
 
+	originalMap,iCount,cCount,rCount = readFile(inputLoc)
+	UNBUILTMAP = originalMap
+	paramsIn = GeneticParams(iCount,cCount,rCount,pMutate,pCross,nTournamentParticipants,timeToRun,k,k2,numCull)
+	result,ind = geneticStateSearch(originalMap,paramsIn)
+	if DEBUG_GENETICS:
+		print 'Util: ',result.utilVal,' Time: ',result.timeFound,' Index: ',ind
+		print result.map
+
+	writeFile(outputLoc,result.utilVal,result.map,result.timeFound)
+
+	pass
+
+elif algRun == 'HillClimb':
+	start_time = time.time()
+	elapsed_time = time.time() - start_time
+
+	cycleCount = 0 
+	numberOfRestarts = 25
+	#numberOfRestarts = 1e6
+
+<<<<<<< HEAD
 start_time = time.time()
 elapsed_time = time.time() - start_time
 
@@ -351,90 +637,103 @@ buildingList = []
 best_Score = -10000
 
 # (UNBUILTMAP, iCount, cCount, rCount) = readFile("sample2.txt")
+=======
+	#while (elapsed_time < 2):
+	listofScores = []
+	siteMap = []
+	UNBUILTMAP = []
+	holdScore = []
+	buildingList = []
+	best_Score = -10000
+>>>>>>> fb437ed78bc0c6a4a3a7258d3882c1b63249354d
 
-# (siteMap, iCount, cCount, rCount) = readFile("bestValue.txt")
+	# (UNBUILTMAP, iCount, cCount, rCount) = readFile("sample2.txt")
 
-# print calculateStateScore(siteMap)
-# 100/0
+	# (siteMap, iCount, cCount, rCount) = readFile("bestValue.txt")
 
-fileLoc = "sample1.txt"
-(UNBUILTMAP, iCount, cCount, rCount) = readFile(fileLoc)
-buildingList = []
-(siteMap, iCount, cCount, rCount) = readFile(fileLoc)
-siteMap, buildingCost = populateSiteMap(siteMap)[0:2]
-BESTSTATE = copy.deepcopy(siteMap)
-holdScore = calculateStateScore(siteMap)
-BESTSCORE = holdScore[0] - holdScore[1]
-buildingList = getLocationsOfAllBuildings(siteMap)
-	
+	# print calculateStateScore(siteMap)
+	# 100/0
 
-while (cycleCount < numberOfRestarts):
-#while (elapsed_time < 1):
-	cycleCount = cycleCount +1
-	elapsed_time = time.time() - start_time
-	for i in range(len(buildingList)):
-		movingbuilding = buildingList[i]
-		[siteMap,best_Score] = moveBuildingThroughMap(movingbuilding, siteMap, best_Score)
-		listofScores.append(best_Score)
-	if(best_Score > BESTSCORE):
-		BESTSTATE = []
-		BESTSTATE = copy.deepcopy(siteMap)
-		BESTSCORE = best_Score
-		bestTime = elapsed_time
+	fileLoc = "sample1.txt"
+	seed() # Seed RNG
+	(UNBUILTMAP, iCount, cCount, rCount) = readFile(fileLoc)
 	buildingList = []
 	(siteMap, iCount, cCount, rCount) = readFile(fileLoc)
 	siteMap, buildingCost = populateSiteMap(siteMap)[0:2]
+	BESTSTATE = copy.deepcopy(siteMap)
+	holdScore = calculateStateScore(siteMap)
+	BESTSCORE = holdScore[0] - holdScore[1]
 	buildingList = getLocationsOfAllBuildings(siteMap)
-	
-print(listofScores)
-print BESTSTATE
-print "\n"
-print BESTSCORE	
-print "\n"
-print bestTime
-columns = len(BESTSTATE)
-rows = len(BESTSTATE[0])
+		
 
-f1 = open('bestValue.txt', 'w')
-f1.write(str(iCount) + "\n")
-f1.write(str(cCount)+ "\n")
-f1.write(str(rCount) + "\n")
+	while (cycleCount < numberOfRestarts):
+	#while (elapsed_time < 1):
+		cycleCount = cycleCount +1
+		elapsed_time = time.time() - start_time
+		for i in range(len(buildingList)):
+			movingbuilding = buildingList[i]
+			[siteMap,best_Score] = moveBuildingThroughMap(movingbuilding, siteMap, best_Score)
+			listofScores.append(best_Score)
+		if(best_Score > BESTSCORE):
+			BESTSTATE = []
+			BESTSTATE = copy.deepcopy(siteMap)
+			BESTSCORE = best_Score
+			bestTime = elapsed_time
+		buildingList = []
+		(siteMap, iCount, cCount, rCount) = readFile(fileLoc)
+		siteMap, buildingCost = populateSiteMap(siteMap)[0:2]
+		buildingList = getLocationsOfAllBuildings(siteMap)
+		
+	print(listofScores)
+	print BESTSTATE
+	print "\n"
+	print BESTSCORE	
+	print "\n"
+	print bestTime
+	columns = len(BESTSTATE)
+	rows = len(BESTSTATE[0])
 
-for i in range(columns):
-	for j in range(rows):
-		if (j != (rows-1)):
-			f1.write(str(BESTSTATE[i,j]) + ",")
-		else:
-			f1.write(str(BESTSTATE[i,j]) + "\n")
-f1.close()	
-outputLoc = "outputFile.txt"
+	f1 = open('bestValue.txt', 'w')
+	f1.write(str(iCount) + "\n")
+	f1.write(str(cCount)+ "\n")
+	f1.write(str(rCount) + "\n")
 
-writeFile(outputLoc,BESTSCORE, BESTSTATE,bestTime)
+	for i in range(columns):
+		for j in range(rows):
+			if (j != (rows-1)):
+				f1.write(str(BESTSTATE[i,j]) + ",")
+			else:
+				f1.write(str(BESTSTATE[i,j]) + "\n")
+	f1.close()	
+	outputLoc = "outputFile.txt"
 
-#test = 1/0
+	writeFile(outputLoc,BESTSCORE, BESTSTATE,bestTime)
 
-# While loop logic
-#===================
-# 1) Figure out potential state.
-# 2) Calculate building cost
-# 3) Calculate state score
-# 4) 
-# print("INITIAL STATE")
-# print(UNBUILTMAP)
-# print("\n")
-# print("INITIAL SCORE", calculateStateScore(UNBUILTMAP))
-#print(UNBUILTMAP)
-#print("\n")
+	#test = 1/0
 
-
-#[bestState, buildingList, buildingNum, holdLastScore] =  moveBuildingThroughMap(buildingList, UNBUILTMAP)
-#[bestState, buildingList, buildingNum, holdLastScore] =  moveBuildingThroughMap(buildingList, UNBUILTMAP)
-
-# print("INITIAL STATE")
-# print(UNBUILTMAP)
+	# While loop logic
+	#===================
+	# 1) Figure out potential state.
+	# 2) Calculate building cost
+	# 3) Calculate state score
+	# 4) 
+	# print("INITIAL STATE")
+	# print(UNBUILTMAP)
+	# print("\n")
+	# print("INITIAL SCORE", calculateStateScore(UNBUILTMAP))
+	#print(UNBUILTMAP)
+	#print("\n")
 
 
-#calculateStateScore(siteMap)    
+	#[bestState, buildingList, buildingNum, holdLastScore] =  moveBuildingThroughMap(buildingList, UNBUILTMAP)
+	#[bestState, buildingList, buildingNum, holdLastScore] =  moveBuildingThroughMap(buildingList, UNBUILTMAP)
+
+	# print("INITIAL STATE")
+	# print(UNBUILTMAP)
+
+
+	#calculateStateScore(siteMap)    
+
 
 
 
