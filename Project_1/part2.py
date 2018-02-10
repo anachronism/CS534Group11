@@ -5,28 +5,27 @@ import numpy
 from random import *
 from collections import namedtuple
 
-
-
 IND = 100
 COM = 200
 RES = 300
 TOXIC = 400
 SCENIC = 500
+
 TOTALSCORE = 0
 iCount =0
 cCount = 0
 rCount = 0
+
 UNBUILTMAP = []
 BESTSTATE = []
 BESTSCORE = -10000	
 iList = []
 cList = []
 rList = []
+
 DEBUGSTATESCORE = 0
 #function takes in map(state) calculates score of the map
-
-
-DEBUG_GENETICS = 1
+DEBUG_GENETICS = 0
 
 ## STRUCTS:
 # Named Tuple containing genetic search parameters.
@@ -585,9 +584,9 @@ def moveBuildingThroughMap(movingBuilding, State, bestscore):
 # buildingList = getLocationsOfAllBuildings(siteMap)
 # print("__________________________________________", len(buildingList))
 algRun = 'Genetic'
-iCount = None
-cCount = None
-rCount = None
+inputLoc = 'sample1.txt'
+seed() # Seed RNG
+
 if algRun == 'Genetic':
 	pMutate = 0.06
 	pCross = 0.5
@@ -596,7 +595,6 @@ if algRun == 'Genetic':
 	k = 100
 	k2 = 6 # As of now, k2 must be an even number greater than 0. Both 0 and odd numbers are edge cases that can be dealt with.
 	numCull = 5
-	inputLoc = 'sample1.txt'
 	outputLoc = 'hw1p2_genetic_sample1.txt'
 
 
@@ -644,11 +642,9 @@ elif algRun == 'HillClimb':
 	# print calculateStateScore(siteMap)
 	# 100/0
 
-	fileLoc = "sample1.txt"
-	seed() # Seed RNG
-	(UNBUILTMAP, iCount, cCount, rCount) = readFile(fileLoc)
+	(UNBUILTMAP, iCount, cCount, rCount) = readFile(inputLoc)
 	buildingList = []
-	(siteMap, iCount, cCount, rCount) = readFile(fileLoc)
+	(siteMap, iCount, cCount, rCount) = readFile(inputLoc)
 	siteMap, buildingCost = populateSiteMap(siteMap)[0:2]
 	BESTSTATE = copy.deepcopy(siteMap)
 	holdScore = calculateStateScore(siteMap)

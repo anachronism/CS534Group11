@@ -1,5 +1,5 @@
 Score achieved: 9
-Time solution was found: 0.03 Seconds 
+Time solution was found: 0.05 Seconds 
  X  1  2  I 
  3  4  S  3 
  6  R  C  3 
