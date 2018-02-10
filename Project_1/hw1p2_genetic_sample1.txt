@@ -1,5 +1,5 @@
-Score achieved: 18
-Time solution was found: 0.85 Seconds 
- X  1  2  I 
- 3  4  S  C 
- 6  C  R  R 
+Score achieved: 0
+Time solution was found: 0.00 Seconds 
+ X  1  2  4 
+ 3  4  S  3 
+ 6  0  2  3 
