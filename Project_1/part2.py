@@ -26,6 +26,7 @@ def calculateStateScore(state):
 	global UNBUILTMAP
 	columns = len(state)
 	rows = len(state[0])
+
 	if DEBUGSTATESCORE:
 		print(state)
 		print("\n")
@@ -356,9 +357,10 @@ best_Score = -10000
 # print calculateStateScore(siteMap)
 # 100/0
 
-(UNBUILTMAP, iCount, cCount, rCount) = readFile("sample2.txt")
+fileLoc = "sample1.txt"
+(UNBUILTMAP, iCount, cCount, rCount) = readFile(fileLoc)
 buildingList = []
-(siteMap, iCount, cCount, rCount) = readFile("sample2.txt")
+(siteMap, iCount, cCount, rCount) = readFile(fileLoc)
 siteMap, buildingCost = populateSiteMap(siteMap)[0:2]
 BESTSTATE = copy.deepcopy(siteMap)
 holdScore = calculateStateScore(siteMap)
@@ -380,7 +382,7 @@ while (cycleCount < numberOfRestarts):
 		BESTSCORE = best_Score
 		bestTime = elapsed_time
 	buildingList = []
-	(siteMap, iCount, cCount, rCount) = readFile("sample2.txt")
+	(siteMap, iCount, cCount, rCount) = readFile(fileLoc)
 	siteMap, buildingCost = populateSiteMap(siteMap)[0:2]
 	buildingList = getLocationsOfAllBuildings(siteMap)
 	
@@ -408,6 +410,7 @@ f1.close()
 outputLoc = "outputFile.txt"
 
 writeFile(outputLoc,BESTSCORE, BESTSTATE,bestTime)
+
 #test = 1/0
 
 # While loop logic
