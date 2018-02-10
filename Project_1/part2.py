@@ -27,6 +27,11 @@ DEBUGSTATESCORE = 0
 #function takes in map(state) calculates score of the map
 DEBUG_GENETICS = 0
 
+algRun = 'HillClimb'#'Genetic'
+inputLoc = 'sample2.txt'
+timeToRun = 1
+seed() # Seed RNG
+
 ## STRUCTS:
 # Named Tuple containing genetic search parameters.
 GeneticParams = namedtuple("GeneticParams", "iCount cCount rCount pMutate pCross nTournament timeToRun k k2 numCull")
@@ -416,7 +421,7 @@ def readFile(fileLoc):
 def writeFile(fileLoc, score, mapIn, timeFound):
 	with open(fileLoc,'w') as f:
 		f.write('Score achieved: '+ str(score) +'\n')
-		f.write('Time solution was found: %.2f Seconds \n'%+ timeFound)
+		f.write('Time solution was found: %.6f Seconds \n'%+ timeFound)
 		for row in range(0,mapIn.shape[0]):
 			for col in range(0,mapIn.shape[1]):
 				if mapIn[row,col] == IND:
@@ -570,33 +575,14 @@ def moveBuildingThroughMap(movingBuilding, State, bestscore):
  START OF 'MAIN'
 '''
 
-
-# your code
-
-# (UNBUILTMAP, iCount, cCount, rCount) = readFile("sample2.txt")
-
-# siteMap = copy.deepcopy(UNBUILTMAP)
-
-
-# [siteMap, buildingCost] = populateSiteMap(siteMap)[0:2]
-# BESTSTATE = copy.deepcopy(UNBUILTMAP)
-
-# buildingList = getLocationsOfAllBuildings(siteMap)
-# print("__________________________________________", len(buildingList))
-algRun = 'Genetic'
-inputLoc = 'sample1.txt'
-seed() # Seed RNG
-
 if algRun == 'Genetic':
 	pMutate = 0.06
 	pCross = 0.5
 	nTournamentParticipants = 5#15 # A value of 1 here is effectively random sampling.
-	timeToRun = 0.5
 	k = 100
 	k2 = 6 # As of now, k2 must be an even number greater than 0. Both 0 and odd numbers are edge cases that can be dealt with.
 	numCull = 5
 	outputLoc = 'hw1p2_genetic_sample1.txt'
-
 
 	originalMap,iCount,cCount,rCount = readFile(inputLoc)
 	UNBUILTMAP = originalMap
@@ -652,8 +638,8 @@ elif algRun == 'HillClimb':
 	buildingList = getLocationsOfAllBuildings(siteMap)
 		
 
-	while (cycleCount < numberOfRestarts):
-	#while (elapsed_time < 1):
+	#while (cycleCount < numberOfRestarts):
+	while (elapsed_time < timeToRun):
 		cycleCount = cycleCount +1
 		elapsed_time = time.time() - start_time
 		for i in range(len(buildingList)):
@@ -666,7 +652,7 @@ elif algRun == 'HillClimb':
 			BESTSCORE = best_Score
 			bestTime = elapsed_time
 		buildingList = []
-		(siteMap, iCount, cCount, rCount) = readFile(fileLoc)
+		(siteMap, iCount, cCount, rCount) = readFile(inputLoc)
 		siteMap, buildingCost = populateSiteMap(siteMap)[0:2]
 		buildingList = getLocationsOfAllBuildings(siteMap)
 		
@@ -692,7 +678,7 @@ elif algRun == 'HillClimb':
 				f1.write(str(BESTSTATE[i,j]) + "\n")
 	f1.close()	
 	outputLoc = "outputFile.txt"
-
+	print bestTime
 	writeFile(outputLoc,BESTSCORE, BESTSTATE,bestTime)
 
 	#test = 1/0
