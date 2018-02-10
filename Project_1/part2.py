@@ -620,24 +620,15 @@ elif algRun == 'HillClimb':
 	numberOfRestarts = 25
 	#numberOfRestarts = 1e6
 
-<<<<<<< HEAD
-start_time = time.time()
-elapsed_time = time.time() - start_time
 
-cycleCount = 0 
-numberOfRestarts = 1000
+	start_time = time.time()
+	elapsed_time = time.time() - start_time
+
+	cycleCount = 0 
+	numberOfRestarts = 1000
 
 
-#while (elapsed_time < 2):
-listofScores = []
-siteMap = []
-UNBUILTMAP = []
-holdScore = []
-buildingList = []
-best_Score = -10000
 
-# (UNBUILTMAP, iCount, cCount, rCount) = readFile("sample2.txt")
-=======
 	#while (elapsed_time < 2):
 	listofScores = []
 	siteMap = []
@@ -645,7 +636,6 @@ best_Score = -10000
 	holdScore = []
 	buildingList = []
 	best_Score = -10000
->>>>>>> fb437ed78bc0c6a4a3a7258d3882c1b63249354d
 
 	# (UNBUILTMAP, iCount, cCount, rCount) = readFile("sample2.txt")
 
