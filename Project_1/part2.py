@@ -26,7 +26,7 @@ DEBUGSTATESCORE = 0
 #function takes in map(state) calculates score of the map
 
 
-DEBUG_GENETICS = 0
+DEBUG_GENETICS = 1
 
 ## STRUCTS:
 # Named Tuple containing genetic search parameters.
@@ -74,7 +74,7 @@ def checkValidLocation(potentialLoc,mapIn,listInvalid):
 def generateRandomLocation(mapIn,listInvalid):
 	f_validLocation = False
 	while not f_validLocation:
-		randLoc = [random.randint(0,mapIn.shape[0]-1),random.randint(0,mapIn.shape[1]-1)]
+		randLoc = [randint(0,mapIn.shape[0]-1),randint(0,mapIn.shape[1]-1)]
 		f_validLocation = checkValidLocation(randLoc,mapIn,listInvalid)
 	return randLoc
 
@@ -86,9 +86,9 @@ def runCrossover(parent1, parent2, mapIn,params,initTime):
 
 	for i in range(0,len(parent1.locations)):
 		# Check if the location will mutate for either child, and picking parents.  
-		randMutate1 = random.random()
-		randMutate2 = random.random()
-		randParent = random.random()
+		randMutate1 = random()
+		randMutate2 = random()
+		randParent = random()
 
 		# Evaluate the location for the first child.
 		# If it should mutate, then add a random location.
@@ -231,20 +231,20 @@ def geneticStateSearch(originalMap,params):
 
 				# Using Tournament-based selection.			
 				# Find Parent 1
-				potentialInds = random.sample(range(0,params.k-params.numCull),k=params.nTournament)
+				potentialInds = sample(range(0,params.k-params.numCull),k=params.nTournament)
 				zippedScores = zip(potentialInds,(lastScores_save[i] for i in potentialInds))
 				zippedScores.sort(key = lambda x:x[1])
 				indParent1 = zippedScores[params.nTournament-1][0]	
 
                                 # Find parent 2
-				potentialInds = random.sample(range(0,params.k-params.numCull),k=params.nTournament)
+				potentialInds = sample(range(0,params.k-params.numCull),k=params.nTournament)
 				zippedScores = zip(potentialInds,(lastScores_save[i] for i in potentialInds))
 				zippedScores.sort(key = lambda x:x[1])
 				indParent2 = zippedScores[params.nTournament-1][0]	
 
                                 # If the second parent happens to be the same as the first, repeat draw until it isnt.
 				while indParent2 == indParent1:
-					potentialInds = random.sample(range(0,params.k-params.numCull),k=params.nTournament)
+					potentialInds = sample(range(0,params.k-params.numCull),k=params.nTournament)
 					zippedScores = zip(potentialInds,(lastScores_save[i] for i in potentialInds))
 					zippedScores.sort(key = lambda x:x[1])
 					indParent2 = zippedScores[params.nTournament-1][0]  
@@ -288,19 +288,19 @@ def calculateStateScore(state):
 			#print(i,j)
 			if (state[i,j] == IND):
 				stateScore =  calcScoreForIND([i,j],state, stateScore)
-				buildScore = buildScore + UNBUILTMAP[i,j]
+				buildScore = buildScore + UNBUILTMAP[i][j]
 				if DEBUGSTATESCORE:
 					print(stateScore)
 					print("100",i,j)
 			if (state[i,j] == COM):
 				stateScore = calcScoreForCOM([i,j],state, stateScore)
-				buildScore = buildScore + UNBUILTMAP[i,j]
+				buildScore = buildScore + UNBUILTMAP[i][j]
 				if DEBUGSTATESCORE:
 					print(stateScore)
 					print("200", i,j)
 			if (state[i,j] == RES):
 				stateScore = calcScoreForRES([i,j],state, stateScore)
-				buildScore = buildScore + UNBUILTMAP[i,j]
+				buildScore = buildScore + UNBUILTMAP[i][j]
 				if DEBUGSTATESCORE:
 					print(stateScore)
 					print("300",i,j)
@@ -599,8 +599,9 @@ if algRun == 'Genetic':
 	inputLoc = 'sample1.txt'
 	outputLoc = 'hw1p2_genetic_sample1.txt'
 
+
 	originalMap,iCount,cCount,rCount = readFile(inputLoc)
-	print iCount
+	UNBUILTMAP = originalMap
 	paramsIn = GeneticParams(iCount,cCount,rCount,pMutate,pCross,nTournamentParticipants,timeToRun,k,k2,numCull)
 	result,ind = geneticStateSearch(originalMap,paramsIn)
 	if DEBUG_GENETICS:
