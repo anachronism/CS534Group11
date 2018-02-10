@@ -27,7 +27,7 @@ DEBUGSTATESCORE = 0
 #function takes in map(state) calculates score of the map
 DEBUG_GENETICS = 0
 
-algRun = 'HillClimb'#'Genetic'
+algRun = 'Both'#'Genetic'
 inputLoc = 'sample2.txt'
 timeToRun = 1
 seed() # Seed RNG
@@ -582,7 +582,7 @@ def geneticStateSearch(originalMap,params):
  START OF 'MAIN'
 '''
 
-if algRun == 'Genetic':
+if algRun == 'Genetic' or algRun == 'Both':
 	pMutate = 0.06
 	pCross = 0.5
 	nTournamentParticipants = 5#15 # A value of 1 here is effectively random sampling.
@@ -603,7 +603,7 @@ if algRun == 'Genetic':
 
 	pass
 
-elif algRun == 'HillClimb':
+if algRun == 'HillClimb' or algRun == 'Both':
 	start_time = time.time()
 	elapsed_time = time.time() - start_time
 
@@ -668,7 +668,6 @@ elif algRun == 'HillClimb':
 	print "\n"
 	print BESTSCORE	
 	print "\n"
-	print bestTime
 	columns = len(BESTSTATE)
 	rows = len(BESTSTATE[0])
 
@@ -685,7 +684,9 @@ elif algRun == 'HillClimb':
 				f1.write(str(BESTSTATE[i,j]) + "\n")
 	f1.close()	
 	outputLoc = "outputFile.txt"
-	print bestTime
+	print "Hillclimb: time_", bestTime, " score_", BESTSCORE 
+	print "Genetic: time_", result.timeFound, " score_", result.utilVal 
+	
 	writeFile(outputLoc,BESTSCORE, BESTSTATE,bestTime)
 
 	#test = 1/0
