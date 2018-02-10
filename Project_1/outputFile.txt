@@ -1,8 +1,8 @@
-Score achieved: 20
-Time solution was found: 0.021000 Seconds 
- I  3  3  X  6 
+Score achieved: 28
+Time solution was found: 0.020000 Seconds 
+ 2  3  3  X  6 
  4  X  3  2  3 
  3  0  1  6  X 
  7  6  C  8  5 
- S  6  S  9  1 
- C  R  R  6  5 
+ S  R  S  9  1 
+ C  R  2  6  I 
