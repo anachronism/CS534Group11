@@ -289,7 +289,7 @@ def moveBuildingThroughMap(movingBuilding, State, bestscore):
 	
 	for i in range(columns):
 		for j in range(rows):
-			if (state[i,j] < 100):
+			if (state[i,j] < 100 or state[i,j] == 500):
 				holdLocationValue = state[i,j]
 				state[i,j] = movingBuilding[0]
 				score = calculateStateScore(state)
@@ -307,8 +307,7 @@ def moveBuildingThroughMap(movingBuilding, State, bestscore):
 	state[holdI,holdJ] = movingbuilding[0]
 	# print("_____________i,j", holdI,holdJ)
 	# state[holdI, holdJ] = movingbuilding[0]
-	print("BEST SCORE_________________")
-	print(bestscore)
+	print("BEST SCORE_________________", bestscore)
 	
 	print("BEST STATE___________________________")
 	print(state)
@@ -338,6 +337,10 @@ def moveBuildingThroughMap(movingBuilding, State, bestscore):
 start_time = time.time()
 elapsed_time = time.time() - start_time
 
+cycleCount = 0 
+numberOfRestarts = 25
+
+
 #while (elapsed_time < 2):
 listofScores = []
 siteMap = []
@@ -346,14 +349,12 @@ holdScore = []
 buildingList = []
 best_Score = -10000
 
-(UNBUILTMAP, iCount, cCount, rCount) = readFile("sample2.txt")
+# (UNBUILTMAP, iCount, cCount, rCount) = readFile("sample2.txt")
 
-(siteMap, iCount, cCount, rCount) = readFile("bestValue.txt")
+# (siteMap, iCount, cCount, rCount) = readFile("bestValue.txt")
 
-print calculateStateScore(siteMap)
-100/0
-
-count = 0 
+# print calculateStateScore(siteMap)
+# 100/0
 
 (UNBUILTMAP, iCount, cCount, rCount) = readFile("sample2.txt")
 buildingList = []
@@ -365,41 +366,30 @@ BESTSCORE = holdScore[0] - holdScore[1]
 buildingList = getLocationsOfAllBuildings(siteMap)
 	
 
-elapsed_time = time.time() - start_time
-
-while (elapsed_time < 5):
+while (cycleCount < numberOfRestarts):
+#while (elapsed_time < 1):
+	cycleCount = cycleCount +1
 	elapsed_time = time.time() - start_time
-	count = count + 1
-	# count = count +1
-	# if (len(buildingList) > 10):
-	# 	print(len(buildingList))
-	# 	print "\n"
-	# 	100/0
 	for i in range(len(buildingList)):
 		movingbuilding = buildingList[i]
 		[siteMap,best_Score] = moveBuildingThroughMap(movingbuilding, siteMap, best_Score)
-		# print "\n"
-		# print "\n"
-		# print best_Score
-		# print "\n"
-		# print calculateStateScore(siteMap)
 		listofScores.append(best_Score)
 	if(best_Score > BESTSCORE):
 		BESTSTATE = []
 		BESTSTATE = copy.deepcopy(siteMap)
 		BESTSCORE = best_Score
-	
+		bestTime = elapsed_time
 	buildingList = []
 	(siteMap, iCount, cCount, rCount) = readFile("sample2.txt")
 	siteMap, buildingCost = populateSiteMap(siteMap)[0:2]
 	buildingList = getLocationsOfAllBuildings(siteMap)
 	
-listofScores.append(best_Score)
 print(listofScores)
-print siteMap
+print BESTSTATE
 print "\n"
-print best_Score	
-
+print BESTSCORE	
+print "\n"
+print bestTime
 columns = len(BESTSTATE)
 rows = len(BESTSTATE[0])
 
@@ -415,6 +405,9 @@ for i in range(columns):
 		else:
 			f1.write(str(BESTSTATE[i,j]) + "\n")
 f1.close()	
+outputLoc = "outputFile.txt"
+
+writeFile(outputLoc,BESTSCORE, BESTSTATE,bestTime)
 #test = 1/0
 
 # While loop logic
