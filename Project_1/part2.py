@@ -32,15 +32,18 @@ DEBUG_GENETICS = 0
 
 # Options for algRun are 'HillClimb', 'Genetic', or 'Both'
 algRun = 'Both'
-inputLoc = 'sample_large.txt'
+inputLoc = '20x20_sample.txt'
 outputLoc_hillClimb = "outputFile.txt"
 outputLoc_genetic = 'hw1p2_genetic_sample1.txt'
+
+
 # project requires the runs with following time settings 0.1, 0.25, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9 10
 listOfTimeSettings = []
 listOfTimeSettings = [0.1, 0.15, 0.5, 1, 2]#, 3, 4, 5, 6, 7, 8, 9, 10]
 timeToRun = 2
 #number of times to repeat the program
 numberOfCycles = 10
+
 
 # Genetic algorithm parameters.
 pMutate = 0.06
@@ -51,6 +54,12 @@ k2 = 6 # As of now, k2 must be an even number greater than 0. Both 0 and odd num
 numCull = 5
 seed() # Seed RNG
 
+# Parameters for generating maps
+newMapName = '5x6_sample.txt'
+generateMap = False
+newMapSize = [5,6]
+numS = 2
+numX = 1
 ## STRUCTS:
 # Named Tuple containing genetic search parameters.
 GeneticParams = namedtuple("GeneticParams", "iCount cCount rCount pMutate pCross nTournament timeToRun k k2 numCull")
@@ -151,6 +160,48 @@ def getLocationsOfAllBuildings(state):
             if (state[i,j] == COM):
                 buildingList.append([state[i,j],i,j ])
     return buildingList
+
+
+
+def generateSiteMap(fileLoc,x_dim,y_dim, numTOX,numSCENE):
+    iCount_local = randint(1,x_dim-1)
+    cCount_local = randint(1,y_dim-1)
+    rCount_local = randint(1,x_dim-1)
+    cnt = 0
+    with open(fileLoc,'w') as f:
+            f.write(str(iCount_local) +'\n')
+            f.write(str(cCount_local) +'\n')
+            f.write(str(rCount_local) +'\n')
+
+            index_available = []
+            for row in range(0,y_dim):
+                for col in range(0,x_dim):
+                    index_available.append([row,col])
+            
+            index_select = sample(index_available,numTOX+numSCENE)
+
+            for row in range(0,x_dim):
+                for col in range(0,y_dim):
+                    if col < y_dim-1:
+                        appendVal = ','
+                    else:
+                        appendVal = ''
+
+                    loc = [row,col]
+                    #print loc in index_select
+                    if loc in index_select:
+                    	if cnt < numTOX:
+                    		f.write('X' + appendVal)
+                    		cnt += 1
+                    	else:
+                    		f.write('S' + appendVal)
+                    		cnt += 1
+                    else:
+                    	currentVal = randint(0,9)
+                    	f.write(str(currentVal)+appendVal)
+                    	                  
+                f.write('\n')
+            f.close()
 
 #at random populate unbuilt spaces with structures listed in first 3 lines of the data input file
 def populateSiteMap(siteMap):
@@ -491,6 +542,7 @@ def geneticStateSearch(originalMap,params):
     lastGen = []
     currentGen =[]
     lastScores = []
+    cntLoops = 0
 
     initTime = time.time()
     while timeRun < params.timeToRun:
@@ -505,6 +557,7 @@ def geneticStateSearch(originalMap,params):
                 lastScores.append(lastGen[i].utilVal)
             if DEBUG_GENETICS:
                 print 'End of first run:',len(lastScores)
+            indUse = params.k
             firstRun = False
 
         # Rest of the generations:
@@ -597,14 +650,16 @@ def geneticStateSearch(originalMap,params):
             else:
             	indUse = len(lastScores)
 
+
         # Update the current time
         timeRun = time.time() - initTime
+        cntLoops += 1
 
     # If the last generation made a result better than the saved best result, return that.  
     zippedScores = zip(range(0,indUse),lastScores)
     zippedScores.sort(key=lambda x: x[1])
-    print 'scores_len:',len(zippedScores), 'score: ',lastGen[0].utilVal
     if (zippedScores[indUse - 1])[1] > lastScores[0]:
+    	print 'length_zipped',len(zippedScores), 'indUse  ', indUse
         return lastGen[(zippedScores[indUse - 1])[0]],(zippedScores[indUse - 1])[0]
     # Otherwise, just return best saved result.
     else:
@@ -616,6 +671,9 @@ def geneticStateSearch(originalMap,params):
 '''
  START OF 'MAIN'
 '''
+if generateMap:
+	generateSiteMap(newMapName,newMapSize[0],newMapSize[1], numX,numS)
+
 resultFileName = 'resultSummary.csv'
 if os.path.exists(resultFileName):
     os.remove(resultFileName)
