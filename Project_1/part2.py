@@ -35,7 +35,10 @@ algRun = 'Both'
 inputLoc = 'sample2.txt'
 outputLoc_hillClimb = "outputFile.txt"
 outputLoc_genetic = 'hw1p2_genetic_sample1.txt'
-timeToRun = 0.1
+# project requires the runs with following time settings 0.1, 0.25, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9 10
+listOfTimeSettings = []
+listOfTimeSettings = [0.1, 0.15]#, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+timeToRun = 2
 #number of times to repeat the program
 numberOfCycles = 10
 
@@ -593,99 +596,109 @@ def geneticStateSearch(originalMap,params):
 '''
  START OF 'MAIN'
 '''
+resultFile = open('resultSummary.csv', 'a')
+resultFile.write("Time Limit,"  + "Genetic Time(s)," + "Genetic Best Score,"  + "HillClimb Time(s)," + "HillClimb Best Score" + "\n")
 
-while (cycleCount < numberOfCycles):
-	cycleCount = cycleCount + 1
-	if algRun == 'Genetic' or algRun == 'Both':
+for i in range(len(listOfTimeSettings)):
+	timeRun = listOfTimeSettings[i]
+	cycleCount = 0
+	while (cycleCount < numberOfCycles):
+		cycleCount = cycleCount + 1
+		if algRun == 'Genetic' or algRun == 'Both':
 
-		originalMap,iCount,cCount,rCount = readFile(inputLoc)
-		UNBUILTMAP = originalMap
-		paramsIn = GeneticParams(iCount,cCount,rCount,pMutate,pCross,nTournamentParticipants,timeToRun,k,k2,numCull)
-		result,ind = geneticStateSearch(originalMap,paramsIn)
-		if DEBUG_GENETICS:
-			print 'Util: ',result.utilVal,' Time: ',result.timeFound,' Index: ',ind
-			print result.map
+			originalMap,iCount,cCount,rCount = readFile(inputLoc)
+			UNBUILTMAP = originalMap
+			paramsIn = GeneticParams(iCount,cCount,rCount,pMutate,pCross,nTournamentParticipants,timeToRun,k,k2,numCull)
+			result,ind = geneticStateSearch(originalMap,paramsIn)
+			if DEBUG_GENETICS:
+				print 'Util: ',result.utilVal,' Time: ',result.timeFound,' Index: ',ind
+				print result.map
 
-		writeFile(outputLoc_genetic,result.utilVal,result.map,result.timeFound)
+			writeFile(outputLoc_genetic,result.utilVal,result.map,result.timeFound)
+			#resultFile.write('Genetic,' + str(timeRun) +  ',' + str(result.timeFound) + ',' + str(result.utilVal) + "\n")
 
-		pass
+			pass
 
-	if algRun == 'HillClimb' or algRun == 'Both':
+		if algRun == 'HillClimb' or algRun == 'Both':
 
-		start_time = time.time()
-		elapsed_time = time.time() - start_time
-
-		numberOfRestarts = 1000
-
-		listofScores = []
-		siteMap = []
-		UNBUILTMAP = []
-		holdScore = []
-		buildingList = []
-		best_Score = -10000
-
-		(UNBUILTMAP, iCount, cCount, rCount) = readFile(inputLoc)
-		siteMap = copy.deepcopy(UNBUILTMAP)
-		siteMap, buildingCost = populateSiteMap(siteMap)[0:2]
-		
-		BESTSTATE = copy.deepcopy(siteMap)
-		holdScore = calculateStateScore(siteMap)
-		BESTSCORE = holdScore[0] - holdScore[1]
-		buildingList = getLocationsOfAllBuildings(siteMap)
+			start_time = time.time()
 			
-		#while (cycleCount < numberOfRestarts):
-		while (elapsed_time < timeToRun):
+			numberOfRestarts = 1000
+
+			listofScores = []
+			siteMap = []
+			UNBUILTMAP = []
+			holdScore = []
+			buildingList = []
 			best_Score = -10000
 
-			for i in range(len(buildingList)):
-				movingbuilding = buildingList[i]
-				[siteMap,best_Score] = moveBuildingThroughMap(movingbuilding, siteMap, best_Score)
-				listofScores.append(best_Score)
-			
-			elapsed_time = time.time() - start_time		
-			print best_Score
-			if(best_Score > BESTSCORE):
-				BESTSTATE = []
-				BESTSTATE = copy.deepcopy(siteMap)
-				BESTSCORE = best_Score
-				bestTime = elapsed_time
-			
-			buildingList = []
-			(siteMap, iCount, cCount, rCount) = readFile(inputLoc)
+			(UNBUILTMAP, iCount, cCount, rCount) = readFile(inputLoc)
+			siteMap = copy.deepcopy(UNBUILTMAP)
 			siteMap, buildingCost = populateSiteMap(siteMap)[0:2]
+			
+			BESTSTATE = copy.deepcopy(siteMap)
+			holdScore = calculateStateScore(siteMap)
+			BESTSCORE = holdScore[0] - holdScore[1]
 			buildingList = getLocationsOfAllBuildings(siteMap)
-		
-		if DEBUGSTATESCORE:	
-			print(listofScores)
-			print BESTSTATE
-			print "\n"
-			print BESTSCORE	
-			print "\n"
-
-		columns = len(BESTSTATE)
-		rows = len(BESTSTATE[0])
-		if DEBUGSTATESCORE:
-			f1 = open('bestValue.txt', 'w')
-			f1.write(str(iCount) + "\n")
-			f1.write(str(cCount)+ "\n")
-			f1.write(str(rCount) + "\n")
-
-			for i in range(columns):
-				for j in range(rows):
-					if (j != (rows-1)):
-						f1.write(str(BESTSTATE[i,j]) + ",")
-					else:
-						f1.write(str(BESTSTATE[i,j]) + "\n")
-			f1.close()	
-		print "Hillclimb: time_", bestTime, " score_", BESTSCORE 
-		print "Genetic: time_", result.timeFound, " score_", result.utilVal 
-		
-		writeFile(outputLoc_hillClimb,BESTSCORE, BESTSTATE,bestTime)
-
-		f1 = open('resultSummary_' + str(timeToRun) +'s.txt', 'a')
-		f1.write(str(bestTime) + ',' + str(BESTSCORE) + ',' + str(result.timeFound) + ',' + str(result.utilVal) + "\n")
+			elapsed_time = time.time() - start_time
+			#while (cycleCount < numberOfRestarts):
+			while (elapsed_time < timeToRun):
+				best_Score = -10000
+				for i in range(len(buildingList)):
+					movingbuilding = buildingList[i]
+					[siteMap,best_Score] = moveBuildingThroughMap(movingbuilding, siteMap, best_Score)
+					listofScores.append(best_Score)
+				
+						
+				print best_Score
+				if(best_Score > BESTSCORE):
+					BESTSTATE = []
+					BESTSTATE = copy.deepcopy(siteMap)
+					BESTSCORE = best_Score
+					bestTime = elapsed_time
+				
+				buildingList = []
+				(siteMap, iCount, cCount, rCount) = readFile(inputLoc)
+				siteMap, buildingCost = populateSiteMap(siteMap)[0:2]
+				buildingList = getLocationsOfAllBuildings(siteMap)
+				elapsed_time = time.time() - start_time
 
 
+
+######################################Saving data
+			if DEBUGSTATESCORE:	
+				print(listofScores)
+				print BESTSTATE
+				print "\n"
+				print BESTSCORE	
+				print "\n"
+
+			columns = len(BESTSTATE)
+			rows = len(BESTSTATE[0])
+			if DEBUGSTATESCORE:
+				f1 = open('bestValue.txt', 'w')
+				f1.write(str(iCount) + "\n")
+				f1.write(str(cCount)+ "\n")
+				f1.write(str(rCount) + "\n")
+
+				for i in range(columns):
+					for j in range(rows):
+						if (j != (rows-1)):
+							f1.write(str(BESTSTATE[i,j]) + ",")
+						else:
+							f1.write(str(BESTSTATE[i,j]) + "\n")
+				f1.close()	
+			print "Hillclimb: time_", bestTime, " score_", BESTSCORE 
+			print "Genetic: time_", result.timeFound, " score_", result.utilVal 
+			
+			writeFile(outputLoc_hillClimb,BESTSCORE, BESTSTATE,bestTime)
+			
+			resultFile.write(str(timeRun) +  ',' + str(result.timeFound) + ',' + str(result.utilVal) + ',' + str(bestTime) + ',' + str(BESTSCORE) + "\n")
+
+			#resultFile.write('HillClimb' + ',' + str(timeRun) + ',' + str(bestTime) + ',' + str(BESTSCORE) + "\n")
+			#f1 = open('resultSummary_' + str(timeToRun) +'s.txt', 'a')
+			
+resultFile.close()
 
 	#test = 1/0
 
