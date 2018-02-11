@@ -587,7 +587,8 @@ def geneticStateSearch(originalMap,params):
                 lastScores.append(child2.utilVal)
                 currentGen.append(child2)
                 if currentTime > timeToRun:
-                    break
+            		indUse = len(lastScores)
+            		break
 
             # Copy created children to become the next old generation
             if currentTime <= timeToRun:

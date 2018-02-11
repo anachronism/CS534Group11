@@ -1,11 +1,11 @@
-Score achieved: 66
-Time solution was found: 0.998000 Seconds 
+Score achieved: 62
+Time solution was found: 1.999244 Seconds 
  2  3  3  X  6  6 
  4  X  3  2  3  0 
  3  0  1  6  X  3 
- C  6  5  8  5  5 
- S  R  S  9  1  S 
- R  R  C  6  5  I 
+ 7  6  5  8  5  5 
+ S  R  S  R  1  S 
+ 4  R  C  6  5  C 
  C  2  5  1  4  8 
  2  3  3  X  6  6 
  4  X  3  2  3  0 
@@ -13,4 +13,4 @@ Time solution was found: 0.998000 Seconds
  7  6  5  8  5  5 
  S  6  S  9  1  S 
  4  7  2  6  5  2 
- 1  2  5  1  4  8 
+ I  2  5  1  4  8 
