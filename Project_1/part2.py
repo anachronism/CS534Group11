@@ -32,12 +32,12 @@ DEBUG_GENETICS = 0
 
 # Options for algRun are 'HillClimb', 'Genetic', or 'Both'
 algRun = 'Both'
-inputLoc = 'sample2.txt'
+inputLoc = 'sample_large.txt'
 outputLoc_hillClimb = "outputFile.txt"
 outputLoc_genetic = 'hw1p2_genetic_sample1.txt'
 # project requires the runs with following time settings 0.1, 0.25, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9 10
 listOfTimeSettings = []
-listOfTimeSettings = [0.1, 0.15]#, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+listOfTimeSettings = [0.1, 0.15, 0.5, 1, 2]#, 3, 4, 5, 6, 7, 8, 9, 10]
 timeToRun = 2
 #number of times to repeat the program
 numberOfCycles = 10
@@ -351,7 +351,7 @@ def writeFile(fileLoc, score, mapIn, timeFound):
 
 ## MAIN FUNCTIONS
 # Main hill climbing function:
-def moveBuildingThroughMap(movingBuilding, State, bestscore):
+def moveBuildingThroughMap(movingBuilding, State, bestscore, timeLimit, startTime):
     state = copy.deepcopy(State)
     columns = len(state)
     rows = len(state[0])
@@ -364,19 +364,23 @@ def moveBuildingThroughMap(movingBuilding, State, bestscore):
     #bestState = copy.deepcopy(state)
     
     state[orig_i,orig_j] = UNBUILTMAP[orig_i,orig_j]
-
-
+	
+    elapsed_time = time.time() - startTime
+    holdBestTime = elapsed_time
     bestBuildingLocation = []
     score = []
     
     for i in range(columns):
         for j in range(rows):
+            elapsed_time = time.time() - startTime
+    
             if (state[i,j] < 100 or state[i,j] == 500):
                 holdLocationValue = state[i,j]
                 state[i,j] = movingBuilding[0]
                 score = calculateStateScore(state)
                 currentScore = score[0] - score[1]
-                    
+                
+
                 if (currentScore > bestscore):
                     # bestState = copy.deepcopy(state)
                     # bestscore = currentScore
@@ -384,7 +388,14 @@ def moveBuildingThroughMap(movingBuilding, State, bestscore):
                     bestscore = currentScore
                     holdI = i
                     holdJ = j
+                    holdBestTime = elapsed_time
                 state[i,j] = holdLocationValue
+            
+            if(elapsed_time > timeLimit):
+            	state[holdI,holdJ] = movingbuilding[0]
+                return [state, bestscore, holdBestTime]
+
+
     #bestState[holdI,holdJ]
     state[holdI,holdJ] = movingbuilding[0]
     # print("_____________i,j", holdI,holdJ)
@@ -396,7 +407,7 @@ def moveBuildingThroughMap(movingBuilding, State, bestscore):
         print(state)
 
     
-    return [state, bestscore]
+    return [state, bestscore, holdBestTime]
 
 
 # Main GA algorithms
@@ -654,11 +665,11 @@ for i in range(len(listOfTimeSettings)):
             buildingList = getLocationsOfAllBuildings(siteMap)
             elapsed_time = time.time() - start_time
             #while (cycleCount < numberOfRestarts):
-            while (elapsed_time < (timeToRun-0.01)):
+            while (elapsed_time < (timeToRun)):
                 best_Score = -10000
                 for i in range(len(buildingList)):
                     movingbuilding = buildingList[i]
-                    [siteMap,best_Score] = moveBuildingThroughMap(movingbuilding, siteMap, best_Score)
+                    [siteMap,best_Score,bestTime] = moveBuildingThroughMap(movingbuilding, siteMap, best_Score, timeToRun, start_time)
                     listofScores.append(best_Score)
                 
                         
@@ -667,8 +678,8 @@ for i in range(len(listOfTimeSettings)):
                     BESTSTATE = []
                     BESTSTATE = copy.deepcopy(siteMap)
                     BESTSCORE = best_Score
-                    bestTime = elapsed_time
-                
+                    BESTTIME = bestTime
+                  
                 buildingList = []
                 (siteMap, iCount, cCount, rCount) = readFile(inputLoc)
                 siteMap, buildingCost = populateSiteMap(siteMap)[0:2]
@@ -700,12 +711,12 @@ for i in range(len(listOfTimeSettings)):
                         else:
                             f1.write(str(BESTSTATE[i,j]) + "\n")
                 f1.close()  
-            print "Hillclimb: time_", bestTime, " score_", BESTSCORE 
+            print "Hillclimb: time_", BESTTIME, " score_", BESTSCORE 
             print "Genetic: time_", result.timeFound, " score_", result.utilVal 
             
             writeFile(outputLoc_hillClimb,BESTSCORE, BESTSTATE,bestTime)
             ##add result to csv file
-            resultFile.write(str(timeToRun) +  ',' + str(result.timeFound) + ',' + str(result.utilVal) + ',' + str(bestTime) + ',' + str(BESTSCORE) + "\n")
+            resultFile.write(str(timeToRun) +  ',' + str(result.timeFound) + ',' + str(result.utilVal) + ',' + str(BESTTIME) + ',' + str(BESTSCORE) + "\n")
 
             #resultFile.write('HillClimb' + ',' + str(timeRun) + ',' + str(bestTime) + ',' + str(BESTSCORE) + "\n")
             #f1 = open('resultSummary_' + str(timeToRun) +'s.txt', 'a')
