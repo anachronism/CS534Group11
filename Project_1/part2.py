@@ -32,14 +32,14 @@ DEBUG_GENETICS = 0
 
 # Options for algRun are 'HillClimb', 'Genetic', or 'Both'
 algRun = 'Both'
-inputLoc = '20x20_sample.txt'
+inputLoc = 'sample_large2.txt'
 outputLoc_hillClimb = "outputFile.txt"
 outputLoc_genetic = 'hw1p2_genetic_sample1.txt'
 
 
 # project requires the runs with following time settings 0.1, 0.25, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9 10
 listOfTimeSettings = []
-listOfTimeSettings = [0.1, 0.15, 0.5, 1, 2]#, 3, 4, 5, 6, 7, 8, 9, 10]
+listOfTimeSettings = [0.1, 0.15, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 timeToRun = 2
 #number of times to repeat the program
 numberOfCycles = 10
