@@ -644,8 +644,8 @@ def geneticStateSearch(originalMap,params):
             		break
 
             # Copy created children to become the next old generation
+            lastGen = currentGen[:]
             if currentTime <= timeToRun:
-                lastGen = currentGen[:]
                 indUse = params.k
             else:
             	indUse = len(lastScores)
@@ -659,7 +659,8 @@ def geneticStateSearch(originalMap,params):
     zippedScores = zip(range(0,indUse),lastScores)
     zippedScores.sort(key=lambda x: x[1])
     if (zippedScores[indUse - 1])[1] > lastScores[0]:
-    	print 'length_zipped',len(zippedScores), 'indUse  ', indUse
+    	#print 'length_zipped',len(zippedScores), 'indUse  ', indUse
+    	#print 'Index Chosen: ',(zippedScores[indUse - 1])[0], 'Length lastgen: ', len(lastGen), 'Length lastScores: ', len(lastScores)
         return lastGen[(zippedScores[indUse - 1])[0]],(zippedScores[indUse - 1])[0]
     # Otherwise, just return best saved result.
     else:
