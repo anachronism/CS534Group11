@@ -1,6 +1,6 @@
 #start by placing all structures randomly on the board
 #recalculate 1 new board for each structure each board holds the cost of moving one structure to every empty square.
-import copy,time,math
+import copy,time,math, os
 import numpy
 from random import *
 from collections import namedtuple
@@ -596,11 +596,15 @@ def geneticStateSearch(originalMap,params):
 '''
  START OF 'MAIN'
 '''
-resultFile = open('resultSummary.csv', 'a')
+resultFileName = 'resultSummary.csv'
+if os.path.exists(resultFileName):
+    os.remove(resultFileName)
+
+resultFile = open(resultFileName, 'a')
 resultFile.write("Time Limit,"  + "Genetic Time(s)," + "Genetic Best Score,"  + "HillClimb Time(s)," + "HillClimb Best Score" + "\n")
 
 for i in range(len(listOfTimeSettings)):
-	timeRun = listOfTimeSettings[i]
+	timeToRun = listOfTimeSettings[i]
 	cycleCount = 0
 	while (cycleCount < numberOfCycles):
 		cycleCount = cycleCount + 1
@@ -642,7 +646,7 @@ for i in range(len(listOfTimeSettings)):
 			buildingList = getLocationsOfAllBuildings(siteMap)
 			elapsed_time = time.time() - start_time
 			#while (cycleCount < numberOfRestarts):
-			while (elapsed_time < timeToRun):
+			while (elapsed_time < (timeToRun-0.01)):
 				best_Score = -10000
 				for i in range(len(buildingList)):
 					movingbuilding = buildingList[i]
@@ -692,8 +696,8 @@ for i in range(len(listOfTimeSettings)):
 			print "Genetic: time_", result.timeFound, " score_", result.utilVal 
 			
 			writeFile(outputLoc_hillClimb,BESTSCORE, BESTSTATE,bestTime)
-			
-			resultFile.write(str(timeRun) +  ',' + str(result.timeFound) + ',' + str(result.utilVal) + ',' + str(bestTime) + ',' + str(BESTSCORE) + "\n")
+			##add result to csv file
+			resultFile.write(str(timeToRun) +  ',' + str(result.timeFound) + ',' + str(result.utilVal) + ',' + str(bestTime) + ',' + str(BESTSCORE) + "\n")
 
 			#resultFile.write('HillClimb' + ',' + str(timeRun) + ',' + str(bestTime) + ',' + str(BESTSCORE) + "\n")
 			#f1 = open('resultSummary_' + str(timeToRun) +'s.txt', 'a')

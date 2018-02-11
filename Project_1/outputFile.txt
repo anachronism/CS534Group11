@@ -1,5 +1,5 @@
 Score achieved: 28
-Time solution was found: 0.001000 Seconds 
+Time solution was found: 0.086000 Seconds 
  2  3  3  X  6 
  4  X  3  2  3 
  3  0  1  6  X 
