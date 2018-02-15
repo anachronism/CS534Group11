@@ -32,7 +32,7 @@ DEBUG_GENETICS = 0
 
 # Options for algRun are 'HillClimb', 'Genetic', or 'Both'
 algRun = 'Both'
-inputLoc = 'sample_large2.txt'
+inputLoc = 'sample2.txt'
 outputLoc_hillClimb = "HillClimbResult.txt"
 outputLoc_genetic = 'GeneticResult.txt'
 
@@ -40,20 +40,11 @@ outputLoc_genetic = 'GeneticResult.txt'
 # project requires the runs with following time settings 0.1, 0.25, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9 10
 
 listOfTimeSettings = []
-
-listOfTimeSettings = [0.1, 0.25, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+#listOfTimeSettings holds time limits to set maximum run time of each algorithm. Chosen algorithms will execute for each time in listOfTimeSettings
+listOfTimeSettings = [0.5] #[0.1, 0.25, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 timeToRun = 10
 #number of times to repeat the program
-numberOfCycles = 10
-
-
-# Genetic algorithm parameters.
-pMutate = 0.06
-pCross = 0.5
-nTournamentParticipants = 5#15 # A value of 1 here is effectively random sampling.
-k = 100
-k2 = 6 # As of now, k2 must be an even number greater than 0. Both 0 and odd numbers are edge cases that can be dealt with.
-numCull = 5
+numberOfCycles = 1
 seed() # Seed RNG
 
 # Parameters for generating maps
