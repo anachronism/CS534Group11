@@ -33,14 +33,16 @@ DEBUG_GENETICS = 0
 # Options for algRun are 'HillClimb', 'Genetic', or 'Both'
 algRun = 'Both'
 inputLoc = 'sample_large2.txt'
-outputLoc_hillClimb = "outputFile.txt"
-outputLoc_genetic = 'hw1p2_genetic_sample1.txt'
+outputLoc_hillClimb = "HillClimbResult.txt"
+outputLoc_genetic = 'GeneticResult.txt'
 
 
 # project requires the runs with following time settings 0.1, 0.25, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9 10
+
 listOfTimeSettings = []
-listOfTimeSettings = [0.1, 0.15, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-timeToRun = 2
+
+listOfTimeSettings = [0.1, 0.25, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+timeToRun = 10
 #number of times to repeat the program
 numberOfCycles = 10
 
@@ -672,13 +674,13 @@ def geneticStateSearch(originalMap,params):
 '''
  START OF 'MAIN'
 '''
-if generateMap:
-	generateSiteMap(newMapName,newMapSize[0],newMapSize[1], numX,numS)
 
-resultFileName = 'resultSummary.csv'
+
+
+resultFileName = 'resultSummary' + str(numCull) + '_' + str(k2) + '.csv'
 if os.path.exists(resultFileName):
     os.remove(resultFileName)
-
+BESTTIME = 1
 resultFile = open(resultFileName, 'a')
 resultFile.write("Time Limit,"  + "Genetic Time(s)," + "Genetic Best Score,"  + "HillClimb Time(s)," + "HillClimb Best Score" + "\n")
 
@@ -776,7 +778,8 @@ for i in range(len(listOfTimeSettings)):
             
             writeFile(outputLoc_hillClimb,BESTSCORE, BESTSTATE,bestTime)
             ##add result to csv file
-            resultFile.write(str(timeToRun) +  ',' + str(result.timeFound) + ',' + str(result.utilVal) + ',' + str(BESTTIME) + ',' + str(BESTSCORE) + "\n")
+        print 'saving'
+        resultFile.write(str(timeToRun) +  ',' + str(result.timeFound) + ',' + str(result.utilVal) + ',' + str(BESTTIME) + ',' + str(BESTSCORE) + "\n")
 
             #resultFile.write('HillClimb' + ',' + str(timeRun) + ',' + str(bestTime) + ',' + str(BESTSCORE) + "\n")
             #f1 = open('resultSummary_' + str(timeToRun) +'s.txt', 'a')
