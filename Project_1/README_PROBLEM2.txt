@@ -12,7 +12,7 @@ If algRun is equal to 'Both' genetic AND HillClimg algorithms will be executed
 
 inputLoc = 'sample2.txt'
 inputLoc is name of the file that problem2.py takes as input. The file contains
-the citi map and quantity of buildings to be built
+the city map and quantity of buildings to be built
 
 outputLoc_hillClimb = "HillClimbResult.txt"
 outputLoc_genetic = 'GeneticResult.txt'
@@ -38,4 +38,4 @@ pCross = 0.5
 nTournamentParticipants = 5#15 # A value of 1 here is effectively random sampling.
 k = 100
 k2 = 2 # As of now, k2 must be an even number greater than 0. Both 0 and odd numbers are edge cases that can be dealt with.
-numCull = 50
+numCull = 50 # This should not be greater than 50, as some configuration of the other parameters will not run. 
