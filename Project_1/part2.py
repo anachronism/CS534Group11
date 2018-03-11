@@ -639,7 +639,6 @@ if algRun == 'HillClimb' or algRun == 'Both':
 			listofScores.append(best_Score)
 		
 		elapsed_time = time.time() - start_time		
-		print best_Score
 		if(best_Score > BESTSCORE):
 			BESTSTATE = []
 			BESTSTATE = copy.deepcopy(siteMap)
