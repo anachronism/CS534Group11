@@ -48,13 +48,26 @@ class BayesNode:
         for ind,elt in enumerate(self.possibleValues):
             probFromParents = self.getProbFromTable(parentStates,ind)
             probFromChildren = 1
+
+            # Update probFromChildren for each child node.
             for elt2 in self.children:
-                currentNode = BAYESMAP[elt]
-                probFromChildren = probFromChildren * self.getProbFromTable(PARENTSOFCHILDREN, currentNode.currentValue)
-                ### THIS IS A HARD CASE self.getPRobFromTable(PARENTSOFCHILDREN,childStates[]) Need to get parents of children.
-                ### The main issue si knowing where the target node is in the list of the child's parents.
+                childStates = []
+                # Get probability for each child node
+                for elt3 in elt2.parents:
+                    currentNode = BAYESMAP[elt]
+                    if currentNode == self: ### CHECK TO MAKE SURE THIS BEHAVES AS EXPECTED.
+                        childStates.append(ind)
+                    else:
+                        childStates.append(currentNode.currentValue)
+
+                probFromChildren = probFromChildren * self.getProbFromTable(childStates, elt2.currentValue)
+
             probValues.append(probFromParents*probFromChildren)
+
+        # NORMALIZE probValues.
+        probValues = np.divide(probValues, np.sum(probValues))
         return probValues
+        
         # For each option in possiblevalues:
             # Calculate P(that result | parent states)
             # Calculate P(child states | all known states including result)
