@@ -10,8 +10,8 @@ class BayesNode:
         self.currentValue = currentValue  
         self.pastValues = []
 
-    def updateNode(self):
-        self.pastValues.append(self.currentValue)
+    def updateNode(self,nIteration):
+        self.pastValues.append((nIteration,self.currentValue)) # Append list with tuble containing current value and the number of iterations.
         numProbabilities = len(self.possibleValues)
 
     
@@ -36,7 +36,7 @@ class BayesNode:
         else: # There are 4 parents
             return self.probTable[parentInds[0]][parentInds[1]][parentInds[2]][parentInds[3]][desiredTargetProb]
 
-    def calculateProbabilies(self):
+    def calculateProbabilities(self):
         global BAYESMAP
 
         parentStates = []
@@ -227,10 +227,11 @@ BAYESMAP["age"] = ageNode
 
 ### PARSE INPUTS, CHANGE EVIDENCE NODE VALUES, MAKE SURE TO RANDOM SELECT
 
-listEvidenceNode = [] ### TODO: Populate with evidence node things
+listEvidenceNodes = [] ### TODO: Populate with evidence node things
 # for elt in whateverEvidenceNodesNeedParsing
 # Set BAYESMAP[elt].currentValue = whatever value its being set to
 
 nodesToUpdate = np.setdiff1d(listEvidenceNodes,listPossibleNodes)
 
 # Actual looping through, ### TODO: Figure best way to drop the first M current values
+BAYESMAP["age"].updateNode(1)
