@@ -100,10 +100,10 @@ def readPriceTable(fileLoc):
             
     return probTable
 
-
-### MAKE NETWORK MAP GLOBAL
+### MAIN:
 BAYESMAP = dict()
-
+listPossibleNodes = ["price","location","neighb","location","children","size","schools","age"]
+### INITIALIZING NODE TABLE
 ################   PRICE NODE
 CHEAP = 0
 OK = 1
@@ -113,12 +113,9 @@ parents = ["location", "age", "school", "size"]
 children = []
 probTable = readPriceTable(priceFileName)
 possibleValue = ["cheap","ok","expensive"]
-currentValue = CHEAP
- 
+currentValue = random.choice([CHEAP,OK,EXPENSIVE])
 priceNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
-
 BAYESMAP["price"] = priceNode
-
 
 ################   AMENETIES NODE
 LOTS = 0
@@ -127,32 +124,28 @@ parents = []
 children = ["location"]
 probTable = [0.3, 0.7]
 possibleValue = ["lots","little"]
-currentValue = LOTS
- 
+currentValue = random.choice([LOTS,LITTLE])
 amenetiesNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
-
 BAYESMAP["ameneties"] = amenetiesNode
 
 
 ################   NEIGHB NODE
 BAD_2OPT = 0
-GOOD_NeighbCh = 1
+GOOD_2OPT = 1
 parents = []
 children = ["location", "children"]
 probTable = [0.4,0.6]
 possibleValue = ["bad", "good"]
-currentValue = BAD_2OPT
- 
-amenetiesNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
-
-BAYESMAP["neighb"] = amenetiesNode
+currentValue = random.choice([BAD_2OPT,GOOD_2OPT])
+neighbNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
+BAYESMAP["neighb"] = neighbNode
 
 
 ################   LOCATION NODE
 GOOD_LOC = 0
 BAD_LOC = 1
 UGLY_LOC = 2
-parents = ["amenities", "neighborhood"]
+parents = ["amenities", "neighb"]
 children = ["age", "price"]
 probTable = [[[[] for i in range(3)] for i in range(3)] for i in range(3)]
 probTable[0][0][0] = 0.3  
@@ -167,12 +160,9 @@ probTable[1][0][2] = 0.4
 probTable[1][1][0] = 0.5  
 probTable[1][1][0] = 0.35  
 probTable[1][1][0] = 0.15
-
 possibleValue = ["good","bad","ugly"] # good is 0, bad is 1, ugly is 2
-currentValue = GOOD_LOC
- 
+currentValue = random.choice([GOOD_LOC,BAD_LOC,UGLY_LOC])
 locationNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
-
 BAYESMAP["location"] = locationNode
 
 
@@ -185,10 +175,8 @@ probTable[0][1] = 0.4
 probTable[1][0] = 0.3  
 probTable[1][1] = 0.7 
 possibleValue = ["bad","good"]
-currentValue = BAD_2OPT
- 
+currentValue = random.choice([BAD_2OPT,GOOD_2OPT])
 childrenNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
-
 BAYESMAP["children"] = childrenNode
 
 
@@ -200,10 +188,8 @@ parents = []
 children = ["price"]
 probTable = [0.33, 0.34, 0.33]
 possibleValue = ["small","medium","large"]
-currentValue = SMALL
- 
+currentValue = random.choice([SMALL,MEDIUM,LARGE])
 sizeNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
-
 BAYESMAP["size"] = sizeNode
 
 
@@ -216,10 +202,8 @@ probTable[0][1] = 0.3
 probTable[1][0] = 0.8  
 probTable[1][1] = 0.2  
 possibleValue = ["bad","good"]
-currentValue = BAD_2OPT
- 
+currentValue = random.choice([BAD_2OPT,GOOD_2OPT])
 schoolsNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
-
 BAYESMAP["schools"] = schoolsNode
 
 
@@ -236,14 +220,17 @@ probTable[0][1][1] = 0.4
 probTable[1][0][0] = 0.9  
 probTable[1][1][1] = 0.1  
 possibleValue = ["old","new"]
-currentValue = OLD
- 
+currentValue = random.choice([OLD,NEW])
 ageNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
-
 BAYESMAP["age"] = ageNode
 
 
+### PARSE INPUTS, CHANGE EVIDENCE NODE VALUES, MAKE SURE TO RANDOM SELECT
 
+listEvidenceNode = [] ### TODO: Populate with evidence node things
+# for elt in whateverEvidenceNodesNeedParsing
+# Set BAYESMAP[elt].currentValue = whatever value its being set to
 
-### GLOBAL, TABLES OF POTENTIAL VALUES.
-## A table for each cpt.
+nodesToUpdate = np.setdiff1d(listEvidenceNodes,listPossibleNodes)
+
+# Actual looping through, ### TODO: Figure best way to drop the first M current values
