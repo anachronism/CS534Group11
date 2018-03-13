@@ -47,6 +47,14 @@ timeToRun = 10
 numberOfCycles = 1
 seed() # Seed RNG
 
+# Genetic algorithm parameters.
+pMutate = 0.06
+pCross = 0.5
+nTournamentParticipants = 5#15 # A value of 1 here is effectively random sampling.
+k = 100
+k2 = 6 # As of now, k2 must be an even number greater than 0. Both 0 and odd numbers are edge cases that can be dealt with.
+numCull = 5
+
 # Parameters for generating maps
 newMapName = '5x6_sample.txt'
 generateMap = False
@@ -668,100 +676,6 @@ def geneticStateSearch(originalMap,params):
 
 
 
-<<<<<<< HEAD
-	cycleCount = 0 
-	numberOfRestarts = 1000
-
-	listofScores = []
-	siteMap = []
-	UNBUILTMAP = []
-	holdScore = []
-	buildingList = []
-	best_Score = -10000
-
-	(UNBUILTMAP, iCount, cCount, rCount) = readFile(inputLoc)
-	siteMap = copy.deepcopy(UNBUILTMAP)
-	siteMap, buildingCost = populateSiteMap(siteMap)[0:2]
-	
-	BESTSTATE = copy.deepcopy(siteMap)
-	holdScore = calculateStateScore(siteMap)
-	BESTSCORE = holdScore[0] - holdScore[1]
-	buildingList = getLocationsOfAllBuildings(siteMap)
-		
-	#while (cycleCount < numberOfRestarts):
-	while (elapsed_time < timeToRun):
-		cycleCount = cycleCount + 1
-		best_Score = -10000
-
-		for i in range(len(buildingList)):
-			movingbuilding = buildingList[i]
-			[siteMap,best_Score] = moveBuildingThroughMap(movingbuilding, siteMap, best_Score)
-			listofScores.append(best_Score)
-		
-		elapsed_time = time.time() - start_time		
-		if(best_Score > BESTSCORE):
-			BESTSTATE = []
-			BESTSTATE = copy.deepcopy(siteMap)
-			BESTSCORE = best_Score
-			bestTime = elapsed_time
-		
-		buildingList = []
-		(siteMap, iCount, cCount, rCount) = readFile(inputLoc)
-		siteMap, buildingCost = populateSiteMap(siteMap)[0:2]
-		buildingList = getLocationsOfAllBuildings(siteMap)
-	
-	if DEBUGSTATESCORE:	
-		print(listofScores)
-		print BESTSTATE
-		print "\n"
-		print BESTSCORE	
-		print "\n"
-
-	columns = len(BESTSTATE)
-	rows = len(BESTSTATE[0])
-	if DEBUGSTATESCORE:
-		f1 = open('bestValue.txt', 'w')
-		f1.write(str(iCount) + "\n")
-		f1.write(str(cCount)+ "\n")
-		f1.write(str(rCount) + "\n")
-
-		for i in range(columns):
-			for j in range(rows):
-				if (j != (rows-1)):
-					f1.write(str(BESTSTATE[i,j]) + ",")
-				else:
-					f1.write(str(BESTSTATE[i,j]) + "\n")
-		f1.close()	
-	print "Hillclimb: time_", bestTime, " score_", BESTSCORE 
-	print "Genetic: time_", result.timeFound, " score_", result.utilVal 
-	
-	writeFile(outputLoc_hillClimb,BESTSCORE, BESTSTATE,bestTime)
-
-	#test = 1/0
-
-	# While loop logic
-	#===================
-	# 1) Figure out potential state.
-	# 2) Calculate building cost
-	# 3) Calculate state score
-	# 4) 
-	# print("INITIAL STATE")
-	# print(UNBUILTMAP)
-	# print("\n")
-	# print("INITIAL SCORE", calculateStateScore(UNBUILTMAP))
-	#print(UNBUILTMAP)
-	#print("\n")
-
-
-	#[bestState, buildingList, buildingNum, holdLastScore] =  moveBuildingThroughMap(buildingList, UNBUILTMAP)
-	#[bestState, buildingList, buildingNum, holdLastScore] =  moveBuildingThroughMap(buildingList, UNBUILTMAP)
-
-	# print("INITIAL STATE")
-	# print(UNBUILTMAP)
-
-
-	#calculateStateScore(siteMap)    
-=======
 resultFileName = 'resultSummary' + str(numCull) + '_' + str(k2) + '.csv'
 if os.path.exists(resultFileName):
     os.remove(resultFileName)
@@ -895,7 +809,6 @@ resultFile.close()
 
 
     #calculateStateScore(siteMap)    
->>>>>>> b40973f5ef9f2e6af54de04cff47fd81e832ba21
 
 
 

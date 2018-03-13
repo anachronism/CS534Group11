@@ -77,10 +77,169 @@ class BayesNode:
         # Normalize probabilities to sum to 1.
         # Return list of probabilities.
 
+debugMode = 0
+
+def readPriceTable(fileLoc):
+    cnt = 0
+   
+    probTable = [[[[[[] for i in range(3)] for i in range(3)] for i in range(3)]for i in range(3)]for i in range(3)]
+  
+    with open(fileLoc,'r') as f:
+        for line in f:
+            if cnt > 2:
+                row = (line.strip('\n')).split(',')
+                cnt = cnt+1
+                #for index,elt in enumerate(row):
+                for i in range(0,3):
+                 
+                    probTable[int(row[0])][int(row[1])][int(row[2])][int(row[3])][i] = row[i+4]
+                    if debugMode:
+                        print "Value___",probTable[int(row[0])][int(row[1])][int(row[2])][int(row[3])][i]
+                    #    
+            cnt = cnt + 1        
+            
+    return probTable
 
 
 ### MAKE NETWORK MAP GLOBAL
-BAYESMAP = dict
+BAYESMAP = dict()
+
+################   PRICE NODE
+priceFileName = "price.csv"
+
+parents = ["location", "age", "school", "size"]
+children = []
+probTable = readPriceTable(priceFileName)
+possibleValue = ["cheap","ok","expensive"]
+currentValue = [0]
+ 
+priceNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
+
+BAYESMAP["price"] = priceNode
+
+
+################   AMENETIES NODE
+parents = []
+children = ["location"]
+probTable = []
+probTable[0] = 0.3  
+probTable[1] = 0.7  
+
+possibleValue = ["lots","little"]
+currentValue = [0]
+ 
+amenetiesNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
+
+BAYESMAP["ameneties"] = amenetiesNode
+
+
+################   NEIGHB NODE
+parents = []
+children = ["location", "children"]
+probTable = []
+probTable[0] = 0.4  
+probTable[1] = 0.6  
+
+possibleValue = ["bad", "good"]
+currentValue = [0]
+ 
+amenetiesNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
+
+BAYESMAP["neighb"] = amenetiesNode
+
+
+################   LOCATION NODE
+parents = ["amenities", "neighborhood"]
+children = ["age", "price"]
+probTable = [[[[] for i in range(3)] for i in range(3)] for i in range(3)]
+probTable[0][0][0] = 0.3  
+probTable[0][0][1] = 0.4  
+probTable[0][0][2] = 0.3  
+probTable[0][1][0] = 0.8  
+probTable[0][1][1] = 0.15  
+probTable[0][1][2] = 0.05  
+probTable[1][0][0] = 0.2  
+probTable[1][0][1] = 0.4  
+probTable[1][0][2] = 0.4  
+probTable[1][1][0] = 0.5  
+probTable[1][1][0] = 0.35  
+probTable[1][1][0] = 0.15
+
+possibleValue = ["good","bad","ugly"]
+currentValue = [0]
+ 
+locationNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
+
+BAYESMAP["location"] = locationNode
+
+
+################   CHILDREN NODE
+parents = ["neighb"]
+children = ["schools"]
+probTable = [[[] for i in range(2)] for i in range(2)] 
+probTable[0][0] = 0.6  
+probTable[0][1] = 0.4  
+probTable[1][0] = 0.3  
+probTable[1][1] = 0.7 
+possibleValue = ["bad","good"]
+currentValue = [0]
+ 
+childrenNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
+
+BAYESMAP["children"] = childrenNode
+
+
+################   SIZE NODE
+parents = []
+children = ["price"]
+probTable = [] 
+probTable[0] = 0.33  
+probTable[0] = 0.34  
+probTable[0] = 0.33  
+possibleValue = ["small","medium","large"]
+currentValue = [0]
+ 
+sizeNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
+
+BAYESMAP["size"] = sizeNode
+
+
+################   SCHOOLS NODE
+parents = ["children"]
+children = ["price"]
+probTable = [[[] for i in range(2)] for i in range(2)] 
+probTable[0][0] = 0.7  
+probTable[0][1] = 0.3  
+probTable[1][0] = 0.8  
+probTable[1][1] = 0.2  
+possibleValue = ["bad","good"]
+currentValue = [0]
+ 
+schoolsNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
+
+BAYESMAP["schools"] = schoolsNode
+
+
+################   AGE NODE
+parents = ["location"]
+children = ["price"]
+probTable = [[[[] for i in range(2)] for i in range(2)] for i in range(2)] 
+probTable[0][0][0] = 0.3  
+probTable[0][0][1] = 0.7  
+probTable[0][1][0] = 0.6  
+probTable[0][1][1] = 0.4  
+probTable[1][0][0] = 0.9  
+probTable[1][1][1] = 0.1  
+possibleValue = ["old","new"]
+currentValue = [0]
+ 
+ageNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
+
+BAYESMAP["age"] = ageNode
+
+
+
+
 ### GLOBAL, TABLES OF POTENTIAL VALUES.
 ## A table for each cpt.
 
