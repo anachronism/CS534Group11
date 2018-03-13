@@ -30,11 +30,11 @@ class BayesNode:
         if len(parentInds) == 0:
             return self.probTable[desiredTargetProb]
         elif len(parentInds) == 1:
-            return self.probTable[parentInds,desiredTargetProb]
+            return self.probTable[parentInds[0]][desiredTargetProb]
         elif len(parentInds) == 2:
-            return self.probTable[parentInds[0],parentInds[1],desiredTargetProb]
+            return self.probTable[parentInds[0]][parentInds[1]][desiredTargetProb]
         else: # There are 4 parents
-            return self.probTable[parentInds[0],parentInds[1],parentInds[2],parentInds[3],desiredTargetProb]
+            return self.probTable[parentInds[0]][parentInds[1]][parentInds[2]][parentInds[3]][desiredTargetProb]
 
     def calculateProbabilies(self):
         global BAYESMAP
@@ -105,13 +105,15 @@ def readPriceTable(fileLoc):
 BAYESMAP = dict()
 
 ################   PRICE NODE
+CHEAP = 0
+OK = 1
+EXPENSIVE = 2
 priceFileName = "price.csv"
-
 parents = ["location", "age", "school", "size"]
 children = []
 probTable = readPriceTable(priceFileName)
 possibleValue = ["cheap","ok","expensive"]
-currentValue = [0]
+currentValue = CHEAP
  
 priceNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
 
@@ -119,11 +121,13 @@ BAYESMAP["price"] = priceNode
 
 
 ################   AMENETIES NODE
+LOTS = 0
+LITTLE = 1
 parents = []
 children = ["location"]
-probTable = [0, 0.3]
+probTable = [0.3, 0.7]
 possibleValue = ["lots","little"]
-currentValue = [0]
+currentValue = LOTS
  
 amenetiesNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
 
@@ -131,11 +135,13 @@ BAYESMAP["ameneties"] = amenetiesNode
 
 
 ################   NEIGHB NODE
+BAD_2OPT = 0
+GOOD_NeighbCh = 1
 parents = []
 children = ["location", "children"]
 probTable = [0.4,0.6]
 possibleValue = ["bad", "good"]
-currentValue = [0]
+currentValue = BAD_2OPT
  
 amenetiesNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
 
@@ -143,6 +149,9 @@ BAYESMAP["neighb"] = amenetiesNode
 
 
 ################   LOCATION NODE
+GOOD_LOC = 0
+BAD_LOC = 1
+UGLY_LOC = 2
 parents = ["amenities", "neighborhood"]
 children = ["age", "price"]
 probTable = [[[[] for i in range(3)] for i in range(3)] for i in range(3)]
@@ -159,8 +168,8 @@ probTable[1][1][0] = 0.5
 probTable[1][1][0] = 0.35  
 probTable[1][1][0] = 0.15
 
-possibleValue = ["good","bad","ugly"]
-currentValue = [0]
+possibleValue = ["good","bad","ugly"] # good is 0, bad is 1, ugly is 2
+currentValue = GOOD_LOC
  
 locationNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
 
@@ -176,7 +185,7 @@ probTable[0][1] = 0.4
 probTable[1][0] = 0.3  
 probTable[1][1] = 0.7 
 possibleValue = ["bad","good"]
-currentValue = [0]
+currentValue = BAD_2OPT
  
 childrenNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
 
@@ -184,11 +193,14 @@ BAYESMAP["children"] = childrenNode
 
 
 ################   SIZE NODE
+SMALL = 0
+MEDIUM = 1
+LARGE = 2
 parents = []
 children = ["price"]
 probTable = [0.33, 0.34, 0.33]
 possibleValue = ["small","medium","large"]
-currentValue = [0]
+currentValue = SMALL
  
 sizeNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
 
@@ -204,7 +216,7 @@ probTable[0][1] = 0.3
 probTable[1][0] = 0.8  
 probTable[1][1] = 0.2  
 possibleValue = ["bad","good"]
-currentValue = [0]
+currentValue = BAD_2OPT
  
 schoolsNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
 
@@ -212,6 +224,8 @@ BAYESMAP["schools"] = schoolsNode
 
 
 ################   AGE NODE
+OLD = 0
+NEW = 1
 parents = ["location"]
 children = ["price"]
 probTable = [[[[] for i in range(2)] for i in range(2)] for i in range(2)] 
@@ -222,7 +236,7 @@ probTable[0][1][1] = 0.4
 probTable[1][0][0] = 0.9  
 probTable[1][1][1] = 0.1  
 possibleValue = ["old","new"]
-currentValue = [0]
+currentValue = OLD
  
 ageNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
 
@@ -233,4 +247,3 @@ BAYESMAP["age"] = ageNode
 
 ### GLOBAL, TABLES OF POTENTIAL VALUES.
 ## A table for each cpt.
-
