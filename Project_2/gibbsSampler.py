@@ -121,10 +121,7 @@ BAYESMAP["price"] = priceNode
 ################   AMENETIES NODE
 parents = []
 children = ["location"]
-probTable = []
-probTable[0] = 0.3  
-probTable[1] = 0.7  
-
+probTable = [0, 0.3]
 possibleValue = ["lots","little"]
 currentValue = [0]
  
@@ -136,10 +133,7 @@ BAYESMAP["ameneties"] = amenetiesNode
 ################   NEIGHB NODE
 parents = []
 children = ["location", "children"]
-probTable = []
-probTable[0] = 0.4  
-probTable[1] = 0.6  
-
+probTable = [0.4,0.6]
 possibleValue = ["bad", "good"]
 currentValue = [0]
  
@@ -192,10 +186,7 @@ BAYESMAP["children"] = childrenNode
 ################   SIZE NODE
 parents = []
 children = ["price"]
-probTable = [] 
-probTable[0] = 0.33  
-probTable[0] = 0.34  
-probTable[0] = 0.33  
+probTable = [0.33, 0.34, 0.33]
 possibleValue = ["small","medium","large"]
 currentValue = [0]
  
