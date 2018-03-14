@@ -262,7 +262,7 @@ while "=" in inputString[i]:
     tempList = BAYESMAP[tempEvidenceNode[0]].possibleValues
     tempIndex = tempList.index(tempEvidenceNode[1])
     print "\n index:", tempIndex, "\n"
-    BAYESMAP[tempEvidenceNode[0]].value = tempIndex[1]    
+    BAYESMAP[tempEvidenceNode[0]].value = tempIndex   
     i=i+1
 
 updateNumber = int(inputString[i+1])
