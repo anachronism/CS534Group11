@@ -1,0 +1,8 @@
+Score achieved: 28
+Time solution was found: 0.501000 Seconds 
+ 2  3  3  X  6 
+ 4  X  3  2  3 
+ 3  0  1  6  X 
+ 7  6  C  8  5 
+ S  R  S  9  1 
+ C  R  2  6  I 

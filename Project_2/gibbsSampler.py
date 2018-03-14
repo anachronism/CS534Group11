@@ -8,8 +8,8 @@ class BayesNode:
         self.probTable = probTable # CPT for this node
         self.possibleValues = possibleValues # list of value names.
         self.currentValue = currentValue  
-        self.pastValues = []
-
+        self.pastValues = [] 
+   
     def updateNode(self,nIteration):
         self.pastValues.append((nIteration,self.currentValue)) # Append list with tuble containing current value and the number of iterations.
         numProbabilities = len(self.possibleValues)
@@ -25,7 +25,7 @@ class BayesNode:
             if randSample <= runningSumProb:
                 self.currentValue = ind
                 break    
-
+   
     def getProbFromTable(self, parentInds,desiredTargetProb):
         #print parentInds
         if len(parentInds) == 0:
@@ -74,7 +74,7 @@ class BayesNode:
         probValues = np.divide(probValues, np.sum(probValues))
         return probValues
         
-        # For each option in possiblevalues:
+        # For each option in possibleValues:
             # Calculate P(that result | parent states)
             # Calculate P(child states | all known states including result)
                 # This splits up for each child state.
@@ -106,9 +106,12 @@ def readPriceTable(fileLoc):
             
     return probTable
 
+def converStringToValue(converString, nodeName):
+    test = 0
+
 ### MAIN:
 BAYESMAP = dict()
-listPossibleNodes = ["price","location","neighb","location","children","size","schools","age"]
+listPossibleNodes = ["price","location","neighborhood","location","children","size","schools","age"]
 
 ### CONSTANTS, FOR READABILITY
 # Price:
@@ -140,33 +143,33 @@ priceFileName = "price.csv"
 parents = ["location", "age", "schools", "size"]
 children = []
 probTable = readPriceTable(priceFileName)
-possibleValue = ["cheap","ok","expensive"]
+possibleValues = ["cheap","ok","expensive"]
 currentValue = random.choice([CHEAP,OK,EXPENSIVE])
-priceNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
+priceNode = BayesNode(parents, children, probTable, possibleValues,currentValue) 
 BAYESMAP["price"] = priceNode
 
 ################   AMENETIES NODE
 parents = []
 children = ["location"]
 probTable = [0.3, 0.7]
-possibleValue = ["lots","little"]
+possibleValues = ["lots","little"]
 currentValue = random.choice([LOTS,LITTLE])
-amenetiesNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
+amenetiesNode = BayesNode(parents, children, probTable, possibleValues,currentValue) 
 BAYESMAP["ameneties"] = amenetiesNode
 
 
-################   NEIGHB NODE
+################   neighborhood NODE
 parents = []
 children = ["location", "children"]
 probTable = [0.4,0.6]
-possibleValue = ["bad", "good"]
+possibleValues = ["bad", "good"]
 currentValue = random.choice([BAD_2OPT,GOOD_2OPT])
-neighbNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
-BAYESMAP["neighb"] = neighbNode
+neighbNode = BayesNode(parents, children, probTable, possibleValues,currentValue) 
+BAYESMAP["neighborhood"] = neighbNode
 
 
 ################   LOCATION NODE
-parents = ["amenities", "neighb"]
+parents = ["amenities", "neighborhood"]
 children = ["age", "price"]
 probTable = [[[[] for i in range(3)] for i in range(2)] for i in range(2)]
 probTable[LOTS][BAD_2OPT][GOOD_LOC] = 0.3  
@@ -181,23 +184,23 @@ probTable[LITTLE][BAD_2OPT][UGLY_LOC] = 0.4
 probTable[LITTLE][GOOD_2OPT][GOOD_LOC] = 0.5  
 probTable[LITTLE][GOOD_2OPT][BAD_LOC] = 0.35  
 probTable[LITTLE][GOOD_2OPT][UGLY_LOC] = 0.15
-possibleValue = ["good","bad","ugly"] # good is 0, bad is 1, ugly is 2
+possibleValues = ["good","bad","ugly"] # good is 0, bad is 1, ugly is 2
 currentValue = random.choice([GOOD_LOC,BAD_LOC,UGLY_LOC])
-locationNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
+locationNode = BayesNode(parents, children, probTable, possibleValues,currentValue) 
 BAYESMAP["location"] = locationNode
 
 
 ################   CHILDREN NODE
-parents = ["neighb"]
+parents = ["neighborhood"]
 children = ["schools"]
 probTable = [[[] for i in range(2)] for i in range(2)] 
 probTable[BAD_2OPT][BAD_2OPT] = 0.6  
 probTable[BAD_2OPT][GOOD_2OPT] = 0.4  
 probTable[GOOD_2OPT][BAD_2OPT] = 0.3  
 probTable[GOOD_2OPT][GOOD_2OPT] = 0.7 
-possibleValue = ["bad","good"]
+possibleValues = ["bad","good"]
 currentValue = random.choice([BAD_2OPT,GOOD_2OPT])
-childrenNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
+childrenNode = BayesNode(parents, children, probTable, possibleValues,currentValue) 
 BAYESMAP["children"] = childrenNode
 
 
@@ -205,9 +208,9 @@ BAYESMAP["children"] = childrenNode
 parents = []
 children = ["price"]
 probTable = [0.33, 0.34, 0.33]
-possibleValue = ["small","medium","large"]
+possibleValues = ["small","medium","large"]
 currentValue = random.choice([SMALL,MEDIUM,LARGE])
-sizeNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
+sizeNode = BayesNode(parents, children, probTable, possibleValues,currentValue) 
 BAYESMAP["size"] = sizeNode
 
 
@@ -219,9 +222,9 @@ probTable[BAD_2OPT][BAD_2OPT] = 0.7
 probTable[BAD_2OPT][GOOD_2OPT] = 0.3  
 probTable[GOOD_2OPT][BAD_2OPT] = 0.8  
 probTable[GOOD_2OPT][GOOD_2OPT] = 0.2  
-possibleValue = ["bad","good"]
+possibleValues = ["bad","good"]
 currentValue = random.choice([BAD_2OPT,GOOD_2OPT])
-schoolsNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
+schoolsNode = BayesNode(parents, children, probTable, possibleValues,currentValue) 
 BAYESMAP["schools"] = schoolsNode
 
 
@@ -235,15 +238,42 @@ probTable[BAD_LOC][OLD] = 0.6
 probTable[BAD_LOC][NEW] = 0.4  
 probTable[UGLY_LOC][OLD] = 0.9  
 probTable[UGLY_LOC][NEW] = 0.1  
-possibleValue = ["old","new"]
+possibleValues = []
+possibleValues = ["old","new"]
 currentValue = random.choice([OLD,NEW])
-ageNode = BayesNode(parents, children, probTable, possibleValue,currentValue) 
+ageNode = BayesNode(parents, children, probTable, possibleValues,currentValue) 
 BAYESMAP["age"] = ageNode
 
 
 ### PARSE INPUTS, CHANGE EVIDENCE NODE VALUES, MAKE SURE TO RANDOM SELECT
+inputString = raw_input("Enter the input string: \n")
+inputString = inputString.split()
 
-listEvidenceNodes = [] ### TODO: Populate with evidence node things
+queryNode = inputString[0]
+
+listEvidenceNodes = []
+listEvidenceNodesValues = []
+
+i = 1
+while "=" in inputString[i]:
+    tempEvidenceNode = inputString[i].split("=")
+    listEvidenceNodes.append(tempEvidenceNode[0])
+    listEvidenceNodesValues.append(tempEvidenceNode[1])
+    tempList = BAYESMAP[tempEvidenceNode[0]].possibleValues
+    tempIndex = tempList.index(tempEvidenceNode[1])
+    print "\n index:", tempIndex, "\n"
+    BAYESMAP[tempEvidenceNode[0]].value = tempEvidenceNode[1]    
+    i=i+1
+
+updateNumber = int(inputString[i+1])
+dropNumber = int(inputString[i+3])
+
+print listEvidenceNodes[0], listEvidenceNodes[1] 
+print listEvidenceNodesValues[0],listEvidenceNodesValues[1]
+print updateNumber
+print dropNumber
+
+### TODO: Populate with evidence node things
 # for elt in whateverEvidenceNodesNeedParsing
 # Set BAYESMAP[elt].currentValue = whatever value its being set to
 
@@ -251,3 +281,5 @@ nodesToUpdate = np.setdiff1d(listEvidenceNodes,listPossibleNodes)
 
 # Actual looping through, ### TODO: Figure best way to drop the first M current values
 BAYESMAP["age"].updateNode(1)
+
+#price schools=good location=ugly -u 10000 -d 0
