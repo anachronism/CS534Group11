@@ -291,8 +291,31 @@ cnt = 0
 for i in range(0,updateNumber):
     nodeToUpdate = random.choice(nodesToUpdate)
     BAYESMAP[nodeToUpdate].updateNode(i) 
-    
-    
+numberOf0 = 0
+numberOf1 = 0
+numberOf2 = 0
+totalNumNodeUpdates = len(BAYESMAP[queryNode].pastValues) 
+for i in range(dropNumber,totalNumNodeUpdates):
+
+    value = BAYESMAP[queryNode].pastValues[i][1]
+    if value == 0:
+        numberOf0 = numberOf0 + 1
+    elif value == 1:
+        numberOf1 = numberOf1 + 1
+    elif value == 2:
+        numberOf2 = numberOf2 + 1
+
+probability0 = float(numberOf0)/float(totalNumNodeUpdates)
+print  "Probability of ", queryNode, "being", BAYESMAP[queryNode].possibleValues[0], "is:", probability0
+
+probability1 = float(numberOf1)/float(totalNumNodeUpdates)
+print "Probability of ", queryNode, "being", BAYESMAP[queryNode].possibleValues[1], "is:", probability1
+
+if len(BAYESMAP[queryNode].possibleValues) == 3:
+    probability2 = float(numberOf2)/float(totalNumNodeUpdates)
+    print "Probability of ", queryNode, "being", BAYESMAP[queryNode].possibleValues[2], "is:", probability2
+
+len(BAYESMAP[queryNode].pastValues)
 #for i in valueHistory:
 #    print "___________", i
 # Actual looping through, ### TODO: Figure best way to drop the first M current values
