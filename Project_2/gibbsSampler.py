@@ -27,16 +27,15 @@ class BayesNode:
                 break    
    
     def getProbFromTable(self, parentInds,desiredTargetProb):
-        #print parentInds
         if len(parentInds) == 0:
-            return self.probTable[desiredTargetProb]
+            retVal = self.probTable[desiredTargetProb]
         elif len(parentInds) == 1:
-            return self.probTable[parentInds[0]][desiredTargetProb]
+            retVal = self.probTable[parentInds[0]][desiredTargetProb]
         elif len(parentInds) == 2:
-            return self.probTable[parentInds[0]][parentInds[1]][desiredTargetProb]
+            retVal = self.probTable[parentInds[0]][parentInds[1]][desiredTargetProb]
         else: # There are 4 parents
-            return self.probTable[parentInds[0]][parentInds[1]][parentInds[2]][parentInds[3]][desiredTargetProb]
-
+            retVal = self.probTable[parentInds[0]][parentInds[1]][parentInds[2]][parentInds[3]][desiredTargetProb]
+        return retVal
     def calculateProbabilities(self):
         global BAYESMAP
 
@@ -44,7 +43,7 @@ class BayesNode:
         for elt in self.parents:
             #print elt
             currentNode = BAYESMAP[elt]
-            print currentNode.currentValue, ' - X, elt - ', elt
+            #print currentNode.currentValue, ' - X, elt - ', elt
             parentStates.append(currentNode.currentValue)
         probValues = []
 
@@ -64,7 +63,8 @@ class BayesNode:
                     else:
                         childStates.append(currentNode.currentValue)
 
-                probFromChildren = probFromChildren * float(currentChild.getProbFromTable(childStates, currentChild.currentValue)) ### WHY IS THIS A STR
+                ######
+                probFromChildren = probFromChildren * currentChild.getProbFromTable(childStates, currentChild.currentValue) ### WHY IS THIS A STR
                
             #print type(probFromParents)
            # print probFromChildren
@@ -98,7 +98,7 @@ def readPriceTable(fileLoc):
                 #for index,elt in enumerate(row):
                 for i in range(0,3):
                  
-                    probTable[int(row[0])][int(row[1])][int(row[2])][int(row[3])][i] = row[i+4]
+                    probTable[int(row[0])][int(row[1])][int(row[2])][int(row[3])][i] = float(row[i+4])
                     if debugMode:
                         print "Value___",probTable[int(row[0])][int(row[1])][int(row[2])][int(row[3])][i]
                     #    
@@ -247,11 +247,11 @@ BAYESMAP["age"] = ageNode
 
 ### PARSE INPUTS, CHANGE EVIDENCE NODE VALUES, MAKE SURE TO RANDOM SELECT
 debug =0
-inputString = raw_input("Enter the input string: \n")
+#inputString = raw_input("Enter the input string: \n")
+inputString = 'price schools=good location=ugly -u 10000 -d 0'
 inputString = inputString.split()
 
 queryNode = inputString[0]
-
 listEvidenceNodes = []
 listEvidenceNodesValues = []
 
