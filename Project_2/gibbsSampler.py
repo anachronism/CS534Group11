@@ -248,7 +248,7 @@ BAYESMAP["age"] = ageNode
 ### PARSE INPUTS, CHANGE EVIDENCE NODE VALUES, MAKE SURE TO RANDOM SELECT
 debug =0
 #inputString = raw_input("Enter the input string: \n")
-inputString = 'price schools=good location=ugly -u 10000 -d 0'
+inputString = 'price schools=good location=ugly -u 100000 -d 1000'
 inputString = inputString.split()
 
 queryNode = inputString[0]
@@ -264,7 +264,7 @@ while "=" in inputString[i]:
     tempIndex = tempList.index(tempEvidenceNode[1])
     #print "\n index:", tempIndex, "\n"
     BAYESMAP[tempEvidenceNode[0]].value = tempIndex   
-    i=i+1
+    i += 1
 
 updateNumber = int(inputString[i+1])
 dropNumber = int(inputString[i+3])
@@ -294,25 +294,29 @@ for i in range(0,updateNumber):
 numberOf0 = 0
 numberOf1 = 0
 numberOf2 = 0
-totalNumNodeUpdates = len(BAYESMAP[queryNode].pastValues) 
-for i in range(dropNumber,totalNumNodeUpdates):
+validUpdateCnt = 0
 
-    value = BAYESMAP[queryNode].pastValues[i][1]
-    if value == 0:
-        numberOf0 = numberOf0 + 1
-    elif value == 1:
-        numberOf1 = numberOf1 + 1
-    elif value == 2:
-        numberOf2 = numberOf2 + 1
+nodeUpdateCnt = len(BAYESMAP[queryNode].pastValues) 
 
-probability0 = float(numberOf0)/float(totalNumNodeUpdates)
+for i in range(dropNumber,nodeUpdateCnt):
+    if(BAYESMAP[queryNode].pastValues[i][0] >= dropNumber):
+        validUpdateCnt += 1       
+        value = BAYESMAP[queryNode].pastValues[i][1]
+        if value == 0:
+            numberOf0 += 1
+        elif value == 1:
+            numberOf1 += 1
+        elif value == 2:
+            numberOf2 += 1
+
+probability0 = float(numberOf0)/float(validUpdateCnt)
 print  "Probability of ", queryNode, "being", BAYESMAP[queryNode].possibleValues[0], "is:", probability0
 
-probability1 = float(numberOf1)/float(totalNumNodeUpdates)
+probability1 = float(numberOf1)/float(validUpdateCnt)
 print "Probability of ", queryNode, "being", BAYESMAP[queryNode].possibleValues[1], "is:", probability1
 
 if len(BAYESMAP[queryNode].possibleValues) == 3:
-    probability2 = float(numberOf2)/float(totalNumNodeUpdates)
+    probability2 = float(numberOf2)/float(validUpdateCnt)
     print "Probability of ", queryNode, "being", BAYESMAP[queryNode].possibleValues[2], "is:", probability2
 
 len(BAYESMAP[queryNode].pastValues)
