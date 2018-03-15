@@ -130,6 +130,30 @@ def printBayesMapStatus():
        sys.stdout.write(str(BAYESMAP[elt].currentValue) + ' ')
     sys.stdout.write('\n')
 
+def getProbEst(nodeToQuery,dropNum, nodeUpdateNum):
+    global BAYESMAP 
+    numberOf0 = 0
+    numberOf1 = 0
+    numberOf2 = 0
+    validUpdateCnt = 0
+    for i in range(dropNum,nodeUpdateNum):
+        if(BAYESMAP[nodeToQuery].pastValues[i][0] >= dropNumber):
+            validUpdateCnt += 1       
+            value = BAYESMAP[queryNode].pastValues[i][1]
+            if value == 0:
+                numberOf0 += 1
+            elif value == 1:
+                numberOf1 += 1
+            elif value == 2:
+                numberOf2 += 1
+    probability0 = float(numberOf0)/float(validUpdateCnt)
+    probability1 = float(numberOf1)/float(validUpdateCnt)
+    if len(BAYESMAP[nodeToQuery].possibleValues) == 3:
+        probability2 = float(numberOf2)/float(validUpdateCnt)
+        return probability0,probability1,probability2
+    else:
+        return probability0, probability1
+
 ### MAIN:
 BAYESMAP = dict()
 listPossibleNodes = ["price","amenities","neighborhood","location","children","size","schools","age"]
@@ -321,26 +345,12 @@ validUpdateCnt = 0
 
 nodeUpdateCnt = len(BAYESMAP[queryNode].pastValues) 
 
-for i in range(dropNumber,nodeUpdateCnt):
-    if(BAYESMAP[queryNode].pastValues[i][0] >= dropNumber):
-        validUpdateCnt += 1       
-        value = BAYESMAP[queryNode].pastValues[i][1]
-        if value == 0:
-            numberOf0 += 1
-        elif value == 1:
-            numberOf1 += 1
-        elif value == 2:
-            numberOf2 += 1
+probabilitiesReturn = getProbEst(queryNode,dropNumber,nodeUpdateCnt)
 
-probability0 = float(numberOf0)/float(validUpdateCnt)
-print  "Probability of ", queryNode, "being", BAYESMAP[queryNode].possibleValues[0], "is:", probability0
-
-probability1 = float(numberOf1)/float(validUpdateCnt)
-print "Probability of ", queryNode, "being", BAYESMAP[queryNode].possibleValues[1], "is:", probability1
-
+print  "Probability of ", queryNode, "being", BAYESMAP[queryNode].possibleValues[0], "is:", probabilitiesReturn[0]
+print "Probability of ", queryNode, "being", BAYESMAP[queryNode].possibleValues[1], "is:", probabilitiesReturn[1]
 if len(BAYESMAP[queryNode].possibleValues) == 3:
-    probability2 = float(numberOf2)/float(validUpdateCnt)
-    print "Probability of ", queryNode, "being", BAYESMAP[queryNode].possibleValues[2], "is:", probability2
+    print "Probability of ", queryNode, "being", BAYESMAP[queryNode].possibleValues[2], "is:", probabilitiesReturn[2]
 
 len(BAYESMAP[queryNode].pastValues)
 #for i in valueHistory:
