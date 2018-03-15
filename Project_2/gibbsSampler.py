@@ -111,7 +111,7 @@ def converStringToValue(converString, nodeName):
 
 ### MAIN:
 BAYESMAP = dict()
-listPossibleNodes = ["price","location","neighborhood","location","children","size","schools","age"]
+listPossibleNodes = ["price","amenities","neighborhood","location","children","size","schools","age"]
 
 ### CONSTANTS, FOR READABILITY
 # Price:
@@ -155,7 +155,7 @@ probTable = [0.3, 0.7]
 possibleValues = ["lots","little"]
 currentValue = random.choice([LOTS,LITTLE])
 amenetiesNode = BayesNode(parents, children, probTable, possibleValues,currentValue) 
-BAYESMAP["ameneties"] = amenetiesNode
+BAYESMAP["amenities"] = amenetiesNode
 
 
 ################   neighborhood NODE
@@ -288,7 +288,7 @@ if debug:
 valueHistory = [[]]
 
 cnt = 0 
-for i in range(0,2):
+for i in range(0,updateNumber):
     nodeToUpdate = random.choice(nodesToUpdate)
     BAYESMAP[nodeToUpdate].updateNode(i) 
     
