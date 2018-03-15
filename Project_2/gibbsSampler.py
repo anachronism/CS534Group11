@@ -246,6 +246,7 @@ BAYESMAP["age"] = ageNode
 
 
 ### PARSE INPUTS, CHANGE EVIDENCE NODE VALUES, MAKE SURE TO RANDOM SELECT
+debug =0
 inputString = raw_input("Enter the input string: \n")
 inputString = inputString.split()
 
@@ -261,25 +262,47 @@ while "=" in inputString[i]:
     listEvidenceNodesValues.append(tempEvidenceNode[1])
     tempList = BAYESMAP[tempEvidenceNode[0]].possibleValues
     tempIndex = tempList.index(tempEvidenceNode[1])
-    print "\n index:", tempIndex, "\n"
+    #print "\n index:", tempIndex, "\n"
     BAYESMAP[tempEvidenceNode[0]].value = tempIndex   
     i=i+1
 
 updateNumber = int(inputString[i+1])
 dropNumber = int(inputString[i+3])
 
-print listEvidenceNodes[0], listEvidenceNodes[1] 
-print listEvidenceNodesValues[0],listEvidenceNodesValues[1]
-print updateNumber
-print dropNumber
+if debug:
+    print listEvidenceNodes[0], listEvidenceNodes[1] 
+    print listEvidenceNodesValues[0],listEvidenceNodesValues[1]
+    print updateNumber
+    print dropNumber
 
 ### TODO: Populate with evidence node things
 # for elt in whateverEvidenceNodesNeedParsing
 # Set BAYESMAP[elt].currentValue = whatever value its being set to
 
-nodesToUpdate = np.setdiff1d(listEvidenceNodes,listPossibleNodes)
+nodesToUpdate = np.setdiff1d(listPossibleNodes,listEvidenceNodes)
+if debug:
+    for i in nodesToUpdate:
+        print "None  evidence node", i
 
+
+valueHistory = [[]]
+
+cnt = 0 
+for i in range(0,2):
+    nodeToUpdate = random.choice(nodesToUpdate)
+    BAYESMAP[nodeToUpdate].updateNode(i) 
+    
+    
+#for i in valueHistory:
+#    print "___________", i
 # Actual looping through, ### TODO: Figure best way to drop the first M current values
-BAYESMAP["age"].updateNode(1)
+
+
+
+
+#print "current value: ", BAYESMAP["age"].currentValue 
+#BAYESMAP["age"].updateNode(1)
+#print "current value: ", BAYESMAP["age"].currentValue
+
 
 #price schools=good location=ugly -u 10000 -d 0
