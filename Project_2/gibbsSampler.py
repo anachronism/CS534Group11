@@ -1,6 +1,7 @@
 # Class containing one map candidate.
 import random
 import numpy as np
+import sys
 class BayesNode:
     def __init__(self, parents, children,probTable,possibleValues,currentValue):
         self.parents = parents # list of names of parents NOTE: MUST BE IN SAME ORDER AS TABLE.
@@ -9,6 +10,7 @@ class BayesNode:
         self.possibleValues = possibleValues # list of value names.
         self.currentValue = currentValue  
         self.pastValues = [] 
+        self.probSave = []### TODO: REMOVE
    
     def updateNode(self,nIteration):
         self.pastValues.append((nIteration,self.currentValue)) # Append list with tuble containing current value and the number of iterations.
@@ -17,24 +19,37 @@ class BayesNode:
     
         # Returns a list of length (numProbabilities)
         newProb = self.calculateProbabilities()
-        
+        self.probSave.append((newProb))
+
         randSample = random.random()
+        # print 'rand:',randSample, 'probs:', newProb
         runningSumProb = 0
         for ind,elt in enumerate(self.possibleValues):
             runningSumProb += newProb[ind]
             if randSample <= runningSumProb:
                 self.currentValue = ind
+                # print 'Changing new val'
                 break    
    
     def getProbFromTable(self, parentInds,desiredTargetProb):
         if len(parentInds) == 0:
             retVal = self.probTable[desiredTargetProb]
+            if retVal == []:
+                print 'BUG0'
         elif len(parentInds) == 1:
             retVal = self.probTable[parentInds[0]][desiredTargetProb]
+            if retVal == []:
+                print 'BUG1'
         elif len(parentInds) == 2:
             retVal = self.probTable[parentInds[0]][parentInds[1]][desiredTargetProb]
+            if retVal == []:
+                print 'BUG2'
         else: # There are 4 parents
             retVal = self.probTable[parentInds[0]][parentInds[1]][parentInds[2]][parentInds[3]][desiredTargetProb]
+            if retVal == []:
+                print 'BUG4: ',parentInds
+                #print self.probTable
+
         return retVal
     def calculateProbabilities(self):
         global BAYESMAP
@@ -64,14 +79,15 @@ class BayesNode:
                         childStates.append(currentNode.currentValue)
 
                 ######
-                probFromChildren = probFromChildren * currentChild.getProbFromTable(childStates, currentChild.currentValue) ### WHY IS THIS A STR
+                probFromChildren = probFromChildren * currentChild.getProbFromTable(childStates, currentChild.currentValue) 
                
             #print type(probFromParents)
-           # print probFromChildren
-            probValues.append(probFromParents*probFromChildren)
+            # print 'c:', probFromChildren,' p:', probFromParents
+            probValues.append(probFromParents*probFromChildren) ### TODO: FIGURE OUT WHY THIS DOESN"T SEEM TO CHANGE.
 
         # NORMALIZE probValues.
         probValues = np.divide(probValues, np.sum(probValues))
+        #print 'prob: ',probValues
         return probValues
         
         # For each option in possibleValues:
@@ -92,7 +108,7 @@ def readPriceTable(fileLoc):
   
     with open(fileLoc,'r') as f:
         for line in f:
-            if cnt > 2:
+            if cnt > 1:
                 row = (line.strip('\n')).split(',')
                 cnt = cnt+1
                 #for index,elt in enumerate(row):
@@ -108,6 +124,11 @@ def readPriceTable(fileLoc):
 
 def converStringToValue(converString, nodeName):
     test = 0
+
+def printBayesMapStatus():
+    for elt in listPossibleNodes:
+       sys.stdout.write(str(BAYESMAP[elt].currentValue) + ' ')
+    sys.stdout.write('\n')
 
 ### MAIN:
 BAYESMAP = dict()
@@ -263,7 +284,7 @@ while "=" in inputString[i]:
     tempList = BAYESMAP[tempEvidenceNode[0]].possibleValues
     tempIndex = tempList.index(tempEvidenceNode[1])
     #print "\n index:", tempIndex, "\n"
-    BAYESMAP[tempEvidenceNode[0]].value = tempIndex   
+    BAYESMAP[tempEvidenceNode[0]].currentValue = tempIndex   
     i += 1
 
 updateNumber = int(inputString[i+1])
@@ -275,9 +296,6 @@ if debug:
     print updateNumber
     print dropNumber
 
-### TODO: Populate with evidence node things
-# for elt in whateverEvidenceNodesNeedParsing
-# Set BAYESMAP[elt].currentValue = whatever value its being set to
 
 nodesToUpdate = np.setdiff1d(listPossibleNodes,listEvidenceNodes)
 if debug:
@@ -287,10 +305,15 @@ if debug:
 
 valueHistory = [[]]
 
+### ACTUAL GIBBS RUNS HERE:
 cnt = 0 
 for i in range(0,updateNumber):
     nodeToUpdate = random.choice(nodesToUpdate)
     BAYESMAP[nodeToUpdate].updateNode(i) 
+    #printBayesMapStatus()
+
+
+### After gibbs runs, get probability.
 numberOf0 = 0
 numberOf1 = 0
 numberOf2 = 0
