@@ -59,11 +59,22 @@ dataDim = 2 ### TODO: make so this number is updated to the dimension of the inp
 dataMeanRange = [0,1] ### TODO: make this based on input data [min,max]
 dataCovRange = [ 0, 0.1] ### TODO: make this based on input data
 
+
+
 if numClusters == 'X':
 	## EM with Bayesian information criterion.
 	pass # replace pass with actual thing.
+
+	# start with numClusters = 2
+	# Run EM with random restarts.
+	# Using resulting log likelihood, calculate BIC
+		## BIC = ln(numDataPoints)*numParametersEst - 2 * log-likelihood
+	# If BIC went down from last value, return numClusters-1
+	# else keep looping.
+	### RETURN: num clusters, LL, BIC, cluster centers.
+
 else:
-	## Standard EM ### TODO: determine if this is an either or, or if you just use BIC and then run EM.
+	## Standard EM 
 
 	### EM Steps:	
 	for i in range(0,numRestarts):
