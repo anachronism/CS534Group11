@@ -2,6 +2,7 @@
 import random
 import numpy as np
 import sys
+import os
 class BayesNode:
     def __init__(self, parents, children,probTable,possibleValues,currentValue):
         self.parents = parents # list of names of parents NOTE: MUST BE IN SAME ORDER AS TABLE.
@@ -12,6 +13,9 @@ class BayesNode:
         self.pastValues = [] 
         self.probSave = []### TODO: REMOVE
    
+    def repeatValue(self,nIteration):
+        self.pastValues.append((nIteration,self.currentValue))
+
     def updateNode(self,nIteration):
         self.pastValues.append((nIteration,self.currentValue)) # Append list with tuble containing current value and the number of iterations.
         numProbabilities = len(self.possibleValues)
@@ -136,8 +140,9 @@ def getProbEst(nodeToQuery,dropNum, nodeUpdateNum):
     numberOf1 = 0
     numberOf2 = 0
     validUpdateCnt = 0
-    for i in range(dropNum,nodeUpdateNum):
+    for i in range(0,nodeUpdateNum):
         if(BAYESMAP[nodeToQuery].pastValues[i][0] >= dropNumber):
+            #print BAYESMAP[nodeToQuery].pastValues[i][0]
             validUpdateCnt += 1       
             value = BAYESMAP[queryNode].pastValues[i][1]
             if value == 0:
@@ -146,14 +151,23 @@ def getProbEst(nodeToQuery,dropNum, nodeUpdateNum):
                 numberOf1 += 1
             elif value == 2:
                 numberOf2 += 1
-    probability0 = float(numberOf0)/float(validUpdateCnt)
-    probability1 = float(numberOf1)/float(validUpdateCnt)
-    if len(BAYESMAP[nodeToQuery].possibleValues) == 3:
-        probability2 = float(numberOf2)/float(validUpdateCnt)
-        return probability0,probability1,probability2
-    else:
-        return probability0, probability1
 
+    if validUpdateCnt > 0:
+        probability0 = float(numberOf0)/float(validUpdateCnt)
+        probability1 = float(numberOf1)/float(validUpdateCnt)
+        if len(BAYESMAP[nodeToQuery].possibleValues) == 3:
+            probability2 = float(numberOf2)/float(validUpdateCnt)
+            return probability0,probability1,probability2
+        else:
+            return probability0, probability1
+    else:
+        probability0 = 0
+        probability1 = 0
+        if len(BAYESMAP[nodeToQuery].possibleValues) == 3:
+            probability2 = 0
+            return probability0,probability1,probability2
+        else:
+            return probability0, probability1
 ### MAIN:
 BAYESMAP = dict()
 listPossibleNodes = ["price","amenities","neighborhood","location","children","size","schools","age"]
@@ -289,80 +303,150 @@ currentValue = random.choice([OLD,NEW])
 ageNode = BayesNode(parents, children, probTable, possibleValues,currentValue) 
 BAYESMAP["age"] = ageNode
 
+#parametrs for automated program runs(to perform a single run using user input set automatedState = 0 )
+#if automatedState is set to 1:
+#updateNumber is increased by updateNumberStep and the program executes until updateNumber is greater than updateNumberMax then:
+#updateNumber is set to updateNumberStatic and dropNumber is increaced by dropNumberStep until dropNumber is greater than dropNumberMax 
+automatedState = 1
+increaseUpdateNumberFlag = 1
+increaseDropNumberFlag = 0
+updateNumberStep = 5
+updateNumberMax = 500
+dropNumberStep = 200
+dropNumberMax = 450
+updateNumberStatic = 500
 
-### PARSE INPUTS, CHANGE EVIDENCE NODE VALUES, MAKE SURE TO RANDOM SELECT
-debug =0
-#inputString = raw_input("Enter the input string: \n")
-inputString = 'price schools=good location=ugly -u 100000 -d 1000'
-inputString = inputString.split()
+#initial updateNumber and drop number(if automatedState set to '0' the values will be overwritten by user input)
+updateNumber = 0
+dropNumber = 0
+droptNumberStr = str(dropNumber)
+while increaseDropNumberFlag == 1 or increaseUpdateNumberFlag == 1:
 
-queryNode = inputString[0]
-listEvidenceNodes = []
-listEvidenceNodesValues = []
+    
+    ### PARSE INPUTS, CHANGE EVIDENCE NODE VALUES, MAKE SURE TO RANDOM SELECT
+    debug =0
+    #inputString = raw_input("Enter the input string: \n")
+    inputString =  'price neighborhood=good -u 100000 -d 100'
+    
+    inputString = inputString.split()
 
-i = 1
-while "=" in inputString[i]:
-    tempEvidenceNode = inputString[i].split("=")
-    listEvidenceNodes.append(tempEvidenceNode[0])
-    listEvidenceNodesValues.append(tempEvidenceNode[1])
-    tempList = BAYESMAP[tempEvidenceNode[0]].possibleValues
-    tempIndex = tempList.index(tempEvidenceNode[1])
-    #print "\n index:", tempIndex, "\n"
-    BAYESMAP[tempEvidenceNode[0]].currentValue = tempIndex   
-    i += 1
+    queryNode = inputString[0]
+    listEvidenceNodes = []
+    listEvidenceNodesValues = []
 
-updateNumber = int(inputString[i+1])
-dropNumber = int(inputString[i+3])
+    i = 1
+    while "=" in inputString[i]:
+        tempEvidenceNode = inputString[i].split("=")
+        listEvidenceNodes.append(tempEvidenceNode[0])
+        listEvidenceNodesValues.append(tempEvidenceNode[1])
+        tempList = BAYESMAP[tempEvidenceNode[0]].possibleValues
+        tempIndex = tempList.index(tempEvidenceNode[1])
+        #print "\n index:", tempIndex, "\n"
+        BAYESMAP[tempEvidenceNode[0]].currentValue = tempIndex   
+        i += 1
 
-if debug:
-    print listEvidenceNodes[0], listEvidenceNodes[1] 
-    print listEvidenceNodesValues[0],listEvidenceNodesValues[1]
-    print updateNumber
-    print dropNumber
+    if automatedState == 0:
+        updateNumber = int(inputString[i+1])
+        dropNumber = int(inputString[i+3])
+        increaseDropNumberFlag = 0 
+        increaseUpdateNumberFlag = 0
+    else:
+        if updateNumber > (updateNumberMax - updateNumberStep):
+            increaseUpdateNumberFlag = 0
+            increaseDropNumberFlag = 1
+        
+        if increaseUpdateNumberFlag:
+            updateNumber += updateNumberStep
+        elif increaseDropNumberFlag:
+            updateNumber = updateNumberStatic
+            dropNumber += dropNumberStep
 
-
-nodesToUpdate = np.setdiff1d(listPossibleNodes,listEvidenceNodes)
-if debug:
-    for i in nodesToUpdate:
-        print "None  evidence node", i
-
-
-valueHistory = [[]]
-
-### ACTUAL GIBBS RUNS HERE:
-cnt = 0 
-for i in range(0,updateNumber):
-    nodeToUpdate = random.choice(nodesToUpdate)
-    BAYESMAP[nodeToUpdate].updateNode(i) 
-    #printBayesMapStatus()
-
-
-### After gibbs runs, get probability.
-numberOf0 = 0
-numberOf1 = 0
-numberOf2 = 0
-validUpdateCnt = 0
-
-nodeUpdateCnt = len(BAYESMAP[queryNode].pastValues) 
-
-probabilitiesReturn = getProbEst(queryNode,dropNumber,nodeUpdateCnt)
-
-print  "Probability of ", queryNode, "being", BAYESMAP[queryNode].possibleValues[0], "is:", probabilitiesReturn[0]
-print "Probability of ", queryNode, "being", BAYESMAP[queryNode].possibleValues[1], "is:", probabilitiesReturn[1]
-if len(BAYESMAP[queryNode].possibleValues) == 3:
-    print "Probability of ", queryNode, "being", BAYESMAP[queryNode].possibleValues[2], "is:", probabilitiesReturn[2]
-
-len(BAYESMAP[queryNode].pastValues)
-#for i in valueHistory:
-#    print "___________", i
-# Actual looping through, ### TODO: Figure best way to drop the first M current values
-
+        if dropNumber > (dropNumberMax - dropNumberStep) :
+            increaseUpdateNumberFlag = 0
+            increaseDropNumberFlag = 0
+    if debug:
+        print listEvidenceNodes[0], listEvidenceNodes[1] 
+        print listEvidenceNodesValues[0],listEvidenceNodesValues[1]
+        print updateNumber
+        print dropNumber
 
 
+    nodesToUpdate = np.setdiff1d(listPossibleNodes,listEvidenceNodes)
+    if debug:
+        for i in nodesToUpdate:
+            print "None  evidence node", i
 
-#print "current value: ", BAYESMAP["age"].currentValue 
-#BAYESMAP["age"].updateNode(1)
-#print "current value: ", BAYESMAP["age"].currentValue
+
+    valueHistory = [[]]
+
+    ### ACTUAL GIBBS RUNS HERE:
+    cnt = 0 
+    for i in range(0,updateNumber):
+        nodeToUpdate = random.choice(nodesToUpdate)
+        BAYESMAP[nodeToUpdate].updateNode(i)
+        for elt in nodesToUpdate:
+            if elt != nodeToUpdate:
+                BAYESMAP[elt].repeatValue(i)
+
+        #printBayesMapStatus()
+    # printBayesMapStatus()
+
+    ### After gibbs runs, get probability.
+    numberOf0 = 0
+    numberOf1 = 0
+    numberOf2 = 0
+    validUpdateCnt = 0
+
+    nodeUpdateCnt = len(BAYESMAP[queryNode].pastValues) 
+    print "Number of updates:", updateNumber
+    print "Number of drop samples:", dropNumber    
+    
+
+    probabilitiesReturn = getProbEst(queryNode,dropNumber,nodeUpdateCnt)
+    print  "P(", queryNode, "=", BAYESMAP[queryNode].possibleValues[0], ") =", probabilitiesReturn[0]
+    print "P(", queryNode, "=", BAYESMAP[queryNode].possibleValues[1], ") =", probabilitiesReturn[1]
+    if len(BAYESMAP[queryNode].possibleValues) == 3:
+        summaryString3 = queryNode, BAYESMAP[queryNode].possibleValues[2], probabilitiesReturn[2]
+        print "P(", queryNode, "=", BAYESMAP[queryNode].possibleValues[2], ") =", probabilitiesReturn[2]
+
+    len(BAYESMAP[queryNode].pastValues)
 
 
-#price schools=good location=ugly -u 10000 -d 0
+    ############STORE TEST RESULTS
+
+    resultFileName = '5_resultSummary_' + queryNode + "_" + droptNumberStr + '.csv'
+    if os.path.exists(resultFileName):
+        resultFile = open(resultFileName, 'a')
+        if len(BAYESMAP[queryNode].possibleValues) == 3:
+            resultFile.write(queryNode + "," + str(dropNumber) + "," + str(updateNumber) + "," + str(probabilitiesReturn[0]) + "," + str(probabilitiesReturn[1]) + "," + str(probabilitiesReturn[2])  +"\n")
+        else:
+            resultFile.write(queryNode + "," + str(dropNumber) + "," + str(updateNumber) + "," + str(probabilitiesReturn[0]) + "," + str(probabilitiesReturn[1]) + "\n")    
+    else: 
+        header = "Query Node Name," + "d," + "u," + BAYESMAP[queryNode].possibleValues[0] +"," + BAYESMAP[queryNode].possibleValues[1]
+        resultFile = open(resultFileName, 'a')
+        if len(BAYESMAP[queryNode].possibleValues) == 3:
+            header += "," + BAYESMAP[queryNode].possibleValues[2]  + "\n"
+            resultFile.write(header)
+            resultFile.write(queryNode + "," + str(dropNumber) + "," + str(updateNumber) + "," + str(probabilitiesReturn[0]) + "," + str(probabilitiesReturn[1]) + "," + str(probabilitiesReturn[2]) + "\n")
+      
+        else:
+            header += "\n"
+            resultFile.write(header)
+            resultFile.write(queryNode + "," + str(dropNumber) + "," + str(updateNumber) + "," + str(probabilitiesReturn[0]) + "," + str(probabilitiesReturn[1]) + "\n")    
+
+
+resultFile.close()
+#print  BAYESMAP[queryNode].pastValues
+    #for i in valueHistory:
+    #    print "___________", i
+    # Actual looping through, ### TODO: Figure best way to drop the first M current values
+
+
+
+
+    #print "current value: ", BAYESMAP["age"].currentValue 
+    #BAYESMAP["age"].updateNode(1)
+    #print "current value: ", BAYESMAP["age"].currentValue
+
+
+    #price schools=good location=ugly -u 10000 -d 0
