@@ -212,7 +212,7 @@ listPossibleNodes = ["price","amenities","neighborhood","location","children","s
 #if automatedState is set to 1:
 #updateNumber is increased by updateNumberStep and the program executes until updateNumber is greater than updateNumberMax then:
 #updateNumber is set to updateNumberStatic and dropNumber is increaced by dropNumberStep until dropNumber is greater than dropNumberMax 
-automatedState = 0
+automatedState = 1
 increaseUpdateNumberFlag = 1
 increaseDropNumberFlag = 0
 updateNumberStep = 5
@@ -330,7 +330,8 @@ while increaseDropNumberFlag == 1 or increaseUpdateNumberFlag == 1:
     debug = 0
 
     # Parse input.
-    inputString = raw_input("Enter the input string: \n")
+    #inputString = raw_input("Enter the input string: \n")
+    inputString = 'price neighborhood=bad -u 10000 -d 100'
     inputString = inputString.split() # split string up by spaces.
 
     queryNode = inputString[0]
@@ -366,7 +367,6 @@ while increaseDropNumberFlag == 1 or increaseUpdateNumberFlag == 1:
             dropNumber += dropNumberStep
 
         if dropNumber > (dropNumberMax - dropNumberStep) :
-            increaseUpdateNumberFlag = 0
             increaseDropNumberFlag = 0
 
     if debug:
@@ -374,12 +374,17 @@ while increaseDropNumberFlag == 1 or increaseUpdateNumberFlag == 1:
         print listEvidenceNodesValues[0],listEvidenceNodesValues[1]
         print updateNumber
         print dropNumber
-
+    #RESET HISTORY
+    for i in range(0, len(listPossibleNodes)):
+        nodeName = listPossibleNodes[i]
+        BAYESMAP[nodeName].pastValues = []
+        BAYESMAP[nodeName]
     # Get the nodes that need to be updated; eg. nodes that aren't evidence nodes.
     nodesToUpdate = np.setdiff1d(listPossibleNodes,listEvidenceNodes)
     if debug:
         for i in nodesToUpdate:
             print "None  evidence node", i
+
 
     ### ACTUAL GIBBS RUNS HERE:
     for i in range(0,updateNumber):
