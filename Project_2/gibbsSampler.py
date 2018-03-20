@@ -203,29 +203,31 @@ LARGE = 2
 OLD = 0
 NEW = 1
 
-# Dictionary that contains all the nodes in the map. 
-BAYESMAP = dict()
-# List of nodes that are possible.
-listPossibleNodes = ["price","amenities","neighborhood","location","children","size","schools","age"]
 
 #parameters for automated program runs(to perform a single run using user input set automatedState = 0 ). This was used to create the plots we were trying to.
 #if automatedState is set to 1:
 #updateNumber is increased by updateNumberStep and the program executes until updateNumber is greater than updateNumberMax then:
 #updateNumber is set to updateNumberStatic and dropNumber is increaced by dropNumberStep until dropNumber is greater than dropNumberMax 
-automatedState = 1
+automatedState = 0
 increaseUpdateNumberFlag = 1
 increaseDropNumberFlag = 0
-updateNumberStep = 1000
-updateNumberMax = 100000
+updateNumberStep = 500
+updateNumberMax = 50000
 dropNumberStep = 200
 dropNumberMax = 0
-updateNumberStatic = 500
+updateNumberStatic = 1000
 
 #initial updateNumber and drop number(if automatedState set to '0' the values will be overwritten by user input)
 updateNumber = 0
-dropNumber = 0
+dropNumber = 500
 droptNumberStr = str(dropNumber)
 while increaseDropNumberFlag == 1 or increaseUpdateNumberFlag == 1:
+    # Dictionary that contains all the nodes in the map. 
+    BAYESMAP = dict()
+    # List of nodes that are possible.
+    listPossibleNodes = ["price","amenities","neighborhood","location","children","size","schools","age"]
+
+
     ### INITIALIZING NODE TABLE
     ################   PRICE NODE
     priceFileName = "price.csv"
@@ -329,8 +331,8 @@ while increaseDropNumberFlag == 1 or increaseUpdateNumberFlag == 1:
     debug = 0
 
     # Parse input.
-    #inputString = raw_input("Enter the input string: \n")
-    inputString = 'price neighborhood=bad -u 10000 -d 100'
+    #inputString = 'age location=good -u 10000 -d 100'
+    inputString = raw_input("Enter the input string: \n")
     inputString = inputString.split() # split string up by spaces.
 
     queryNode = inputString[0]
@@ -381,7 +383,23 @@ while increaseDropNumberFlag == 1 or increaseUpdateNumberFlag == 1:
             print "None  evidence node", i
 
 
+    for i in range(0, len(listPossibleNodes)):
+        nodeName = listPossibleNodes[i]
+        BAYESMAP[nodeName].pastValues = []
+        BAYESMAP[nodeName]
+    
     ### ACTUAL GIBBS RUNS HERE:
+    #ORDERED NODE SELCTION
+    # nodeIndex = 0
+    # for i in range(0,updateNumber):
+    #     nodeIndex += 1
+    #     if(nodeIndex ==  len(nodesToUpdate)):
+    #         nodeIndex = 0
+    #     nodeToUpdate = nodesToUpdate[nodeIndex]
+    #     BAYESMAP[nodeToUpdate].updateNode(i)
+    #     for elt in nodesToUpdate:
+    #         if elt != nodeToUpdate:
+    #             BAYESMAP[elt].repeatValue(i)
     for i in range(0,updateNumber):
         nodeToUpdate = random.choice(nodesToUpdate)
         BAYESMAP[nodeToUpdate].updateNode(i)
