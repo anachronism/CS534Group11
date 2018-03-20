@@ -1,8 +1,16 @@
-# Class containing one map candidate.
+# Import libraries that are used.
 import random
 import numpy as np
 import sys
 import os
+
+## Class containing one node. 
+## Attributes:
+# Parents: List containing the names of the parents, as strings.
+# Children: List of names of the children nodes, as strings.
+# possibleValues: List containing the names of the potential values the node can take, as strings.
+# currentValue: The current value of the node, represented as the index to possibleValues to get the current value out.
+# pastValues: A running tally of the values that the node has taken, along with the index that it was taken.
 class BayesNode:
     def __init__(self, parents, children,probTable,possibleValues,currentValue):
         self.parents = parents # list of names of parents NOTE: MUST BE IN SAME ORDER AS TABLE.
@@ -11,30 +19,72 @@ class BayesNode:
         self.possibleValues = possibleValues # list of value names.
         self.currentValue = currentValue  
         self.pastValues = [] 
-        self.probSave = []### TODO: REMOVE
    
-    def repeatValue(self,nIteration):
-        self.pastValues.append((nIteration,self.currentValue))
-
+## Methods of BayesNode:   
+    # updateNode(self,nIteration). Given the current timestamp provided, update the state in the node. 
     def updateNode(self,nIteration):
-        self.pastValues.append((nIteration,self.currentValue)) # Append list with tuble containing current value and the number of iterations.
-        numProbabilities = len(self.possibleValues)
-
-    
-        # Returns a list of length (numProbabilities)
+        # Save the current value before updating it.
+        self.pastValues.append((nIteration,self.currentValue)) 
+        
+        # Get the new set of probabilities based on the current state of the Bayesmap 
         newProb = self.calculateProbabilities()
-        self.probSave.append((newProb))
 
+        # draw a sample from U(0,1), and chose the state that it corresponds to based on the new probability calculation.
         randSample = random.random()
-        # print 'rand:',randSample, 'probs:', newProb
         runningSumProb = 0
         for ind,elt in enumerate(self.possibleValues):
+            # RunningSumProb keeps the running CDF of the probability.
             runningSumProb += newProb[ind]
             if randSample <= runningSumProb:
                 self.currentValue = ind
-                # print 'Changing new val'
                 break    
    
+   #calculateProbabilities() With the bayesmap in its current state, update the probability of each possibleValue of thsi node.
+    def calculateProbabilities(self):
+        global BAYESMAP
+
+        # Get the states of each of the parent nodes.
+        parentStates = []
+        for elt in self.parents:
+            currentNode = BAYESMAP[elt]
+            parentStates.append(currentNode.currentValue)
+        
+        probValues = []
+        # For each possible value the current node can take, look up the required probabilities.
+        for ind,elt in enumerate(self.possibleValues):
+            # Look up p(self == ind | parentStates).
+            probFromParents = self.getProbFromTable(parentStates,ind)
+
+            # Initialize probability of the children. 
+            probFromChildren = 1
+            
+            # Update probFromChildren for each child node. Making the assumption that children nodes are conditionally independent,
+            # and can be multiplied together.
+            for elt2 in self.children:
+
+                childStates = []
+                currentChild = BAYESMAP[elt2]
+                # Get probability for each child node. Need to check the state of each of the child's parents
+                for elt3 in currentChild.parents:
+                    currentNode = BAYESMAP[elt3]
+                    # If currentNode is the node getting updated, use the possibleValue we are looking at as its state instead of its currentValue.
+                    if currentNode == self: 
+                        childStates.append(ind)
+                    else:
+                        childStates.append(currentNode.currentValue)
+
+                # After each child's probability is calculated, update the total probability from the children nodes.
+                probFromChildren = probFromChildren * currentChild.getProbFromTable(childStates, currentChild.currentValue) 
+               
+            # Add the probability of self.possibleValues to the probabilities.
+            probValues.append(probFromParents*probFromChildren)
+
+        # NORMALIZE probValues so they sum to 1.
+        probValues = np.divide(probValues, np.sum(probValues))
+        return probValues
+
+    # getProbFromTable(parentInds,desiredTargetProb): A utility function to look through a table based on the states of the parents, and the desired
+    # value to look up.
     def getProbFromTable(self, parentInds,desiredTargetProb):
         if len(parentInds) == 0:
             retVal = self.probTable[desiredTargetProb]
@@ -55,56 +105,14 @@ class BayesNode:
                 #print self.probTable
 
         return retVal
-    def calculateProbabilities(self):
-        global BAYESMAP
 
-        parentStates = []
-        for elt in self.parents:
-            #print elt
-            currentNode = BAYESMAP[elt]
-            #print currentNode.currentValue, ' - X, elt - ', elt
-            parentStates.append(currentNode.currentValue)
-        probValues = []
+    # repeatValue: When another node is updated other than this one, this function saves the fact that the node did not change.
+    def repeatValue(self,nIteration):
+        self.pastValues.append((nIteration,self.currentValue))
 
-        for ind,elt in enumerate(self.possibleValues):
-            probFromParents = self.getProbFromTable(parentStates,ind) 
-            probFromChildren = 1
 
-            # Update probFromChildren for each child node.
-            for elt2 in self.children:
-                childStates = []
-                currentChild = BAYESMAP[elt2]
-                # Get probability for each child node
-                for elt3 in currentChild.parents:
-                    currentNode = BAYESMAP[elt3]
-                    if currentNode == self: ### CHECK TO MAKE SURE THIS BEHAVES AS EXPECTED.
-                        childStates.append(ind)
-                    else:
-                        childStates.append(currentNode.currentValue)
-
-                ######
-                probFromChildren = probFromChildren * currentChild.getProbFromTable(childStates, currentChild.currentValue) 
-               
-            #print type(probFromParents)
-            # print 'c:', probFromChildren,' p:', probFromParents
-            probValues.append(probFromParents*probFromChildren) ### TODO: FIGURE OUT WHY THIS DOESN"T SEEM TO CHANGE.
-
-        # NORMALIZE probValues.
-        probValues = np.divide(probValues, np.sum(probValues))
-        #print 'prob: ',probValues
-        return probValues
-        
-        # For each option in possibleValues:
-            # Calculate P(that result | parent states)
-            # Calculate P(child states | all known states including result)
-                # This splits up for each child state.
-            # Multiply together.
-
-        # Normalize probabilities to sum to 1.
-        # Return list of probabilities.
-
-debugMode = 0
-
+# readPriceTable(fileLoc): Price table was stored as CSV instead of explicitly input, and so needs to be read in.
+# we assume that this csv is in the same directory as the file.
 def readPriceTable(fileLoc):
     cnt = 0
    
@@ -126,14 +134,13 @@ def readPriceTable(fileLoc):
             
     return probTable
 
-def converStringToValue(converString, nodeName):
-    test = 0
-
+# printBayesMapStatus(): Debug function that prints out the current state of each node in the map.
 def printBayesMapStatus():
     for elt in listPossibleNodes:
        sys.stdout.write(str(BAYESMAP[elt].currentValue) + ' ')
     sys.stdout.write('\n')
 
+# getProbEst(nodeToQuery,dropNum,nodeUpdateNum): Given a node to look at, calculate the current estimate of the probability.
 def getProbEst(nodeToQuery,dropNum, nodeUpdateNum):
     global BAYESMAP 
     numberOf0 = 0
@@ -168,11 +175,12 @@ def getProbEst(nodeToQuery,dropNum, nodeUpdateNum):
             return probability0,probability1,probability2
         else:
             return probability0, probability1
-### MAIN:
-BAYESMAP = dict()
-listPossibleNodes = ["price","amenities","neighborhood","location","children","size","schools","age"]
 
-### CONSTANTS, FOR READABILITY
+
+### MAIN:
+debugMode = 0
+
+## CONSTANTS, FOR READABILITY
 # Price:
 CHEAP = 0
 OK = 1
@@ -195,15 +203,37 @@ LARGE = 2
 OLD = 0
 NEW = 1
 
+# Dictionary that contains all the nodes in the map. 
+BAYESMAP = dict()
+# List of nodes that are possible.
+listPossibleNodes = ["price","amenities","neighborhood","location","children","size","schools","age"]
+
+#parameters for automated program runs(to perform a single run using user input set automatedState = 0 ). This was used to create the plots we were trying to.
+#if automatedState is set to 1:
+#updateNumber is increased by updateNumberStep and the program executes until updateNumber is greater than updateNumberMax then:
+#updateNumber is set to updateNumberStatic and dropNumber is increaced by dropNumberStep until dropNumber is greater than dropNumberMax 
+automatedState = 0
+increaseUpdateNumberFlag = 1
+increaseDropNumberFlag = 0
+updateNumberStep = 5
+updateNumberMax = 500
+dropNumberStep = 200
+dropNumberMax = 450
+updateNumberStatic = 500
+
+#initial updateNumber and drop number(if automatedState set to '0' the values will be overwritten by user input)
+updateNumber = 0
+dropNumber = 0
+droptNumberStr = str(dropNumber)
+
 ### INITIALIZING NODE TABLE
 ################   PRICE NODE
-
 priceFileName = "price.csv"
 parents = ["location", "age", "schools", "size"]
 children = []
 probTable = readPriceTable(priceFileName)
 possibleValues = ["cheap","ok","expensive"]
-currentValue = random.choice([CHEAP,OK,EXPENSIVE])
+currentValue = random.choice([CHEAP,OK,EXPENSIVE]) # Randomly pick initial state
 priceNode = BayesNode(parents, children, probTable, possibleValues,currentValue) 
 BAYESMAP["price"] = priceNode
 
@@ -212,7 +242,7 @@ parents = []
 children = ["location"]
 probTable = [0.3, 0.7]
 possibleValues = ["lots","little"]
-currentValue = random.choice([LOTS,LITTLE])
+currentValue = random.choice([LOTS,LITTLE]) # Randomly pick initial state
 amenetiesNode = BayesNode(parents, children, probTable, possibleValues,currentValue) 
 BAYESMAP["amenities"] = amenetiesNode
 
@@ -222,7 +252,7 @@ parents = []
 children = ["location", "children"]
 probTable = [0.4,0.6]
 possibleValues = ["bad", "good"]
-currentValue = random.choice([BAD_2OPT,GOOD_2OPT])
+currentValue = random.choice([BAD_2OPT,GOOD_2OPT]) # Randomly pick initial state
 neighbNode = BayesNode(parents, children, probTable, possibleValues,currentValue) 
 BAYESMAP["neighborhood"] = neighbNode
 
@@ -244,7 +274,7 @@ probTable[LITTLE][GOOD_2OPT][GOOD_LOC] = 0.5
 probTable[LITTLE][GOOD_2OPT][BAD_LOC] = 0.35  
 probTable[LITTLE][GOOD_2OPT][UGLY_LOC] = 0.15
 possibleValues = ["good","bad","ugly"] # good is 0, bad is 1, ugly is 2
-currentValue = random.choice([GOOD_LOC,BAD_LOC,UGLY_LOC])
+currentValue = random.choice([GOOD_LOC,BAD_LOC,UGLY_LOC]) # Randomly pick initial state
 locationNode = BayesNode(parents, children, probTable, possibleValues,currentValue) 
 BAYESMAP["location"] = locationNode
 
@@ -258,7 +288,7 @@ probTable[BAD_2OPT][GOOD_2OPT] = 0.4
 probTable[GOOD_2OPT][BAD_2OPT] = 0.3  
 probTable[GOOD_2OPT][GOOD_2OPT] = 0.7 
 possibleValues = ["bad","good"]
-currentValue = random.choice([BAD_2OPT,GOOD_2OPT])
+currentValue = random.choice([BAD_2OPT,GOOD_2OPT]) # Randomly pick initial state
 childrenNode = BayesNode(parents, children, probTable, possibleValues,currentValue) 
 BAYESMAP["children"] = childrenNode
 
@@ -268,7 +298,7 @@ parents = []
 children = ["price"]
 probTable = [0.33, 0.34, 0.33]
 possibleValues = ["small","medium","large"]
-currentValue = random.choice([SMALL,MEDIUM,LARGE])
+currentValue = random.choice([SMALL,MEDIUM,LARGE]) # Randomly pick initial state
 sizeNode = BayesNode(parents, children, probTable, possibleValues,currentValue) 
 BAYESMAP["size"] = sizeNode
 
@@ -282,7 +312,7 @@ probTable[BAD_2OPT][GOOD_2OPT] = 0.3
 probTable[GOOD_2OPT][BAD_2OPT] = 0.8  
 probTable[GOOD_2OPT][GOOD_2OPT] = 0.2  
 possibleValues = ["bad","good"]
-currentValue = random.choice([BAD_2OPT,GOOD_2OPT])
+currentValue = random.choice([BAD_2OPT,GOOD_2OPT]) # Randomly pick initial state
 schoolsNode = BayesNode(parents, children, probTable, possibleValues,currentValue) 
 BAYESMAP["schools"] = schoolsNode
 
@@ -299,49 +329,30 @@ probTable[UGLY_LOC][OLD] = 0.9
 probTable[UGLY_LOC][NEW] = 0.1  
 possibleValues = []
 possibleValues = ["old","new"]
-currentValue = random.choice([OLD,NEW])
+currentValue = random.choice([OLD,NEW]) # Randomly pick initial state
 ageNode = BayesNode(parents, children, probTable, possibleValues,currentValue) 
 BAYESMAP["age"] = ageNode
 
-#parametrs for automated program runs(to perform a single run using user input set automatedState = 0 )
-#if automatedState is set to 1:
-#updateNumber is increased by updateNumberStep and the program executes until updateNumber is greater than updateNumberMax then:
-#updateNumber is set to updateNumberStatic and dropNumber is increaced by dropNumberStep until dropNumber is greater than dropNumberMax 
-automatedState = 1
-increaseUpdateNumberFlag = 1
-increaseDropNumberFlag = 0
-updateNumberStep = 5
-updateNumberMax = 500
-dropNumberStep = 200
-dropNumberMax = 450
-updateNumberStatic = 500
-
-#initial updateNumber and drop number(if automatedState set to '0' the values will be overwritten by user input)
-updateNumber = 0
-dropNumber = 0
-droptNumberStr = str(dropNumber)
 while increaseDropNumberFlag == 1 or increaseUpdateNumberFlag == 1:
+    
+    debug = 0
 
-    
-    ### PARSE INPUTS, CHANGE EVIDENCE NODE VALUES, MAKE SURE TO RANDOM SELECT
-    debug =0
-    #inputString = raw_input("Enter the input string: \n")
-    inputString =  'price neighborhood=good -u 100000 -d 100'
-    
-    inputString = inputString.split()
+    # Parse input.
+    inputString = raw_input("Enter the input string: \n")
+    inputString = inputString.split() # split string up by spaces.
 
     queryNode = inputString[0]
     listEvidenceNodes = []
     listEvidenceNodesValues = []
-
     i = 1
+
+    # While there are still equals, there are still evidence nodes to read in. 
     while "=" in inputString[i]:
         tempEvidenceNode = inputString[i].split("=")
         listEvidenceNodes.append(tempEvidenceNode[0])
         listEvidenceNodesValues.append(tempEvidenceNode[1])
         tempList = BAYESMAP[tempEvidenceNode[0]].possibleValues
         tempIndex = tempList.index(tempEvidenceNode[1])
-        #print "\n index:", tempIndex, "\n"
         BAYESMAP[tempEvidenceNode[0]].currentValue = tempIndex   
         i += 1
 
@@ -350,6 +361,7 @@ while increaseDropNumberFlag == 1 or increaseUpdateNumberFlag == 1:
         dropNumber = int(inputString[i+3])
         increaseDropNumberFlag = 0 
         increaseUpdateNumberFlag = 0
+
     else:
         if updateNumber > (updateNumberMax - updateNumberStep):
             increaseUpdateNumberFlag = 0
@@ -364,23 +376,20 @@ while increaseDropNumberFlag == 1 or increaseUpdateNumberFlag == 1:
         if dropNumber > (dropNumberMax - dropNumberStep) :
             increaseUpdateNumberFlag = 0
             increaseDropNumberFlag = 0
+
     if debug:
         print listEvidenceNodes[0], listEvidenceNodes[1] 
         print listEvidenceNodesValues[0],listEvidenceNodesValues[1]
         print updateNumber
         print dropNumber
 
-
+    # Get the nodes that need to be updated; eg. nodes that aren't evidence nodes.
     nodesToUpdate = np.setdiff1d(listPossibleNodes,listEvidenceNodes)
     if debug:
         for i in nodesToUpdate:
             print "None  evidence node", i
 
-
-    valueHistory = [[]]
-
     ### ACTUAL GIBBS RUNS HERE:
-    cnt = 0 
     for i in range(0,updateNumber):
         nodeToUpdate = random.choice(nodesToUpdate)
         BAYESMAP[nodeToUpdate].updateNode(i)
@@ -388,19 +397,10 @@ while increaseDropNumberFlag == 1 or increaseUpdateNumberFlag == 1:
             if elt != nodeToUpdate:
                 BAYESMAP[elt].repeatValue(i)
 
-        #printBayesMapStatus()
-    # printBayesMapStatus()
-
     ### After gibbs runs, get probability.
-    numberOf0 = 0
-    numberOf1 = 0
-    numberOf2 = 0
-    validUpdateCnt = 0
-
     nodeUpdateCnt = len(BAYESMAP[queryNode].pastValues) 
     print "Number of updates:", updateNumber
     print "Number of drop samples:", dropNumber    
-    
 
     probabilitiesReturn = getProbEst(queryNode,dropNumber,nodeUpdateCnt)
     print  "P(", queryNode, "=", BAYESMAP[queryNode].possibleValues[0], ") =", probabilitiesReturn[0]
@@ -409,11 +409,7 @@ while increaseDropNumberFlag == 1 or increaseUpdateNumberFlag == 1:
         summaryString3 = queryNode, BAYESMAP[queryNode].possibleValues[2], probabilitiesReturn[2]
         print "P(", queryNode, "=", BAYESMAP[queryNode].possibleValues[2], ") =", probabilitiesReturn[2]
 
-    len(BAYESMAP[queryNode].pastValues)
-
-
-    ############STORE TEST RESULTS
-
+    ### STORE TEST RESULTS IN CSV: Used to create the plots in the assignment.
     resultFileName = '5_resultSummary_' + queryNode + "_" + droptNumberStr + '.csv'
     if os.path.exists(resultFileName):
         resultFile = open(resultFileName, 'a')
@@ -436,17 +432,3 @@ while increaseDropNumberFlag == 1 or increaseUpdateNumberFlag == 1:
 
 
 resultFile.close()
-#print  BAYESMAP[queryNode].pastValues
-    #for i in valueHistory:
-    #    print "___________", i
-    # Actual looping through, ### TODO: Figure best way to drop the first M current values
-
-
-
-
-    #print "current value: ", BAYESMAP["age"].currentValue 
-    #BAYESMAP["age"].updateNode(1)
-    #print "current value: ", BAYESMAP["age"].currentValue
-
-
-    #price schools=good location=ugly -u 10000 -d 0
