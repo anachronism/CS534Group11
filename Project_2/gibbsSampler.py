@@ -215,117 +215,116 @@ listPossibleNodes = ["price","amenities","neighborhood","location","children","s
 automatedState = 1
 increaseUpdateNumberFlag = 1
 increaseDropNumberFlag = 0
-updateNumberStep = 5
-updateNumberMax = 500
+updateNumberStep = 1000
+updateNumberMax = 100000
 dropNumberStep = 200
-dropNumberMax = 450
+dropNumberMax = 0
 updateNumberStatic = 500
 
 #initial updateNumber and drop number(if automatedState set to '0' the values will be overwritten by user input)
 updateNumber = 0
 dropNumber = 0
 droptNumberStr = str(dropNumber)
-
-### INITIALIZING NODE TABLE
-################   PRICE NODE
-priceFileName = "price.csv"
-parents = ["location", "age", "schools", "size"]
-children = []
-probTable = readPriceTable(priceFileName)
-possibleValues = ["cheap","ok","expensive"]
-priceNode = BayesNode(parents, children, probTable, possibleValues) 
-BAYESMAP["price"] = priceNode
-
-################   AMENETIES NODE
-parents = []
-children = ["location"]
-probTable = [0.3, 0.7]
-possibleValues = ["lots","little"]
-amenetiesNode = BayesNode(parents, children, probTable, possibleValues) 
-BAYESMAP["amenities"] = amenetiesNode
-
-
-################   neighborhood NODE
-parents = []
-children = ["location", "children"]
-probTable = [0.4,0.6]
-possibleValues = ["bad", "good"]
-neighbNode = BayesNode(parents, children, probTable, possibleValues) 
-BAYESMAP["neighborhood"] = neighbNode
-
-
-################   LOCATION NODE
-parents = ["amenities", "neighborhood"]
-children = ["age", "price"]
-probTable = [[[[] for i in range(3)] for i in range(2)] for i in range(2)]
-probTable[LOTS][BAD_2OPT][GOOD_LOC] = 0.3  
-probTable[LOTS][BAD_2OPT][BAD_LOC] = 0.4  
-probTable[LOTS][BAD_2OPT][UGLY_LOC] = 0.3  
-probTable[LOTS][GOOD_2OPT][GOOD_LOC] = 0.8  
-probTable[LOTS][GOOD_2OPT][BAD_LOC] = 0.15  
-probTable[LOTS][GOOD_2OPT][UGLY_LOC] = 0.05  
-probTable[LITTLE][BAD_2OPT][GOOD_LOC] = 0.2  
-probTable[LITTLE][BAD_2OPT][BAD_LOC] = 0.4  
-probTable[LITTLE][BAD_2OPT][UGLY_LOC] = 0.4  
-probTable[LITTLE][GOOD_2OPT][GOOD_LOC] = 0.5  
-probTable[LITTLE][GOOD_2OPT][BAD_LOC] = 0.35  
-probTable[LITTLE][GOOD_2OPT][UGLY_LOC] = 0.15
-possibleValues = ["good","bad","ugly"] # good is 0, bad is 1, ugly is 2
-locationNode = BayesNode(parents, children, probTable, possibleValues) 
-BAYESMAP["location"] = locationNode
-
-
-################   CHILDREN NODE
-parents = ["neighborhood"]
-children = ["schools"]
-probTable = [[[] for i in range(2)] for i in range(2)] 
-probTable[BAD_2OPT][BAD_2OPT] = 0.6  
-probTable[BAD_2OPT][GOOD_2OPT] = 0.4  
-probTable[GOOD_2OPT][BAD_2OPT] = 0.3  
-probTable[GOOD_2OPT][GOOD_2OPT] = 0.7 
-possibleValues = ["bad","good"]
-childrenNode = BayesNode(parents, children, probTable, possibleValues) 
-BAYESMAP["children"] = childrenNode
-
-
-################   SIZE NODE
-parents = []
-children = ["price"]
-probTable = [0.33, 0.34, 0.33]
-possibleValues = ["small","medium","large"]
-sizeNode = BayesNode(parents, children, probTable, possibleValues) 
-BAYESMAP["size"] = sizeNode
-
-
-################   SCHOOLS NODE
-parents = ["children"]
-children = ["price"]
-probTable = [[[] for i in range(2)] for i in range(2)] 
-probTable[BAD_2OPT][BAD_2OPT] = 0.7  
-probTable[BAD_2OPT][GOOD_2OPT] = 0.3  
-probTable[GOOD_2OPT][BAD_2OPT] = 0.8  
-probTable[GOOD_2OPT][GOOD_2OPT] = 0.2  
-possibleValues = ["bad","good"]
-schoolsNode = BayesNode(parents, children, probTable, possibleValues) 
-BAYESMAP["schools"] = schoolsNode
-
-
-################   AGE NODE
-parents = ["location"]
-children = ["price"]
-probTable = [[[] for i in range(2)] for i in range(3)] 
-probTable[GOOD_LOC][OLD] = 0.3  
-probTable[GOOD_LOC][NEW] = 0.7  
-probTable[BAD_LOC][OLD] = 0.6  
-probTable[BAD_LOC][NEW] = 0.4  
-probTable[UGLY_LOC][OLD] = 0.9  
-probTable[UGLY_LOC][NEW] = 0.1  
-possibleValues = []
-possibleValues = ["old","new"]
-ageNode = BayesNode(parents, children, probTable, possibleValues) 
-BAYESMAP["age"] = ageNode
-
 while increaseDropNumberFlag == 1 or increaseUpdateNumberFlag == 1:
+    ### INITIALIZING NODE TABLE
+    ################   PRICE NODE
+    priceFileName = "price.csv"
+    parents = ["location", "age", "schools", "size"]
+    children = []
+    probTable = readPriceTable(priceFileName)
+    possibleValues = ["cheap","ok","expensive"]
+    priceNode = BayesNode(parents, children, probTable, possibleValues) 
+    BAYESMAP["price"] = priceNode
+
+    ################   AMENETIES NODE
+    parents = []
+    children = ["location"]
+    probTable = [0.3, 0.7]
+    possibleValues = ["lots","little"]
+    amenetiesNode = BayesNode(parents, children, probTable, possibleValues) 
+    BAYESMAP["amenities"] = amenetiesNode
+
+
+    ################   neighborhood NODE
+    parents = []
+    children = ["location", "children"]
+    probTable = [0.4,0.6]
+    possibleValues = ["bad", "good"]
+    neighbNode = BayesNode(parents, children, probTable, possibleValues) 
+    BAYESMAP["neighborhood"] = neighbNode
+
+
+    ################   LOCATION NODE
+    parents = ["amenities", "neighborhood"]
+    children = ["age", "price"]
+    probTable = [[[[] for i in range(3)] for i in range(2)] for i in range(2)]
+    probTable[LOTS][BAD_2OPT][GOOD_LOC] = 0.3  
+    probTable[LOTS][BAD_2OPT][BAD_LOC] = 0.4  
+    probTable[LOTS][BAD_2OPT][UGLY_LOC] = 0.3  
+    probTable[LOTS][GOOD_2OPT][GOOD_LOC] = 0.8  
+    probTable[LOTS][GOOD_2OPT][BAD_LOC] = 0.15  
+    probTable[LOTS][GOOD_2OPT][UGLY_LOC] = 0.05  
+    probTable[LITTLE][BAD_2OPT][GOOD_LOC] = 0.2  
+    probTable[LITTLE][BAD_2OPT][BAD_LOC] = 0.4  
+    probTable[LITTLE][BAD_2OPT][UGLY_LOC] = 0.4  
+    probTable[LITTLE][GOOD_2OPT][GOOD_LOC] = 0.5  
+    probTable[LITTLE][GOOD_2OPT][BAD_LOC] = 0.35  
+    probTable[LITTLE][GOOD_2OPT][UGLY_LOC] = 0.15
+    possibleValues = ["good","bad","ugly"] # good is 0, bad is 1, ugly is 2
+    locationNode = BayesNode(parents, children, probTable, possibleValues) 
+    BAYESMAP["location"] = locationNode
+
+
+    ################   CHILDREN NODE
+    parents = ["neighborhood"]
+    children = ["schools"]
+    probTable = [[[] for i in range(2)] for i in range(2)] 
+    probTable[BAD_2OPT][BAD_2OPT] = 0.6  
+    probTable[BAD_2OPT][GOOD_2OPT] = 0.4  
+    probTable[GOOD_2OPT][BAD_2OPT] = 0.3  
+    probTable[GOOD_2OPT][GOOD_2OPT] = 0.7 
+    possibleValues = ["bad","good"]
+    childrenNode = BayesNode(parents, children, probTable, possibleValues) 
+    BAYESMAP["children"] = childrenNode
+
+
+    ################   SIZE NODE
+    parents = []
+    children = ["price"]
+    probTable = [0.33, 0.34, 0.33]
+    possibleValues = ["small","medium","large"]
+    sizeNode = BayesNode(parents, children, probTable, possibleValues) 
+    BAYESMAP["size"] = sizeNode
+
+
+    ################   SCHOOLS NODE
+    parents = ["children"]
+    children = ["price"]
+    probTable = [[[] for i in range(2)] for i in range(2)] 
+    probTable[BAD_2OPT][BAD_2OPT] = 0.7  
+    probTable[BAD_2OPT][GOOD_2OPT] = 0.3  
+    probTable[GOOD_2OPT][BAD_2OPT] = 0.8  
+    probTable[GOOD_2OPT][GOOD_2OPT] = 0.2  
+    possibleValues = ["bad","good"]
+    schoolsNode = BayesNode(parents, children, probTable, possibleValues) 
+    BAYESMAP["schools"] = schoolsNode
+
+
+    ################   AGE NODE
+    parents = ["location"]
+    children = ["price"]
+    probTable = [[[] for i in range(2)] for i in range(3)] 
+    probTable[GOOD_LOC][OLD] = 0.3  
+    probTable[GOOD_LOC][NEW] = 0.7  
+    probTable[BAD_LOC][OLD] = 0.6  
+    probTable[BAD_LOC][NEW] = 0.4  
+    probTable[UGLY_LOC][OLD] = 0.9  
+    probTable[UGLY_LOC][NEW] = 0.1  
+    possibleValues = []
+    possibleValues = ["old","new"]
+    ageNode = BayesNode(parents, children, probTable, possibleValues) 
+    BAYESMAP["age"] = ageNode
+
     
     debug = 0
 
@@ -374,11 +373,7 @@ while increaseDropNumberFlag == 1 or increaseUpdateNumberFlag == 1:
         print listEvidenceNodesValues[0],listEvidenceNodesValues[1]
         print updateNumber
         print dropNumber
-    #RESET HISTORY
-    for i in range(0, len(listPossibleNodes)):
-        nodeName = listPossibleNodes[i]
-        BAYESMAP[nodeName].pastValues = []
-        BAYESMAP[nodeName]
+   
     # Get the nodes that need to be updated; eg. nodes that aren't evidence nodes.
     nodesToUpdate = np.setdiff1d(listPossibleNodes,listEvidenceNodes)
     if debug:
