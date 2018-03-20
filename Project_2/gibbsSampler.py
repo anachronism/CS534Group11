@@ -12,12 +12,12 @@ import os
 # currentValue: The current value of the node, represented as the index to possibleValues to get the current value out.
 # pastValues: A running tally of the values that the node has taken, along with the index that it was taken.
 class BayesNode:
-    def __init__(self, parents, children,probTable,possibleValues,currentValue):
+    def __init__(self, parents, children,probTable,possibleValues):
         self.parents = parents # list of names of parents NOTE: MUST BE IN SAME ORDER AS TABLE.
         self.children = children # list of names of children
         self.probTable = probTable # CPT for this node
         self.possibleValues = possibleValues # list of value names.
-        self.currentValue = currentValue  
+        self.currentValue = random.choice(range(0,len(possibleValues))) # choose a random index of the possible values as the initial state.
         self.pastValues = [] 
    
 ## Methods of BayesNode:   
@@ -233,8 +233,7 @@ parents = ["location", "age", "schools", "size"]
 children = []
 probTable = readPriceTable(priceFileName)
 possibleValues = ["cheap","ok","expensive"]
-currentValue = random.choice([CHEAP,OK,EXPENSIVE]) # Randomly pick initial state
-priceNode = BayesNode(parents, children, probTable, possibleValues,currentValue) 
+priceNode = BayesNode(parents, children, probTable, possibleValues) 
 BAYESMAP["price"] = priceNode
 
 ################   AMENETIES NODE
@@ -242,8 +241,7 @@ parents = []
 children = ["location"]
 probTable = [0.3, 0.7]
 possibleValues = ["lots","little"]
-currentValue = random.choice([LOTS,LITTLE]) # Randomly pick initial state
-amenetiesNode = BayesNode(parents, children, probTable, possibleValues,currentValue) 
+amenetiesNode = BayesNode(parents, children, probTable, possibleValues) 
 BAYESMAP["amenities"] = amenetiesNode
 
 
@@ -252,8 +250,7 @@ parents = []
 children = ["location", "children"]
 probTable = [0.4,0.6]
 possibleValues = ["bad", "good"]
-currentValue = random.choice([BAD_2OPT,GOOD_2OPT]) # Randomly pick initial state
-neighbNode = BayesNode(parents, children, probTable, possibleValues,currentValue) 
+neighbNode = BayesNode(parents, children, probTable, possibleValues) 
 BAYESMAP["neighborhood"] = neighbNode
 
 
@@ -274,8 +271,7 @@ probTable[LITTLE][GOOD_2OPT][GOOD_LOC] = 0.5
 probTable[LITTLE][GOOD_2OPT][BAD_LOC] = 0.35  
 probTable[LITTLE][GOOD_2OPT][UGLY_LOC] = 0.15
 possibleValues = ["good","bad","ugly"] # good is 0, bad is 1, ugly is 2
-currentValue = random.choice([GOOD_LOC,BAD_LOC,UGLY_LOC]) # Randomly pick initial state
-locationNode = BayesNode(parents, children, probTable, possibleValues,currentValue) 
+locationNode = BayesNode(parents, children, probTable, possibleValues) 
 BAYESMAP["location"] = locationNode
 
 
@@ -288,8 +284,7 @@ probTable[BAD_2OPT][GOOD_2OPT] = 0.4
 probTable[GOOD_2OPT][BAD_2OPT] = 0.3  
 probTable[GOOD_2OPT][GOOD_2OPT] = 0.7 
 possibleValues = ["bad","good"]
-currentValue = random.choice([BAD_2OPT,GOOD_2OPT]) # Randomly pick initial state
-childrenNode = BayesNode(parents, children, probTable, possibleValues,currentValue) 
+childrenNode = BayesNode(parents, children, probTable, possibleValues) 
 BAYESMAP["children"] = childrenNode
 
 
@@ -298,8 +293,7 @@ parents = []
 children = ["price"]
 probTable = [0.33, 0.34, 0.33]
 possibleValues = ["small","medium","large"]
-currentValue = random.choice([SMALL,MEDIUM,LARGE]) # Randomly pick initial state
-sizeNode = BayesNode(parents, children, probTable, possibleValues,currentValue) 
+sizeNode = BayesNode(parents, children, probTable, possibleValues) 
 BAYESMAP["size"] = sizeNode
 
 
@@ -312,8 +306,7 @@ probTable[BAD_2OPT][GOOD_2OPT] = 0.3
 probTable[GOOD_2OPT][BAD_2OPT] = 0.8  
 probTable[GOOD_2OPT][GOOD_2OPT] = 0.2  
 possibleValues = ["bad","good"]
-currentValue = random.choice([BAD_2OPT,GOOD_2OPT]) # Randomly pick initial state
-schoolsNode = BayesNode(parents, children, probTable, possibleValues,currentValue) 
+schoolsNode = BayesNode(parents, children, probTable, possibleValues) 
 BAYESMAP["schools"] = schoolsNode
 
 
@@ -329,8 +322,7 @@ probTable[UGLY_LOC][OLD] = 0.9
 probTable[UGLY_LOC][NEW] = 0.1  
 possibleValues = []
 possibleValues = ["old","new"]
-currentValue = random.choice([OLD,NEW]) # Randomly pick initial state
-ageNode = BayesNode(parents, children, probTable, possibleValues,currentValue) 
+ageNode = BayesNode(parents, children, probTable, possibleValues) 
 BAYESMAP["age"] = ageNode
 
 while increaseDropNumberFlag == 1 or increaseUpdateNumberFlag == 1:
