@@ -7,9 +7,16 @@ class clusterCandidate:
 		self.means = means # list of length M = numClusters
 							# each is a tuple.
 		self.cov = cov # matr of size NxN = covariance
-		self.logLike = logLike # 1 log likelihood value
+		self.LL = logLike # 1 log likelihood value
 		self.dataLabels = np.full((numDataPoints,len(means[0])),-1) ### TODO: Make reasonable.
 							# Array of size MxN N = numDatapoints
+
+## 
+def calcBIC(candidate):
+    numDataPoints = candidate.dataLabels.shape[0]
+    numParameters = candidate.dataLabels.shape[1] ### TODO: Verify that this is actual number of parameters.
+    BICVal = np.log(numDataPoints) * numParameters - 2*candidate.LL ## Numpy log is ln.
+    return BICVal   
 
 ## Produces list of tuples, each tuple being a data point.
 def genMultidimGaussianData(nDims,nPoints,**keywordParameters):
@@ -63,19 +70,31 @@ dataCovRange = [ 0, 0.1] ### TODO: make this based on input data
 
 if numClusters == 'X':
 	## EM with Bayesian information criterion.
-	pass # replace pass with actual thing.
-
-	# start with numClusters = 2
-	# Run EM with random restarts.
-	# Using resulting log likelihood, calculate BIC
+    currentBIC = 0
+    lastBIC = -1
+    numClusters_tmp = 2
+    endThresh = 0
+    oldCandidate = None
+    while (currentBIC - lastBIC > endThresh):        
+	    # Run EM with random restarts.
+	    # Using resulting log likelihood, calculate BIC
+	    newCandidate = runEM(numRestarts,numClusters_tmp) ### TODO: Update with actual inputs that will be needed.
+	    lastBIC = currentBIC
+	    currentBIC = calcBIC(newCandidate)
 		## BIC = ln(numDataPoints)*numParametersEst - 2 * log-likelihood
-	# If BIC went down from last value, return numClusters-1
-	# else keep looping.
+	    if (currentBIC - lastBIC <= endThresh):
+	        retCandidate = oldCandidate
+	        retBIC = lastBIC
+	        retNumClusters = numClusters_tmp - 1
+	    else:
+	        oldCandidate = newCandidate
+	        numClusters_tmp = numClusters_tmp + 1
+	
 	### RETURN: num clusters, LL, BIC, cluster centers.
 
 else:
 	## Standard EM 
-
+    ### TODO: MOVE THE WHOLE THING (INCLUDING RESTARTS) INTO A FUNCTION SO BIC VERSION CAN CALL.
 	### EM Steps:	
 	for i in range(0,numRestarts):
 		pass # Replace pass with algorithm
