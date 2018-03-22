@@ -94,7 +94,7 @@ else:
 			# Given data, assign data to clusters.
 			# Given the points assigned to the clusters, update cluster mean and cov
 			# Check log likelihood (save log likelihood)
-			# If change in log likelihood is less than certain value, move to next iteration
+			# If change in log likelihood is less than certain value, move to next random restart
 			# or if count is too large.
 	# Pick model with best log-likelihood
 	
