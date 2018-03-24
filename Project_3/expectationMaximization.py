@@ -11,6 +11,26 @@ class clusterCandidate:
 		self.dataLabels = np.full((numDataPoints,len(means[0])),-1) ### TODO: Make reasonable.
 							# Array of size MxN N = numDatapoints
 
+#read data file
+def readPriceTable(fileLoc):
+    firstLineFlag = 1
+    data = []           
+            
+    with open(fileLoc,'r') as f:
+        for line in f:
+            row = (line.strip('\n')).split(',')
+            #print row
+            if(firstLineFlag):
+                size = len(row)          
+                firstLineFlag = 0
+            data.append((row))
+            
+            #for index,elt in enumerate(row):
+    print data[0:10]        
+    return data
+
+readPriceTable("sample EM data v2.csv")
+
 ## 
 def calcBIC(candidate):
     numDataPoints = candidate.dataLabels.shape[0]
