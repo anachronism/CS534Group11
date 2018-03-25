@@ -1,4 +1,5 @@
 import numpy as np
+import scipy as sp
 import argparse
 import matplotlib.pyplot as plt
 import math
@@ -10,7 +11,7 @@ class clusterCandidate:
 							# each is a tuple.
 		self.cov = cov # matr of size NxN = covariance
 		self.LL = logLike # 1 log likelihood value
-		self.dataLabels = np.full((numDataPoints,len(means[0])),-1) ### TODO: Make reasonable.
+		self.dataLabels = np.full((numDataPoints,len(means)),-1) ### TODO: Make reasonable.
 							# Array of size MxN N = numDatapoints
 
 #read data file
@@ -71,8 +72,6 @@ def genMultidimGaussianData(nDims,nPoints,**keywordParameters):
 		cov = np.diag(np.random.uniform(covRange[0],covRange[1],nDims)) 
 	
 	output = []
-	print len(mean)
-	print len(cov)
 	for i in range(0,nPoints):
 		output.append(tuple(np.random.multivariate_normal(mean,cov)))
 	return output,mean,cov
@@ -84,7 +83,6 @@ def genMultidimGaussianData(nDims,nPoints,**keywordParameters):
 
 print calcDistance([2, 5, 1], [1,2,3])
 
-print asdfasdf
 parser = argparse.ArgumentParser(description='''CS 534 Assignment 3.''')
 parser.add_argument('--n',dest='nClusters',nargs=1, type=int, default=3, help='''
 										s	Number of clusters to find. input X to have the algorithm choose.
