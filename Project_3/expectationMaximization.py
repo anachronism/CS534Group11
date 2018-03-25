@@ -13,9 +13,9 @@ class clusterCandidate:
         
         self.normals = gaussInst # list of length M = numClusters
         self.LL = logLike # 1 log likelihood value
-        self.probTable = np.full((numDataPoints,len(gaussInst)),-1)
+        self.probTable = np.full((numDataPoints,len(gaussInst)),-1,dtype=np.float64)
                         # Array of size MxN N = numDatapoints
-        self.normProbTable = np.full((numDataPoints,len(gaussInst)),-1) 
+        self.normProbTable = np.full((numDataPoints,len(gaussInst)),-1,dtype=np.float64) 
                             # Array of size MxN N = numDatapoints
         
     def getProbabilities(self, data):
@@ -24,16 +24,16 @@ class clusterCandidate:
         
         for n in range(0, numDataPoints):
             for m in range(0,len(self.normals)):
-                self.probTable[n,m] = self.normals[m].pdf(data[n])
-            print "__prob___"
-            print self.probTable[m]
+            	self.probTable[n,m] = self.normals[m].pdf(data[n])
+            # print "__prob___"
+            # print np.log10(self.probTable[m])
             #print self.probTable[n]
             #print probSum
             probSum = sum(self.probTable[n])
             for m in range(0,len(self.normals)):
                 self.normProbTable[n,m] = self.probTable[n,m]/probSum
-        
-            #print "__norm___"
+        	
+        	#print "__norm___"
             #print self.normProbTable[m]
             
 # From probTable, assign point to cluster based on which has highest value:
@@ -42,7 +42,7 @@ class clusterCandidate:
         newLL = 0
         for ind in range(0,self.probTable.shape[1]):
             newLL += sum(np.log10(self.probTable[:,ind])) ## TODO: Check if there should be a multiply here.
-        print newLL
+        #print newLL
         self.LL = newLL
 
 
@@ -139,6 +139,7 @@ def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange,point
         runEM = True
         # Randomly pick N means and covariances
         gaussInstances = []
+        
         for i in range(0,nClusters):
             _,gaussInst = genMultidimGaussianData(dataDim,1,meanRange=meanRange,covRange=covRange) ### TODO: set meanRange and covRange based on input data. 
             gaussInstances.append(gaussInst)
@@ -159,7 +160,7 @@ def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange,point
             # If change in log likelihood is less than certain value, move to next random restart
             # or if count is too large.
 
-        clusterOptions.append(currentCluster)
+        clusterOptions.append(currentClusterCandidate)
 
     # Pick model with best log-likelihood
     savedLL = []
@@ -183,19 +184,24 @@ numRestarts = 100 # Currently arbitrarily picked number
 f_readDataFile = True
 dataFile = 'sample EM data v2.csv' # relative path to data.
 
+    
+
 if f_readDataFile:
     ### TODO: Sub with actual data
     testData = readDataFile(dataFile)
     dataDim = len(testData[0,:])
     numDataPoints = len(testData[:,0])
 
-    plt.scatter(testData[:,0],testData[:,1])
-    plt.show()
+    dataMean = np.mean(testData)
+    dataMeanRange = [-dataMean,dataMean]
+    dataCovRange = [0, dataMean]
+    # plt.scatter(testData[:,0],testData[:,1])
+    # plt.show()
 else:
     numDataPoints = 50 # TODO: make this part of reading in the text file
-    dataDim = 2 ### TODO: make so this number is updated to the dimension of the input data.
     dataMeanRange = [0,1] ### TODO: make this based on input data [min,max]
     dataCovRange = [ 0, 0.1] ### TODO: make this based on input data 
+    dataDim = 2 ### TODO: make so this number is updated to the dimension of the input data.
     testData,testCluster = genMultidimGaussianData(dataDim,numDataPoints,mean=[-2,2],cov=[[1,0],[0,1]])
 
 ### Run EM:
