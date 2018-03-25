@@ -15,15 +15,24 @@ class clusterCandidate:
 		self.normProbTable = np.full((numDataPoints,len(gaussInst)),-1) ### TODO: Make reasonable.
 							# Array of size MxN N = numDatapoints
 		
-		def getProbabilities(self, data):
-			for n in (0, numDataPoints):
-				for m in len(gaussInst):
-					self.probTable[m,n] = normals[m].pdf(data[n])
-				probSum = sum(self.probTable[:,n])
-				for m in len(gaussInst):
-					self.normProbTable[m,n] = self.probTable[m,n]/probSum
-
-
+	def getProbabilities(self, data):
+		#print data
+		#print self.probTable[0]
+		
+		for n in range(0, numDataPoints):
+			for m in range(0,len(self.normals)):
+				self.probTable[n,m] = self.normals[m].pdf(data[n])
+			#print "__prob___"
+			#print self.probTable[m]
+			#print self.probTable[n]
+			#print probSum
+			probSum = sum(self.probTable[n])
+			for m in range(0,len(self.normals)):
+				self.normProbTable[n,m] = self.probTable[n,m]/probSum
+		
+			#print "__norm___"
+			#print self.normProbTable[m]
+			
 # From probTable, assign point to cluster based on which has highest value:
 # returns M lists containing points that belong to the cluster.
 def dividePoints(pTable,points):
@@ -146,13 +155,15 @@ def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange,point
 			# or if count is too large.
 	# Pick model with best log-likelihood
 	clusteredPoints = dividePoints(clusterOptions[0].probTable,pointsIn)
-	plot2DClusters(clusteredPoints)		
+	plot2DClusters(clusteredPoints)	
+	clusterOptions[0].getProbabilities(pointsIn)
+	
+	return clusterOptions[0]
 
 
 ### MAIN:
 
 
-print calcDistance([2, 5, 1], [1,2,3])
 
 parser = argparse.ArgumentParser(description='''CS 534 Assignment 3.''')
 parser.add_argument('--n',dest='nClusters',nargs=1, type=int, default=3, help='''
@@ -193,16 +204,14 @@ if numClusters == 'X':
 	    else:
 	        oldCandidate = newCandidate
 	        numClusters_tmp = numClusters_tmp + 1
-	
 	### RETURN: num clusters, LL, BIC, cluster centers.
-
+	
 else:
 	## Standard EM 
     ### TODO: MOVE THE WHOLE THING (INCLUDING RESTARTS) INTO A FUNCTION SO BIC VERSION CAN CALL.
 	### EM Steps:
 	bestClusterCandidate = expectationMaximization(numRestarts,numClusters,dataDim,dataMeanRange,dataCovRange,testData)	
-		
-
+	#print bestClusterCandidate.probTable
 ### OUTPUTS:
 # Best fitting cluster centers
 # Log-likelihood of the model
