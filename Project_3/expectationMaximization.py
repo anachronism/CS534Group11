@@ -153,7 +153,7 @@ if numClusters == 'X':
     while (currentBIC - lastBIC > endThresh):        
 	    # Run EM with random restarts.
 	    # Using resulting log likelihood, calculate BIC
-	    newCandidate = runEM(numRestarts,numClusters_tmp) ### TODO: Update with actual inputs that will be needed.
+	    newCandidate = expectationMaximization(numRestarts,numClusters_tmp,dataDim,dataMeanRange,dataCovRange,testData) ### TODO: Update with actual inputs that will be needed.
 	    lastBIC = currentBIC
 	    currentBIC = calcBIC(newCandidate)
 		## BIC = ln(numDataPoints)*numParametersEst - 2 * log-likelihood
@@ -171,7 +171,7 @@ else:
 	## Standard EM 
     ### TODO: MOVE THE WHOLE THING (INCLUDING RESTARTS) INTO A FUNCTION SO BIC VERSION CAN CALL.
 	### EM Steps:
-	bestCluster = expectationMaximization(numRestarts,numClusters,dataDim,dataMeanRange,dataCovRange,testData)	
+	bestClusterCandidate = expectationMaximization(numRestarts,numClusters,dataDim,dataMeanRange,dataCovRange,testData)	
 		
 
 ### OUTPUTS:
