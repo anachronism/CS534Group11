@@ -72,7 +72,7 @@ def genMultidimGaussianData(nDims,nPoints,**keywordParameters):
 	
 
 
-	gaussianInstance = sp.multivariate_normal(mean,mean,cov)
+	gaussianInstance = sp.multivariate_normal(mean=mean,cov=cov)
 	output = np.zeros((nPoints,nDims))
 	for i in range(0,nPoints):
 		output[i,:] = gaussianInstance.rvs()
@@ -168,7 +168,10 @@ else:
 # plt.show()
 # #print ptsTest
 nPointsTest = 100
-testOut = genMultidimGaussianData(2,nPointsTest)
-print testOut
+testOut,_ = genMultidimGaussianData(2,nPointsTest,mean=[2,2])
+testOut2,_ = genMultidimGaussianData(2,nPointsTest,mean=[-2,-2])
+plt.scatter(testOut[:,0],testOut[:,1])
+plt.scatter(testOut2[:,0],testOut2[:,1])
 
+plt.show()
 
