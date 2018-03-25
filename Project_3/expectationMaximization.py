@@ -42,24 +42,6 @@ def plot2DClusters(pointArray):
 		plt.scatter(elt[:,0],elt[:,1])
 	plt.show()
 
-# From probTable, assign point to cluster based on which has highest value:
-# returns M lists containing points that belong to the cluster.
-def dividePoints(pTable,points):
-	indResult = []
-	pointsInCluster = []
-	for i in range(0,pTable.shape[0]):
-		valsSearch=pTable[i,:]
-		indResult.append(np.argmax(valsSearch))
-	for i in range(0,pTable.shape[1]):
-		indInCluster = [j for j, x in enumerate(indResult) if x == i]
-		pointsInCluster.append(points[indInCluster])
-	return pointsInCluster
-
-def plot2DClusters(pointArray):
-	for elt in pointArray:
-		plt.scatter(elt[:,0],elt[:,1])
-	plt.show()
-
 #read data file
 def readPriceTable(fileLoc):
     firstLineFlag = 1
