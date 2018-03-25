@@ -42,7 +42,7 @@ class clusterCandidate:
         newLL = 0
         for ind in range(0,self.probTable.shape[1]):
             newLL += sum(np.log10(self.probTable[:,ind])) ## TODO: Check if there should be a multiply here.
-        #print newLL
+        print newLL
         self.LL = newLL
 
 
@@ -193,8 +193,9 @@ if f_readDataFile:
     numDataPoints = len(testData[:,0])
 
     dataMean = np.mean(testData)
+    dataMaxCov = np.amax(np.cov(testData)) 
     dataMeanRange = [-dataMean,dataMean]
-    dataCovRange = [0, dataMean]
+    dataCovRange = [0, dataMaxCov]
     # plt.scatter(testData[:,0],testData[:,1])
     # plt.show()
 else:
