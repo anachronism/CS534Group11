@@ -187,22 +187,20 @@ dataFile = 'sample EM data v2.csv' # relative path to data.
     
 
 if f_readDataFile:
-    ### TODO: Sub with actual data
     testData = readDataFile(dataFile)
     dataDim = len(testData[0,:])
     numDataPoints = len(testData[:,0])
 
-    dataMean = np.mean(testData)
     dataMaxCov = np.amax(np.cov(testData)) 
-    dataMeanRange = [-dataMean,dataMean]
+    dataMeanRange = [np.amin(testData),np.amax(testData)]
     dataCovRange = [0, dataMaxCov]
     # plt.scatter(testData[:,0],testData[:,1])
     # plt.show()
 else:
-    numDataPoints = 50 # TODO: make this part of reading in the text file
-    dataMeanRange = [0,1] ### TODO: make this based on input data [min,max]
-    dataCovRange = [ 0, 0.1] ### TODO: make this based on input data 
-    dataDim = 2 ### TODO: make so this number is updated to the dimension of the input data.
+    numDataPoints = 50 
+    dataMeanRange = [0,1] 
+    dataCovRange = [ 0, 0.1] 
+    dataDim = 2 
     testData,testCluster = genMultidimGaussianData(dataDim,numDataPoints,mean=[-2,2],cov=[[1,0],[0,1]])
 
 ### Run EM:
@@ -242,7 +240,8 @@ else:
     ## Standard EM 
     ### TODO: MOVE THE WHOLE THING (INCLUDING RESTARTS) INTO A FUNCTION SO BIC VERSION CAN CALL.
     ### EM Steps:
-    bestClusterCandidate = expectationMaximization(numRestarts,numClusters,dataDim,dataMeanRange,dataCovRange,testData)    
+    bestClusterCandidate = expectationMaximization(numRestarts,numClusters,dataDim,dataMeanRange,dataCovRange,testData)   
+    print bestClusterCandidate.probTable 
     clusteredPoints = dividePoints(bestClusterCandidate.probTable,testData)
     plot2DClusters(clusteredPoints)    
     ### OUTPUTS:
