@@ -1,6 +1,6 @@
 import numpy as np
 import argparse
-
+import matplotlib.pyplot as plt
 class clusterCandidate:
 	def __init__(self,means,cov,logLike,numDataPoints):
 		
@@ -29,7 +29,7 @@ def readPriceTable(fileLoc):
     print data[0:10]        
     return data
 
-readPriceTable("sample EM data v2.csv")
+# readPriceTable("sample EM data v2.csv")
 
 ## 
 def calcBIC(candidate):
@@ -53,6 +53,7 @@ def genMultidimGaussianData(nDims,nPoints,**keywordParameters):
 	
 	if 'mean' in keywordParameters:
 		mean = keywordParameters['mean']
+		#mean = np.full( nDims,mean)
 	else:
 		mean = np.random.uniform(meanRange[0],meanRange[1],nDims) ## This * 5 shows the range that data can be on.
 	
@@ -62,6 +63,8 @@ def genMultidimGaussianData(nDims,nPoints,**keywordParameters):
 		cov = np.diag(np.random.uniform(covRange[0],covRange[1],nDims)) 
 	
 	output = []
+	print len(mean)
+	print len(cov)
 	for i in range(0,nPoints):
 		output.append(tuple(np.random.multivariate_normal(mean,cov)))
 	return output,mean,cov
@@ -85,8 +88,6 @@ numDataPoints = 50 # TODO: make this part of reading in the text file
 dataDim = 2 ### TODO: make so this number is updated to the dimension of the input data.
 dataMeanRange = [0,1] ### TODO: make this based on input data [min,max]
 dataCovRange = [ 0, 0.1] ### TODO: make this based on input data
-
-
 
 if numClusters == 'X':
 	## EM with Bayesian information criterion.
@@ -141,3 +142,17 @@ else:
 ### OUTPUTS:
 # Best fitting cluster centers
 # Log-likelihood of the model
+
+
+## Test genMultidimGaussianData
+# nTestPoints = 1000
+# ptsTest,meansTest,covTest = genMultidimGaussianData(2,nTestPoints,mean=[5,4])
+# ptsTest2,_,_= genMultidimGaussianData(2,nTestPoints,mean=[-3,1])
+# xTest,yTest = zip(*ptsTest)
+# xTest2,yTest2 =zip(*ptsTest2)
+# # print xTest2,yTest2
+# plt.axis([-6,6,-6,6])
+# plt.scatter([xTest, xTest2],[yTest,yTest2])
+# plt.show()
+# #print ptsTest
+
