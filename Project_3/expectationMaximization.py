@@ -17,6 +17,26 @@ class clusterCandidate:
 						# Array of size MxN N = numDatapoints
 		self.normProbTable = np.full((numDataPoints,len(gaussInst)),-1) 
 							# Array of size MxN N = numDatapoints
+		
+	def getProbabilities(self, data):
+		#print data
+		#print self.probTable[0]
+		
+		for n in range(0, numDataPoints):
+			for m in range(0,len(self.normals)):
+				self.probTable[n,m] = self.normals[m].pdf(data[n])
+			#print "__prob___"
+			#print self.probTable[m]
+			#print self.probTable[n]
+			#print probSum
+			probSum = sum(self.probTable[n])
+			for m in range(0,len(self.normals)):
+				self.normProbTable[n,m] = self.probTable[n,m]/probSum
+		
+			#print "__norm___"
+			#print self.normProbTable[m]
+			
+# From probTable, assign point to cluster based on which has highest value:
 	def updateLL(self):
 		### TODO: Check if there's a multiply needed here.
 		newLL = 0
@@ -24,15 +44,6 @@ class clusterCandidate:
 			newLL += sum(np.log10(self.probTable[:,ind])) ## TODO: Check if there should be a multiply here.
 		print newLL
 		self.LL = newLL
-
-		def getProbabilities(self, data):
-			for n in (0, numDataPoints):
-				for m in len(gaussInst):
-					self.probTable[m,n] = normals[m].pdf(data[n])
-				probSum = sum(self.probTable[:,n])
-				for m in len(gaussInst):
-					self.normProbTable[m,n] = self.probTable[m,n]/probSum
-
 
 
 # From probTable, assign point to cluster based on which has highest value:
