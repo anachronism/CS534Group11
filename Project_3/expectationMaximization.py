@@ -78,6 +78,25 @@ def genMultidimGaussianData(nDims,nPoints,**keywordParameters):
 		output[i,:] = gaussianInstance.rvs()
 	return output,gaussianInstance
 
+def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange):
+	for i in range(0,nRestarts):
+		pass # Replace pass with algorithm
+		runEM = True
+		# Randomly pick N means and covariances
+		gaussInstances = []
+		for i in range(0,nClusters):
+			_,gaussInst = genMultidimGaussianData(dataDim,1,meanRange=meanRange,covRange=covRange) ### TODO: set meanRange and covRange based on input data. 
+			gaussInstances.append(gaussInst)
+		
+		clusterOptions.append(clusterCandidate(gaussInstances,-float("inf"),numDataPoints))
+		while runEM == True:
+			runEM = False ### TODO: \ Make this conditional
+			# Given data, assign data to clusters.
+			# Given the points assigned to the clusters, update cluster mean and cov
+			# Check log likelihood (save log likelihood)
+			# If change in log likelihood is less than certain value, move to next random restart
+			# or if count is too large.
+	# Pick model with best log-likelihood
 
 
 ### MAIN:
@@ -128,26 +147,9 @@ if numClusters == 'X':
 else:
 	## Standard EM 
     ### TODO: MOVE THE WHOLE THING (INCLUDING RESTARTS) INTO A FUNCTION SO BIC VERSION CAN CALL.
-	### EM Steps:	
-	for i in range(0,numRestarts):
-		pass # Replace pass with algorithm
-		runEM = True
-		# Randomly pick N means and covariances
-		gaussInstances = []
-		for i in range(0,numClusters):
-			_,gaussInst = genMultidimGaussianData(dataDim,1,meanRange=dataMeanRange,covRange=dataCovRange) ### TODO: set meanRange and covRange based on input data. 
-			gaussInstances.append(gaussInst)
+	### EM Steps:
+	bestCluster = expectationMaximization(numRestarts,numClusters,dataDim,dataMeanRange,dataCovRange)	
 		
-		clusterOptions.append(clusterCandidate(gaussInstances,-float("inf"),numDataPoints))
-		while runEM == True:
-			runEM = False ### TODO: \ Make this conditional
-			# Given data, assign data to clusters.
-			# Given the points assigned to the clusters, update cluster mean and cov
-			# Check log likelihood (save log likelihood)
-			# If change in log likelihood is less than certain value, move to next random restart
-			# or if count is too large.
-	# Pick model with best log-likelihood
-	
 
 ### OUTPUTS:
 # Best fitting cluster centers
@@ -168,3 +170,5 @@ else:
 nPointsTest = 100
 testOut = genMultidimGaussianData(2,nPointsTest)
 print testOut
+
+
