@@ -1,6 +1,6 @@
 import numpy as np
 import argparse
-
+import math
 class clusterCandidate:
 	def __init__(self,means,cov,logLike,numDataPoints):
 		
@@ -29,7 +29,12 @@ def readPriceTable(fileLoc):
     print data[0:10]        
     return data
 
-readPriceTable("sample EM data v2.csv")
+def calcDistance(point1, point2):
+	dimension = len(point1)
+	sum = 0
+	for i in range(0,dimension):
+		sum += math.pow((point1[i]-point2[i]),2) 
+	return math.sqrt(sum)
 
 ## 
 def calcBIC(candidate):
@@ -70,6 +75,10 @@ def genMultidimGaussianData(nDims,nPoints,**keywordParameters):
 
 ### MAIN:
 
+
+print calcDistance([2, 5, 1], [1,2,3])
+
+print asdfasdf
 parser = argparse.ArgumentParser(description='''CS 534 Assignment 3.''')
 parser.add_argument('--n',dest='nClusters',nargs=1, type=int, default=3, help='''
 										s	Number of clusters to find. input X to have the algorithm choose.
