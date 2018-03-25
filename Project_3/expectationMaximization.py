@@ -86,7 +86,7 @@ def calcBIC(candidate):
     BICVal = np.log(numDataPoints) * numParameters - 2*candidate.LL ## Numpy log is ln.
     return BICVal   
 
-## Produces list of tuples, each tuple being a data point.
+## Produces list of Datapoints
 def genMultidimGaussianData(nDims,nPoints,**keywordParameters):
 	
 	if 'meanRange' in keywordParameters:
@@ -95,7 +95,7 @@ def genMultidimGaussianData(nDims,nPoints,**keywordParameters):
 		meanRange = [0,1]
 
 	if 'covRange' in keywordParameters:
-		covRange = keywordParameters['meanRange']
+		covRange = keywordParameters['covRange']
 	else:
 		covRange = [0, 0.1]
 	
