@@ -1,17 +1,16 @@
 import numpy as np
-import scipy as sp
+import scipy.stats as sp
 import argparse
 import matplotlib.pyplot as plt
 import math
 
 class clusterCandidate:
-	def __init__(self,means,cov,logLike,numDataPoints):
+	def __init__(self,gaussInst,logLike,numDataPoints):
 		
-		self.means = means # list of length M = numClusters
+		self.normals = gaussInst # list of length M = numClusters
 							# each is a tuple.
-		self.cov = cov # matr of size NxN = covariance
 		self.LL = logLike # 1 log likelihood value
-		self.dataLabels = np.full((numDataPoints,len(means)),-1) ### TODO: Make reasonable.
+		self.probTable = np.full((numDataPoints,len(gaussInst)),-1) ### TODO: Make reasonable.
 							# Array of size MxN N = numDatapoints
 
 #read data file
@@ -74,7 +73,9 @@ def genMultidimGaussianData(nDims,nPoints,**keywordParameters):
 	output = []
 	for i in range(0,nPoints):
 		output.append(tuple(np.random.multivariate_normal(mean,cov)))
-	return output,mean,cov
+
+	gaussianInstance = sp.multivariate_normal(mean,mean,cov)
+	return output,gaussianInstance
 
 
 
@@ -131,14 +132,12 @@ else:
 		pass # Replace pass with algorithm
 		runEM = True
 		# Randomly pick N means and covariances
-		meansIn = []
-		covIn = []
+		gaussInstances = []
 		for i in range(0,numClusters):
-			_,meansTmp,covTmp = genMultidimGaussianData(dataDim,1,meanRange=dataMeanRange,covRange=dataCovRange) ### TODO: set meanRange and covRange based on input data. 
-			meansIn.append(meansTmp)
-			covIn.append(covTmp)		
+			_,gaussInst = genMultidimGaussianData(dataDim,1,meanRange=dataMeanRange,covRange=dataCovRange) ### TODO: set meanRange and covRange based on input data. 
+			gaussInstances.append(gaussInst)
 		
-		clusterOptions.append(clusterCandidate(meansIn,covIn,-float("inf"),numDataPoints))
+		clusterOptions.append(clusterCandidate(gaussInstances,-float("inf"),numDataPoints))
 		while runEM == True:
 			runEM = False ### TODO: \ Make this conditional
 			# Given data, assign data to clusters.
@@ -165,4 +164,3 @@ else:
 # plt.scatter([xTest, xTest2],[yTest,yTest2])
 # plt.show()
 # #print ptsTest
-
