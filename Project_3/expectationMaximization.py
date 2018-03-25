@@ -70,11 +70,12 @@ def genMultidimGaussianData(nDims,nPoints,**keywordParameters):
 	else:
 		cov = np.diag(np.random.uniform(covRange[0],covRange[1],nDims)) 
 	
-	output = []
-	for i in range(0,nPoints):
-		output.append(tuple(np.random.multivariate_normal(mean,cov)))
+
 
 	gaussianInstance = sp.multivariate_normal(mean,mean,cov)
+	output = np.zeros((nPoints,nDims))
+	for i in range(0,nPoints):
+		output[i,:] = gaussianInstance.rvs()
 	return output,gaussianInstance
 
 
@@ -164,3 +165,6 @@ else:
 # plt.scatter([xTest, xTest2],[yTest,yTest2])
 # plt.show()
 # #print ptsTest
+nPointsTest = 100
+testOut = genMultidimGaussianData(2,nPointsTest)
+print testOut
