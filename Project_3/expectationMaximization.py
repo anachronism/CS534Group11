@@ -13,6 +13,24 @@ class clusterCandidate:
 		self.probTable = np.full((numDataPoints,len(gaussInst)),-1) ### TODO: Make reasonable.
 							# Array of size MxN N = numDatapoints
 
+# From probTable, assign point to cluster based on which has highest value:
+# returns M lists containing points that belong to the cluster.
+def dividePoints(pTable,points):
+	indResult = []
+	pointsInCluster = []
+	for i in range(0,pTable.shape[0]):
+		valsSearch=pTable[i,:]
+		indResult.append(np.argmax(valsSearch))
+	for i in range(0,pTable.shape[1]):
+		indInCluster = [j for j, x in enumerate(indResult) if x == i]
+		pointsInCluster.append(points[indInCluster])
+	return pointsInCluster
+
+def plot2DClusters(pointArray):
+	for elt in pointArray:
+		plt.scatter(elt[:,0],elt[:,1])
+	plt.show()
+
 #read data file
 def readPriceTable(fileLoc):
     firstLineFlag = 1
@@ -78,7 +96,8 @@ def genMultidimGaussianData(nDims,nPoints,**keywordParameters):
 		output[i,:] = gaussianInstance.rvs()
 	return output,gaussianInstance
 
-def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange):
+
+def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange,pointsIn):
 	for i in range(0,nRestarts):
 		pass # Replace pass with algorithm
 		runEM = True
@@ -97,6 +116,8 @@ def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange):
 			# If change in log likelihood is less than certain value, move to next random restart
 			# or if count is too large.
 	# Pick model with best log-likelihood
+	clusteredPoints = dividePoints(clusterOptions[0].probTable,pointsIn)
+	plot2DClusters(clusteredPoints)		
 
 
 ### MAIN:
@@ -119,6 +140,8 @@ numDataPoints = 50 # TODO: make this part of reading in the text file
 dataDim = 2 ### TODO: make so this number is updated to the dimension of the input data.
 dataMeanRange = [0,1] ### TODO: make this based on input data [min,max]
 dataCovRange = [ 0, 0.1] ### TODO: make this based on input data
+### TODO: Sub with actual data
+testData,testCluster = genMultidimGaussianData(dataDim,numDataPoints,mean=[-2,2],cov=[[1,0],[0,1]])
 
 if numClusters == 'X':
 	## EM with Bayesian information criterion.
@@ -148,7 +171,7 @@ else:
 	## Standard EM 
     ### TODO: MOVE THE WHOLE THING (INCLUDING RESTARTS) INTO A FUNCTION SO BIC VERSION CAN CALL.
 	### EM Steps:
-	bestCluster = expectationMaximization(numRestarts,numClusters,dataDim,dataMeanRange,dataCovRange)	
+	bestCluster = expectationMaximization(numRestarts,numClusters,dataDim,dataMeanRange,dataCovRange,testData)	
 		
 
 ### OUTPUTS:
@@ -167,11 +190,11 @@ else:
 # plt.scatter([xTest, xTest2],[yTest,yTest2])
 # plt.show()
 # #print ptsTest
-nPointsTest = 100
-testOut,_ = genMultidimGaussianData(2,nPointsTest,mean=[2,2])
-testOut2,_ = genMultidimGaussianData(2,nPointsTest,mean=[-2,-2])
-plt.scatter(testOut[:,0],testOut[:,1])
-plt.scatter(testOut2[:,0],testOut2[:,1])
+# nPointsTest = 100
+# testOut,_ = genMultidimGaussianData(2,nPointsTest,mean=[2,2])
+# testOut2,_ = genMultidimGaussianData(2,nPointsTest,mean=[-2,-2])
+# plt.scatter(testOut[:,0],testOut[:,1])
+# plt.scatter(testOut2[:,0],testOut2[:,1])
 
-plt.show()
+# plt.show()
 
