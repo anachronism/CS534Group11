@@ -17,18 +17,18 @@ class clusterCandidate:
 def readPriceTable(fileLoc):
     firstLineFlag = 1
     data = []           
-            
+    floatRow = [] 
     with open(fileLoc,'r') as f:
         for line in f:
+            floatRow = []
             row = (line.strip('\n')).split(',')
-            #print row
-            if(firstLineFlag):
-                size = len(row)          
-                firstLineFlag = 0
-            data.append((row))
+
+            for stringIndex in range(0,len(row)):
+                floatRow.append(float(row[stringIndex]))
+            
+            data.append(deepcopy(floatRow))
             
             #for index,elt in enumerate(row):
-    print data[0:10]        
     return data
 
 def calcDistance(point1, point2):
