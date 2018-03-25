@@ -11,14 +11,17 @@ class clusterCandidate:
 							# each is a tuple.
 		self.LL = logLike # 1 log likelihood value
 		self.probTable = np.full((numDataPoints,len(gaussInst)),-1) ### TODO: Make reasonable.
+						# Array of size MxN N = numDatapoints
+		self.normProbTable = np.full((numDataPoints,len(gaussInst)),-1) ### TODO: Make reasonable.
 							# Array of size MxN N = numDatapoints
+		
 		def getProbabilities(self, data):
 			for n in (0, numDataPoints):
 				for m in len(gaussInst):
 					self.probTable[m,n] = normals[m].pdf(data[n])
 				probSum = sum(self.probTable[:,n])
 				for m in len(gaussInst):
-					self.probTable[m,n] = self.probTable[m,n]/probSum
+					self.normProbTable[m,n] = self.probTable[m,n]/probSum
 
 
 # From probTable, assign point to cluster based on which has highest value:
