@@ -141,7 +141,7 @@ def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange,point
         gaussInstances = []
         
         for i in range(0,nClusters):
-            _,gaussInst = genMultidimGaussianData(dataDim,1,meanRange=meanRange,covRange=covRange) ### TODO: set meanRange and covRange based on input data. 
+            _,gaussInst = genMultidimGaussianData(dataDim,1,meanRange=meanRange,covRange=covRange)
             gaussInstances.append(gaussInst)
         
         currentClusterCandidate = clusterCandidate(gaussInstances,-float("inf"),numDataPoints)
@@ -153,7 +153,7 @@ def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange,point
             lastLL = currentClusterCandidate.LL
             currentClusterCandidate.updateLL() 
             if (currentClusterCandidate.LL - lastLL < THRESHREPEAT) or (iterationCount > NUMITERATIONS): 
-                runEM = False ### TODO:  Make this conditional
+                runEM = False 
             else:
                 iterationCount += 1
             
@@ -215,7 +215,7 @@ if numClusters == 'X':
     while(currentBIC - lastBIC > endThresh):        
         # Run EM with random restarts.
         # Using resulting log likelihood, calculate BIC
-        newCandidate = expectationMaximization(numRestarts,numClusters_tmp,dataDim,dataMeanRange,dataCovRange,testData) ### TODO: Update with actual inputs that will be needed.
+        newCandidate = expectationMaximization(numRestarts,numClusters_tmp,dataDim,dataMeanRange,dataCovRange,testData) 
         lastBIC = currentBIC
         currentBIC = calcBIC(newCandidate)
         ## BIC = ln(numDataPoints)*numParametersEst - 2 * log-likelihood
@@ -238,7 +238,6 @@ if numClusters == 'X':
 
 else:
     ## Standard EM 
-    ### TODO: MOVE THE WHOLE THING (INCLUDING RESTARTS) INTO A FUNCTION SO BIC VERSION CAN CALL.
     ### EM Steps:
     bestClusterCandidate = expectationMaximization(numRestarts,numClusters,dataDim,dataMeanRange,dataCovRange,testData)   
     print bestClusterCandidate.probTable 
