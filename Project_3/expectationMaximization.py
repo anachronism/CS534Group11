@@ -53,11 +53,13 @@ class clusterCandidate:
         numDataPoints = self.normProbTable.shape[0]
         # Columns of normProbTable represents number of means or number of clusters.
         numMeans = self.normProbTable.shape[1]
-        dataDim = len(dataDim[0,:])
+        dataDim = len(dataPoints[0,:])
         # Initialize summations to zero vector or zero.
         summationProbDatapoints = np.zeros((1,dataDim))
-        summationProb = 0
         for j in range(0,numMeans):
+            # Calculate New mean:
+            summationProb = 0
+            summationCov = np.zeros((dataDim,dataDim))
             for i in range(0,numDataPoints):
                 expectedValue = self.normProbTable[i,j]
                 ### TODO: double check that the individual points are grabbed correctly from the structure
@@ -67,9 +69,15 @@ class clusterCandidate:
                 summationProb += expectedValue
 
             newMean = summationProbDatapoints / summationProb
-            newCov = np.zeros((dataDim, dataDim))
+            for i in range(0,numDataPoints):
+                expectedValue = self.normProbTable[i,j]
+                currentData = dataPoints[i,:]
+                eltCov = expectedValue * (currentData - newMean)*np.transpose(currentData-newMean)
+                summationCov += eltCov
+            newCov = summationCov/summationProb
             ### TODO: need to calculate new covariance
-            self.normals[j] = sp.multivariate_normal(newMean, newCov)
+            self.normals[j].mean = newMean 
+            self.normals[j].cov = newCov # = sp.multivariate_normal(newMean, newCov)
                 
                 
 
@@ -141,6 +149,7 @@ def genMultidimGaussianData(nDims,nPoints,**keywordParameters):
         mean = keywordParameters['mean']
         #mean = np.full( nDims,mean)
     else:
+        #print meanRange[0]
         mean = np.random.uniform(meanRange[0],meanRange[1],nDims) ## This * 5 shows the range that data can be on.
     
     if 'cov' in keywordParameters:
@@ -157,20 +166,31 @@ def genMultidimGaussianData(nDims,nPoints,**keywordParameters):
     return output,gaussianInstance
 
 
-def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange,pointsIn):
+def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange,pointsIn,**keywordParameters):
     global THRESHREPEAT
     global NUMITERATIONS
     clusterOptions = []
+
+    if 'covOfInputData' in keywordParameters:
+        covOfInputData = keywordParameters['covOfInputData']
+    else:
+        covOfInputData = False
+
     for i in range(0,nRestarts):
         iterationCount = 0
         runEM = True
         # Randomly pick N means and covariances
         gaussInstances = []
-        
         for i in range(0,nClusters):
-            _,gaussInst = genMultidimGaussianData(dataDim,1,meanRange=meanRange,covRange=covRange)
+            if(covOfInputData):
+                covIn = np.diag(np.var(pointsIn,0))
+                _,gaussInst = genMultidimGaussianData(dataDim,1,meanRange=meanRange,cov=covIn)
+            else:
+                _,gaussInst = genMultidimGaussianData(dataDim,1,meanRange=meanRange,covRange=covRange)
             gaussInstances.append(gaussInst)
-        
+
+
+        cntRuns = 0
         currentClusterCandidate = clusterCandidate(gaussInstances,-float("inf"),numDataPoints)
         while runEM == True:
             currentClusterCandidate.getProbabilities(pointsIn) # Given data, assign data to clusters.
@@ -181,6 +201,7 @@ def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange,point
             currentClusterCandidate.updateLL() 
             if (currentClusterCandidate.LL - lastLL < THRESHREPEAT) or (iterationCount > NUMITERATIONS): 
                 runEM = False 
+                iterationCount = 0
             else:
                 iterationCount += 1
             
@@ -206,7 +227,11 @@ parser.add_argument('--n',dest='nClusters',nargs=1, type=int, default=3, help=''
 
 args = parser.parse_args()
 
-numClusters = args.nClusters
+if type(args.nClusters) == list:
+    numClusters = args.nClusters[0]
+else:
+    numClusters = args.nClusters
+
 numRestarts = 100 # Currently arbitrarily picked number
 f_readDataFile = True
 dataFile = 'sample EM data v2.csv' # relative path to data.
@@ -215,15 +240,19 @@ dataFile = 'sample EM data v2.csv' # relative path to data.
 
 if f_readDataFile:
     testData = readDataFile(dataFile)
+    listTestData = [testData]
+    #plot2DClusters(listTestData)  
     dataDim = len(testData[0,:])
     numDataPoints = len(testData[:,0])
+    covOfInputData = True
 
-    dataMaxCov = np.amax(np.cov(testData)) 
+    dataMaxCov = [] 
     dataMeanRange = [np.amin(testData),np.amax(testData)]
-    dataCovRange = [0, dataMaxCov]
+    dataCovRange = []
     # plt.scatter(testData[:,0],testData[:,1])
     # plt.show()
 else:
+    covOfInputData = False
     numDataPoints = 50 
     dataMeanRange = [0,1] 
     dataCovRange = [ 0, 0.1] 
@@ -242,7 +271,7 @@ if numClusters == 'X':
     while(currentBIC - lastBIC > endThresh):        
         # Run EM with random restarts.
         # Using resulting log likelihood, calculate BIC
-        newCandidate = expectationMaximization(numRestarts,numClusters_tmp,dataDim,dataMeanRange,dataCovRange,testData) 
+        newCandidate = expectationMaximization(numRestarts,numClusters_tmp,dataDim,dataMeanRange,dataCovRange,testData,covOfInputData=covOfInputData) 
         lastBIC = currentBIC
         currentBIC = calcBIC(newCandidate)
         ## BIC = ln(numDataPoints)*numParametersEst - 2 * log-likelihood
@@ -266,8 +295,8 @@ if numClusters == 'X':
 else:
     ## Standard EM 
     ### EM Steps:
-    bestClusterCandidate = expectationMaximization(numRestarts,numClusters,dataDim,dataMeanRange,dataCovRange,testData)   
-    print bestClusterCandidate.probTable 
+    bestClusterCandidate = expectationMaximization(numRestarts,numClusters,dataDim,dataMeanRange,dataCovRange,testData,covOfInputData=covOfInputData)   
+   # print bestClusterCandidate.probTable 
     clusteredPoints = dividePoints(bestClusterCandidate.probTable,testData)
     plot2DClusters(clusteredPoints)    
     ### OUTPUTS:
