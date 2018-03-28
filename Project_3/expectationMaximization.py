@@ -45,6 +45,33 @@ class clusterCandidate:
         print newLL
         self.LL = newLL
 
+    # Maximization class function that re-calculates the mean by getting the summation of the probabilies
+    # that datapoints are within a certain mean and then dividing that summation with the summation of
+    # probabilities in the mean. 
+    def maximization(self, dataPoints):
+        # Rows of normProbTable represents number of data points.
+        numDataPoints = self.normProbTable.shape[0]
+        # Columns of normProbTable represents number of means or number of clusters.
+        numMeans = self.normProbTable.shape[1]
+        dataDim = len(dataDim[0,:])
+        # Initialize summations to zero vector or zero.
+        summationProbDatapoints = np.zeros((1,dataDim))
+        summationProb = 0
+        for j in range(0,numMeans):
+            for i in range(0,numDataPoints):
+                expectedValue = self.normProbTable[i,j]
+                ### TODO: double check that the individual points are grabbed correctly from the structure
+                currentData = dataPoints[i,:]
+                expectedData = expectedValue * currentData
+                summationProbDatapoints += expectedData
+                summationProb += expectedValue
+
+            newMean = summationProbDatapoints / summationProb
+            newCov = np.zeros((dataDim, dataDim))
+            ### TODO: need to calculate new covariance
+            self.normals[j] = sp.multivariate_normal(newMean, newCov)
+                
+                
 
 # From probTable, assign point to cluster based on which has highest value:
 # returns M lists containing points that belong to the cluster.
@@ -148,7 +175,7 @@ def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange,point
         while runEM == True:
             currentClusterCandidate.getProbabilities(pointsIn) # Given data, assign data to clusters.
             # Given the points assigned to the clusters, update cluster mean and cov
-
+            currentClusterCandidate.maximization(pointsIn)
             # Check log likelihood (save log likelihood)
             lastLL = currentClusterCandidate.LL
             currentClusterCandidate.updateLL() 
