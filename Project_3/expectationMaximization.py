@@ -185,7 +185,7 @@ def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange,point
     else:
         covOfInputData = False
 
-    
+    ### TODO: make covariance init localized.
 
 
     for i in range(0,nRestarts):
@@ -274,8 +274,8 @@ if f_readDataFile:
     #plot2DClusters(listTestData)  
     dataDim = len(testData[0,:])
     numDataPoints = len(testData[:,0])
-    covOfInputData = False
-    dataCovRange = [10,np.amax(testData)-np.amin(testData)] 
+    covOfInputData = True
+    dataCovRange = [1,np.amax(testData)-np.amin(testData)] 
     dataMeanRange = [np.mean(testData) -np.mean(testData)/2,np.mean(testData)+np.mean(testData)/2]
 
     
