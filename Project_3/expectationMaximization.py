@@ -378,10 +378,10 @@ if numClusters == 'X':
             numClusters_tmp = numClusters_tmp + 1
     
     ### RETURN: num clusters, LL, BIC, cluster centers.
-    # retNumClusters
+    print 'Num Clusters',retNumClusters
     LL_best = retCandidate.LL
     print LL_best
-    # retBIC
+    print retBIC
     clusterCenters = []
     for elt in retCandidate.normals:
         clusterCenters.append(elt.mean)
