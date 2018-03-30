@@ -6,9 +6,13 @@ import math
 import random
 from copy import deepcopy
 
+### PARAMETERS
 THRESHREPEAT = 0.1 # Value that LL has to improve by to keep updating EM in specific iteration
 NUMITERATIONS = 1e6 # Number of times to repeat EM before restarting again.
+f_readDataFile = True
+dataFile = 'sample EM data v2.csv' # relative path to data.
 
+## Class containing one candidate set of means and covariances.
 class clusterCandidate:
     def __init__(self,gaussInst,logLike,numDataPoints):
         
@@ -21,45 +25,29 @@ class clusterCandidate:
         self.normProbTable = np.full((numDataPoints,len(gaussInst)),-1,dtype=np.float64) 
                             # Array of size MxN N = numDatapoints
         
-    def getProbabilities(self, data):
-        #print data
-        #print self.probTable[0]
-        
+    def expectationUpdate(self, data):
+
         for n in range(0, numDataPoints):
             for m in range(0,len(self.normals)):
                 self.probTable[n,m] = self.normals[m].pdf(data[n])
-            # print "__prob___"
-            #print np.log10(self.probTable[m])
-            #print self.probTable[n]
-            #print probSum
             
-            #print probSum
             for m in range(0,len(self.normals)):
                 probSum = sum(np.multiply(self.probNormals,self.probTable[n]))
                 self.normProbTable[n,m] = self.probNormals[m] * self.probTable[n,m]/probSum   
-                # if self.normProbTable[n,m] < 1e-6:
-                #     print 'Normtable:',self.normProbTable[n,m]
-                #     print self.probTable[n]
-        	#print "__norm___"
-            #print self.normProbTable[m]
-            
-# From probTable, assign point to cluster based on which has highest value:
+                    
+    # From probTable, assign point to cluster based on which has highest value:
     def updateLL(self):
-        ### TODO: Check if there's a multiply needed here.
         newLL = 0
 
-       # print self.normProbTable.shape[0]
         for ind in range(0,self.probTable.shape[0]):
             newLL += np.log(np.sum(np.multiply(self.probNormals,self.probTable[ind,:]))) 
-            #print 'table',self.normProbTable[:,ind]## TODO: Check if there should be a multiply here.
-        
-        #print newLL
+
         self.LL = newLL
 
     # Maximization class function that re-calculates the mean by getting the summation of the probabilies
     # that datapoints are within a certain mean and then dividing that summation with the summation of
     # probabilities in the mean. 
-    def maximization(self, dataPoints):
+    def maximizationUpdate(self, dataPoints):
         # Rows of normProbTable represents number of data points.
         numDataPoints = self.normProbTable.shape[0]
         # Columns of normProbTable represents number of means or number of clusters.
@@ -99,13 +87,9 @@ class clusterCandidate:
                 summationCov += np.diag(eltCov)
             newCov = summationCov/summationProb
 
-            # print 'newCov',j,':',newCov
-            ### TODO: need to calculate new covariance
             self.normals[j]= sp.multivariate_normal(newMean,newCov) 
-            # self.normals[j].cov = newCov # = sp.multivariate_normal(newMean, newCov)
-                
-                
-
+                             
+### Plotting functions:
 # From probTable, assign point to cluster based on which has highest value:
 # returns M lists containing points that belong to the cluster.
 def dividePoints(pTable,points):
@@ -124,7 +108,7 @@ def plot2DClusters(pointArray):
         plt.scatter(elt[:,0],elt[:,1])
     plt.show()
 
-#read data file
+### read data file
 def readDataFile(fileLoc):
     firstLineFlag = 1
     data = []           
@@ -142,38 +126,18 @@ def readDataFile(fileLoc):
             #for index,elt in enumerate(row):
     return np.asarray(data)
 
-def calcDistance(point1, point2):
-    dimension = len(point1)
-    sum = 0
-    for i in range(0,dimension):
-        sum += math.pow((point1[i]-point2[i]),2) 
-    return math.sqrt(sum)
-
-
-def sortPointsWithMeans(data,meanCenters):
-    pointDistances = np.zeros((data.shape[0],len(meanCenters)))
-    for i in range(0,data.shape[0]):
-        for j in range(0,len(meanCenters)):
-            pointDistances[i,j] = calcDistance(data[i,:],meanCenters[j])
-
-    #print pointDistances[1:10,:]
-    clusterAssign = pointDistances.argmin(axis=1)
-    ret = []
-    for i in range(0,len(meanCenters)):
-        print max(clusterAssign == i)
-        ret.append(data[clusterAssign == i])
-
-    return ret
+# def calcDistance(point1, point2):
+#     dimension = len(point1)
+#     sum = 0
+#     for i in range(0,dimension):
+#         sum += math.pow((point1[i]-point2[i]),2) 
+#     return math.sqrt(sum)
     
-
 ## 
 def calcBIC(candidate):
     numDataPoints = candidate.normProbTable.shape[0]
     numParameters = candidate.normProbTable.shape[1] * (len(candidate.normals[0].mean) + np.diag(candidate.normals[0].cov).size) ### TODO: Verify that this is actual number of parameters.
-    print 'numParameters: ', numParameters
     BICVal = np.log(numDataPoints) * numParameters - 2*candidate.LL ## Numpy log is ln.
-    #BICVal = -BICVal 
-    print 'BIC: ', BICVal
     return BICVal   
 
 ## Produces list of Datapoints
@@ -191,9 +155,7 @@ def genMultidimGaussianData(nDims,nPoints,**keywordParameters):
     
     if 'mean' in keywordParameters:
         mean = keywordParameters['mean']
-        #mean = np.full( nDims,mean)
     else:
-        #print meanRange[0]
         mean = np.random.uniform(meanRange[0],meanRange[1],nDims) ## This * 5 shows the range that data can be on.
     
     if 'cov' in keywordParameters:
@@ -210,97 +172,65 @@ def genMultidimGaussianData(nDims,nPoints,**keywordParameters):
     return output,gaussianInstance
 
 
+## Given number of clusters, run EM.
 def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange,pointsIn,**keywordParameters):
     global THRESHREPEAT
     global NUMITERATIONS
     clusterOptions = []
 
-    if 'covOfInputData' in keywordParameters:
-        covOfInputData = keywordParameters['covOfInputData']
-    else:
-        covOfInputData = False
-
-    ### TODO: make covariance init localized.
-
-
     for i in range(0,nRestarts):
-        print i
+        print '     EM Restart Number ', i
         iterationCount = 0
         runEM = True
         # Randomly pick N means and covariances
         gaussInstances = []
 
-        if 'initMeans' in keywordParameters:
-            means = np.zeros((nClusters,dataDim))
-            for i in range(0,nClusters):
-                # randx = random.uniform(np.amin(pointsIn[:,0]),np.amax(pointsIn[:,0]))
-                # randy = random.uniform(np.amin(pointsIn[:,1]),np.amax(pointsIn[:,1]))
-                # means[i,:] = [randx,randy]
+        if 'externalInputData' in keywordParameters:
+            externalInputData = keywordParameters['externalInputData']
+            if externalInputData:
+                means = np.zeros((nClusters,dataDim))
+                for i in range(0,nClusters):
+                    ## Dumb init choice
+                    # randx = random.uniform(np.amin(pointsIn[:,0]),np.amax(pointsIn[:,0]))
+                    # randy = random.uniform(np.amin(pointsIn[:,1]),np.amax(pointsIn[:,1]))
+                    # means[i,:] = [randx,randy]
 
-                pointNum =random.randint(0,len(pointsIn[:,0])-1)
-                means[i,:]=pointsIn[pointNum,:]
-
-
-
-            #splitPoints = sortPointsWithMeans(pointsIn,means)
-            covIn = []
-            for i in range(0,nClusters):
-                varIn = []
-                #covIn.append(np.diag(np.var(splitPoints[i],0)))
-                for j in range(dataDim):
-                    varIn.append(random.uniform(5,60))
-                #print varIn
-                covIn.append(np.diag(varIn))
-                #print covIn
-           
-           # print 'Cov: ', covIn
-
+                    ## smart init choice (init with point in dataset)
+                    pointNum =random.randint(0,len(pointsIn[:,0])-1)
+                    means[i,:]=pointsIn[pointNum,:]
+                
+        # Initialize distribution estimates.
         for i in range(0,nClusters):
-            if(covOfInputData):
-               # covIn = np.diag(np.var(pointsIn,0))
-                # print covIn[i]
-                _,gaussInst = genMultidimGaussianData(dataDim,1,mean=means[i],cov=covIn[i])
+            if(externalInputData):
+                _,gaussInst = genMultidimGaussianData(dataDim,1,mean=means[i],cov=covRange)
             else:
                 _,gaussInst = genMultidimGaussianData(dataDim,1,meanRange=meanRange,covRange=covRange)
             gaussInstances.append(gaussInst)
 
-
-        cntRuns = 0
+       # Initialize clusterCandidate class instance.
         currentClusterCandidate = clusterCandidate(gaussInstances,-float("inf"),numDataPoints)
-        #currentClusterCandidate.updateLL()
+       
         while runEM == True:
-            currentClusterCandidate.getProbabilities(pointsIn) # Given data, assign data to clusters.
-            # Given the points assigned to the clusters, update cluster mean and cov
-            currentClusterCandidate.maximization(pointsIn)
-            # Check log likelihood (save log likelihood)
             lastLL = currentClusterCandidate.LL
+            currentClusterCandidate.expectationUpdate(pointsIn) 
+            currentClusterCandidate.maximizationUpdate(pointsIn)
             currentClusterCandidate.updateLL() 
 
-            if (currentClusterCandidate.LL - lastLL < THRESHREPEAT) or (iterationCount > NUMITERATIONS) or (currentClusterCandidate.LL == -float("inf")): 
-                if currentClusterCandidate.LL - lastLL < 0:
-                    print 'SHOULDN\'T HAPPEN: ', currentClusterCandidate.LL,lastLL
-                    print currentClusterCandidate.probNormals
+            if (currentClusterCandidate.LL - lastLL < THRESHREPEAT) or (iterationCount > NUMITERATIONS): 
                 runEM = False 
                 iterationCount = 0
             else:
                 iterationCount += 1
             
-            # If change in log likelihood is less than certain value, move to next random restart
-            # or if count is too large.
-
+        print "         LL: ", currentClusterCandidate.LL
         clusterOptions.append(currentClusterCandidate)
 
     # Pick model with best log-likelihood
     savedLL = []
     for elt in clusterOptions:
         savedLL.append(elt.LL)
-    print 'MAX: ', max(savedLL)
-    # print savedLL
-    retIndex = savedLL.index(max(savedLL))    
 
-    for elt in clusterOptions[retIndex].normals:
-        print elt.mean
-        print elt.cov
+    retIndex = np.argmax(savedLL)    
 
     return clusterOptions[retIndex]
 
@@ -309,6 +239,9 @@ def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange,point
 parser = argparse.ArgumentParser(description='''CS 534 Assignment 3.''')
 parser.add_argument('--n',dest='nClusters',nargs=1, type=str, default='3', help='''
                                         s    Number of clusters to find. input X to have the algorithm choose.
+                                            ''')
+parser.add_argument('--nRestarts',dest='nRestarts',nargs=1, type=int, default=3, help='''
+                                        s    Number of restarts for EM. Default is 3.
                                             ''')
 
 args = parser.parse_args()
@@ -320,11 +253,10 @@ if type(args.nClusters) == list:
 else:
     numClusters = int(args.nClusters)
 
-numRestarts = 2#50 # Currently arbitrarily picked number
-f_readDataFile = True
-dataFile = 'sample EM data v2.csv' # relative path to data.
-
-    
+if type(args.nRestarts) == list:
+    numRestarts = int(args.nRestarts[0])
+else:   
+    numRestarts = int(args.nRestarts)
 
 if f_readDataFile:
     testData = readDataFile(dataFile)
@@ -332,9 +264,9 @@ if f_readDataFile:
     #plot2DClusters(listTestData)  
     dataDim = len(testData[0,:])
     numDataPoints = len(testData[:,0])
-    covOfInputData = True
-    dataCovRange = [1,np.amax(testData)-np.amin(testData)] 
-    dataMeanRange = [np.mean(testData) -np.mean(testData)/2,np.mean(testData)+np.mean(testData)/2]
+    externInput=True
+    dataCovRange = [5,60]
+    dataMeanRange = []
 
     
     # plt.scatter(testData[:,0],testData[:,1])
@@ -345,6 +277,7 @@ else:
     dataMeanRange = [0,1] 
     dataCovRange = [ 0, 0.1] 
     dataDim = 2 
+    externInput = False
     testData,testCluster = genMultidimGaussianData(dataDim,numDataPoints,mean=[-2,2],cov=[[1,0],[0,1]])
 
 
@@ -358,7 +291,8 @@ if numClusters == 'X':
     endThresh = 0
     oldCandidate = None
     justStarted = True
-    while( lastBIC - currentBIC > endThresh):        
+    while( lastBIC - currentBIC > endThresh):  
+        print 'EM with ',numClusters_tmp, 'clusters running.'      
         # Run EM with random restarts.
         # Using resulting log likelihood, calculate BIC
         if justStarted == False:
@@ -366,8 +300,9 @@ if numClusters == 'X':
         else:
             justStarted = False
 
-        print 'Num CLusters: ', numClusters_tmp
-        newCandidate = expectationMaximization(numRestarts,numClusters_tmp,dataDim,dataMeanRange,dataCovRange,testData,covOfInputData=covOfInputData,initMeans=True) 
+
+        newCandidate = expectationMaximization(numRestarts,numClusters_tmp,dataDim,dataMeanRange,dataCovRange,testData,externalInputData=externInput) 
+
         currentBIC = calcBIC(newCandidate)
         ## BIC = ln(numDataPoints)*numParametersEst - 2 * log-likelihood
         if (lastBIC - currentBIC <= endThresh):
@@ -381,33 +316,40 @@ if numClusters == 'X':
     
     ## Plots:
 
-    clusteredPoints = dividePoints(retCandidate.normProbTable,testData)
-    plot2DClusters(clusteredPoints)
+    
 
     ### RETURN: num clusters, LL, BIC, cluster centers.
+    print '______RESULTS______'
     print 'Num Clusters: ',retNumClusters
-    LL_best = retCandidate.LL
-    print 'Log Likelihood: ',LL_best
+    print 'Log Likelihood: ',retCandidate.LL
     print 'BIC: ',retBIC
-    print 'Means: ', clusterCenters
-    clusterCenters = []
-    for elt in retCandidate.normals:
-        clusterCenters.append(elt.mean)
+    
+    for ind,elt in enumerate(retCandidate.normals):
+        print 'Mean ',ind,': ',elt.mean
+        print 'Cov ',ind,': \n',elt.cov,'\n'
+
+    clusteredPoints = dividePoints(retCandidate.normProbTable,testData)
+    plot2DClusters(clusteredPoints)
+    
 
 
 else:
     ## Standard EM 
     ### EM Steps:
-    bestClusterCandidate = expectationMaximization(numRestarts,numClusters,dataDim,dataMeanRange,dataCovRange,testData,covOfInputData=covOfInputData,initMeans=True)   
-   # print bestClusterCandidate.probTable 
-    clusteredPoints = dividePoints(bestClusterCandidate.normProbTable,testData)
-    print 'Best LL: ',bestClusterCandidate.LL 
-    plot2DClusters(clusteredPoints)   
+    print 'EM with ',numClusters, 'clusters running.'
+    retCandidate = expectationMaximization(numRestarts,numClusters,dataDim,dataMeanRange,dataCovRange,testData,externalInputData=True)   
+
 
     ### OUTPUTS:
     # Best fitting cluster centers
-    clusterCenters = []
-    for elt in bestClusterCandidate.normals:    
-        clusterCenters.append(elt.mean) 
+    print '______RESULTS______'
     # Log-likelihood of the model
-    LL_best = bestClusterCandidate.LL
+    print 'Num Clusters: ', numClusters
+    print 'Log Likelihood: ',retCandidate.LL
+
+    for ind,elt in enumerate(retCandidate.normals):
+        print 'Mean ',ind,': ',elt.mean
+        print 'Cov ',ind,': \n',elt.cov,'\n'
+
+    clusteredPoints = dividePoints(retCandidate.normProbTable,testData)
+    plot2DClusters(clusteredPoints)
