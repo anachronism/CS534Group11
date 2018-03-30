@@ -44,9 +44,12 @@ class clusterCandidate:
     def updateLL(self):
         ### TODO: Check if there's a multiply needed here.
         newLL = 0
-        for ind in range(0,self.normProbTable.shape[1]):
-            newLL += sum(np.log10(self.normProbTable[:,ind])) ## TODO: Check if there should be a multiply here.
-        print newLL
+       # print self.normProbTable.shape[0]
+        for ind in range(0,self.normProbTable.shape[0]):
+            newLL += sum(np.log10(self.normProbTable[ind,:])) 
+            #print 'table',self.normProbTable[:,ind]## TODO: Check if there should be a multiply here.
+        
+        # print newLL
         self.LL = newLL
 
     # Maximization class function that re-calculates the mean by getting the summation of the probabilies
@@ -80,13 +83,13 @@ class clusterCandidate:
             for i in range(0,numDataPoints):
                 expectedValue = self.normProbTable[i,j]
                 currentData = dataPoints[i,:]
-                eltCov = expectedValue * (currentData - newMean)*np.transpose(currentData-newMean)
+                eltCov = expectedValue * np.dot((currentData - newMean),np.transpose(currentData-newMean))
                 summationCov += eltCov
-            newCov = summationCov/summationProb
+            newCov = np.diag(np.diag(summationCov/summationProb))
             # print 'newCov',j,':',newCov
             ### TODO: need to calculate new covariance
-            self.normals[j].mean = newMean 
-            self.normals[j].cov = newCov # = sp.multivariate_normal(newMean, newCov)
+            self.normals[j]= sp.multivariate_normal(newMean[0],newCov) 
+            # self.normals[j].cov = newCov # = sp.multivariate_normal(newMean, newCov)
                 
                 
 
@@ -133,6 +136,21 @@ def calcDistance(point1, point2):
         sum += math.pow((point1[i]-point2[i]),2) 
     return math.sqrt(sum)
 
+
+def sortPointsWithMeans(data,meanCenters):
+    pointDistances = np.zeros((data.shape[0],len(meanCenters)))
+    for i in range(0,data.shape[0]):
+        for j in range(0,len(meanCenters)):
+            pointDistances[i,j] = calcDistance(data[i,:],meanCenters[j])
+
+    #print pointDistances[1:10,:]
+    clusterAssign = pointDistances.argmin(axis=1)
+    ret = []
+    for i in range(0,len(meanCenters)):
+        ret.append(data[clusterAssign == i])
+
+    return ret
+    
 
 ## 
 def calcBIC(candidate):
@@ -199,15 +217,21 @@ def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange,point
             for i in range(0,nClusters):
                 pointNum =random.randint(0,len(pointsIn[:,0])-1)
                 means[i,:]=pointsIn[pointNum,:]
-            
 
-            print 'Means: ', means
+            splitPoints = sortPointsWithMeans(pointsIn,means)
+            #print 'Means: ', means
+            #plot2DClusters(splitPoints)
+            covIn = []
+            for i in range(0,nClusters):
+                covIn.append(np.diag(np.var(splitPoints[i],0)))
+           
+           # print 'Cov: ', covIn
 
         for i in range(0,nClusters):
             if(covOfInputData):
-                covIn = np.diag(np.var(pointsIn,0))
+               # covIn = np.diag(np.var(pointsIn,0))
                 # print covIn
-                _,gaussInst = genMultidimGaussianData(dataDim,1,mean=means[i],cov=covIn)
+                _,gaussInst = genMultidimGaussianData(dataDim,1,mean=means[i],cov=covIn[i])
             else:
                 _,gaussInst = genMultidimGaussianData(dataDim,1,meanRange=meanRange,covRange=covRange)
             gaussInstances.append(gaussInst)
@@ -224,9 +248,9 @@ def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange,point
             lastLL = currentClusterCandidate.LL
             currentClusterCandidate.updateLL() 
 
-            if (currentClusterCandidate.LL - lastLL < THRESHREPEAT) or (iterationCount > NUMITERATIONS): 
+            if (currentClusterCandidate.LL - lastLL < THRESHREPEAT) or (iterationCount > NUMITERATIONS) or (currentClusterCandidate.LL == -float("inf")): 
                 if currentClusterCandidate.LL - lastLL < 0:
-                    print 'SHOULDN\'T HAPPEN: ', currentClusterCandidate.LL
+                    print 'SHOULDN\'T HAPPEN: ', currentClusterCandidate.LL,lastLL
                     
                 runEM = False 
                 iterationCount = 0
@@ -246,21 +270,27 @@ def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange,point
     # print savedLL
     retIndex = savedLL.index(max(savedLL))    
 
+    for elt in clusterOptions[retIndex].normals:
+        print elt.mean
+        print elt.cov
+
     return clusterOptions[retIndex]
 
 
 ### MAIN:
 parser = argparse.ArgumentParser(description='''CS 534 Assignment 3.''')
-parser.add_argument('--n',dest='nClusters',nargs=1, type=int, default=3, help='''
+parser.add_argument('--n',dest='nClusters',nargs=1, type=str, default='3', help='''
                                         s    Number of clusters to find. input X to have the algorithm choose.
                                             ''')
 
 args = parser.parse_args()
 
 if type(args.nClusters) == list:
-    numClusters = args.nClusters[0]
-else:
+    numClusters = int(args.nClusters[0])
+elif (args.nClusters == 'X'):
     numClusters = args.nClusters
+else:
+    numClusters = int(args.nClusters)
 
 numRestarts = 100 # Currently arbitrarily picked number
 f_readDataFile = True
@@ -317,6 +347,7 @@ if numClusters == 'X':
     ### RETURN: num clusters, LL, BIC, cluster centers.
     # retNumClusters
     LL_best = retCandidate.LL
+    print LL_best
     # retBIC
     clusterCenters = []
     for elt in retCandidate.normals:
