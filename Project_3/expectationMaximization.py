@@ -2,6 +2,7 @@ import numpy as np
 import scipy.stats as sp
 import argparse
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 import math
 import random
 from copy import deepcopy
@@ -10,7 +11,7 @@ from copy import deepcopy
 THRESHREPEAT = 0.1 # Value that LL has to improve by to keep updating EM in specific iteration
 NUMITERATIONS = 1e6 # Number of times to repeat EM before restarting again.
 f_readDataFile = True
-dataFile = 'sample EM data v7.csv' # relative path to data.
+dataFile = 'sample EM data v2.csv' # relative path to data.
 
 ## Class containing one candidate set of means and covariances.
 class clusterCandidate:
@@ -122,8 +123,13 @@ def dividePoints(pTable,points):
     return pointsInCluster
 
 def plot2DClusters(pointArray):
+    numClusters = len(pointArray)
+    #colors = cm.rainbow(np.linspace(0, 1, numClusters))
+    colors = cm.get_cmap('brg', numClusters)
+    i = 0
     for elt in pointArray:
-        plt.scatter(elt[:,0],elt[:,1])
+        plt.scatter(elt[:,0],elt[:,1],c=colors(i),s=35)
+        i = i+1
     plt.show()
 
 ### read data file
