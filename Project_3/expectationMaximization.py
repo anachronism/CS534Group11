@@ -49,11 +49,11 @@ class clusterCandidate:
         newLL = 0
 
        # print self.normProbTable.shape[0]
-        for ind in range(0,self.normProbTable.shape[0]):
-            newLL += sum(np.log10(np.multiply(self.probNormals,self.normProbTable[ind,:]))) 
+        for ind in range(0,self.probTable.shape[0]):
+            newLL += np.log(np.sum(np.multiply(self.probNormals,self.probTable[ind,:]))) 
             #print 'table',self.normProbTable[:,ind]## TODO: Check if there should be a multiply here.
         
-        #print newLL
+        print newLL
         self.LL = newLL
 
     # Maximization class function that re-calculates the mean by getting the summation of the probabilies
@@ -168,8 +168,8 @@ def sortPointsWithMeans(data,meanCenters):
 
 ## 
 def calcBIC(candidate):
-    numDataPoints = candidate.dataLabels.shape[0]
-    numParameters = candidate.dataLabels.shape[1] ### TODO: Verify that this is actual number of parameters.
+    numDataPoints = candidate.normProbTable.shape[0]
+    numParameters = candidate.normProbTable.shape[1] ### TODO: Verify that this is actual number of parameters.
     BICVal = np.log(numDataPoints) * numParameters - 2*candidate.LL ## Numpy log is ln.
     return BICVal   
 
@@ -229,8 +229,14 @@ def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange,point
         if 'initMeans' in keywordParameters:
             means = np.zeros((nClusters,dataDim))
             for i in range(0,nClusters):
+                # randx = random.uniform(np.amin(pointsIn[:,0]),np.amax(pointsIn[:,0]))
+                # randy = random.uniform(np.amin(pointsIn[:,1]),np.amax(pointsIn[:,1]))
+                # means[i,:] = [randx,randy]
+
                 pointNum =random.randint(0,len(pointsIn[:,0])-1)
                 means[i,:]=pointsIn[pointNum,:]
+
+
 
             #splitPoints = sortPointsWithMeans(pointsIn,means)
             covIn = []
@@ -302,11 +308,11 @@ parser.add_argument('--n',dest='nClusters',nargs=1, type=str, default='3', help=
                                             ''')
 
 args = parser.parse_args()
-
 if type(args.nClusters) == list:
-    numClusters = int(args.nClusters[0])
-elif (args.nClusters == 'X'):
-    numClusters = args.nClusters
+    if args.nClusters[0] == 'X':
+        numClusters = args.nClusters[0]
+    else:
+        numClusters = int(args.nClusters[0])
 else:
     numClusters = int(args.nClusters)
 
