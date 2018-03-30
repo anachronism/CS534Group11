@@ -53,7 +53,7 @@ class clusterCandidate:
             newLL += np.log(np.sum(np.multiply(self.probNormals,self.probTable[ind,:]))) 
             #print 'table',self.normProbTable[:,ind]## TODO: Check if there should be a multiply here.
         
-        print newLL
+        #print newLL
         self.LL = newLL
 
     # Maximization class function that re-calculates the mean by getting the summation of the probabilies
@@ -169,8 +169,11 @@ def sortPointsWithMeans(data,meanCenters):
 ## 
 def calcBIC(candidate):
     numDataPoints = candidate.normProbTable.shape[0]
-    numParameters = candidate.normProbTable.shape[1] ### TODO: Verify that this is actual number of parameters.
+    numParameters = candidate.normProbTable.shape[1] * (len(candidate.normals[0].mean) + np.diag(candidate.normals[0].cov).size) ### TODO: Verify that this is actual number of parameters.
+    print 'numParameters: ', numParameters
     BICVal = np.log(numDataPoints) * numParameters - 2*candidate.LL ## Numpy log is ln.
+    BICVal = -BICVal
+    print 'BIC: ', BICVal
     return BICVal   
 
 ## Produces list of Datapoints
@@ -221,6 +224,7 @@ def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange,point
 
 
     for i in range(0,nRestarts):
+        print i
         iterationCount = 0
         runEM = True
         # Randomly pick N means and covariances
@@ -316,7 +320,7 @@ if type(args.nClusters) == list:
 else:
     numClusters = int(args.nClusters)
 
-numRestarts = 100 # Currently arbitrarily picked number
+numRestarts = 2#50 # Currently arbitrarily picked number
 f_readDataFile = True
 dataFile = 'sample EM data v2.csv' # relative path to data.
 
@@ -349,15 +353,20 @@ else:
 if numClusters == 'X':
     ## EM with Bayesian information criterion.
     currentBIC = 0
-    lastBIC = -1
+    lastBIC = -float("inf")
     numClusters_tmp = 2
     endThresh = 0
     oldCandidate = None
+    justStarted = True
     while(currentBIC - lastBIC > endThresh):        
         # Run EM with random restarts.
         # Using resulting log likelihood, calculate BIC
+        if justStarted == False:
+            lastBIC = deepcopy(currentBIC)
+        else:
+            justStarted = False
+
         newCandidate = expectationMaximization(numRestarts,numClusters_tmp,dataDim,dataMeanRange,dataCovRange,testData,covOfInputData=covOfInputData,initMeans=True) 
-        lastBIC = currentBIC
         currentBIC = calcBIC(newCandidate)
         ## BIC = ln(numDataPoints)*numParametersEst - 2 * log-likelihood
         if (currentBIC - lastBIC <= endThresh):
