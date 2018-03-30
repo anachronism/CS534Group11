@@ -172,7 +172,7 @@ def calcBIC(candidate):
     numParameters = candidate.normProbTable.shape[1] * (len(candidate.normals[0].mean) + np.diag(candidate.normals[0].cov).size) ### TODO: Verify that this is actual number of parameters.
     print 'numParameters: ', numParameters
     BICVal = np.log(numDataPoints) * numParameters - 2*candidate.LL ## Numpy log is ln.
-    BICVal = -BICVal
+    #BICVal = -BICVal 
     print 'BIC: ', BICVal
     return BICVal   
 
@@ -353,12 +353,12 @@ else:
 if numClusters == 'X':
     ## EM with Bayesian information criterion.
     currentBIC = 0
-    lastBIC = -float("inf")
+    lastBIC = float("inf")
     numClusters_tmp = 2
     endThresh = 0
     oldCandidate = None
     justStarted = True
-    while(currentBIC - lastBIC > endThresh):        
+    while( lastBIC - currentBIC > endThresh):        
         # Run EM with random restarts.
         # Using resulting log likelihood, calculate BIC
         if justStarted == False:
@@ -366,10 +366,11 @@ if numClusters == 'X':
         else:
             justStarted = False
 
+        print 'Num CLusters: ', numClusters_tmp
         newCandidate = expectationMaximization(numRestarts,numClusters_tmp,dataDim,dataMeanRange,dataCovRange,testData,covOfInputData=covOfInputData,initMeans=True) 
         currentBIC = calcBIC(newCandidate)
         ## BIC = ln(numDataPoints)*numParametersEst - 2 * log-likelihood
-        if (currentBIC - lastBIC <= endThresh):
+        if (lastBIC - currentBIC <= endThresh):
             retCandidate = oldCandidate
             retBIC = lastBIC
             retNumClusters = numClusters_tmp - 1
@@ -377,11 +378,18 @@ if numClusters == 'X':
             oldCandidate = newCandidate
             numClusters_tmp = numClusters_tmp + 1
     
+    
+    ## Plots:
+
+    clusteredPoints = dividePoints(retCandidate.normProbTable,testData)
+    plot2DClusters(clusteredPoints)
+
     ### RETURN: num clusters, LL, BIC, cluster centers.
-    print 'Num Clusters',retNumClusters
+    print 'Num Clusters: ',retNumClusters
     LL_best = retCandidate.LL
-    print LL_best
-    print retBIC
+    print 'Log Likelihood: ',LL_best
+    print 'BIC: ',retBIC
+    print 'Means: ', clusterCenters
     clusterCenters = []
     for elt in retCandidate.normals:
         clusterCenters.append(elt.mean)
