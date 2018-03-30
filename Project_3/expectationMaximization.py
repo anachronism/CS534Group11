@@ -6,13 +6,15 @@ import math
 import random
 from copy import deepcopy
 
-THRESHREPEAT = 0.01 # Value that LL has to improve by to keep updating EM in specific iteration
-NUMITERATIONS = 1e7 # Number of times to repeat EM before restarting again.
+THRESHREPEAT = 0.1 # Value that LL has to improve by to keep updating EM in specific iteration
+NUMITERATIONS = 1e6 # Number of times to repeat EM before restarting again.
 
 class clusterCandidate:
     def __init__(self,gaussInst,logLike,numDataPoints):
         
         self.normals = gaussInst # list of length M = numClusters
+        self.probNormals = np.random.random(len(gaussInst)) 
+        self.probNormals = self.probNormals / sum(self.probNormals)
         self.LL = logLike # 1 log likelihood value
         self.probTable = np.full((numDataPoints,len(gaussInst)),-1,dtype=np.float64)
                         # Array of size MxN N = numDatapoints
@@ -30,10 +32,11 @@ class clusterCandidate:
             #print np.log10(self.probTable[m])
             #print self.probTable[n]
             #print probSum
-            probSum = sum(self.probTable[n])
+            
             #print probSum
             for m in range(0,len(self.normals)):
-                self.normProbTable[n,m] = self.probTable[n,m]/probSum   
+                probSum = sum(np.multiply(self.probNormals,self.probTable[n]))
+                self.normProbTable[n,m] = self.probNormals[m] * self.probTable[n,m]/probSum   
                 # if self.normProbTable[n,m] < 1e-6:
                 #     print 'Normtable:',self.normProbTable[n,m]
                 #     print self.probTable[n]
@@ -44,12 +47,13 @@ class clusterCandidate:
     def updateLL(self):
         ### TODO: Check if there's a multiply needed here.
         newLL = 0
+
        # print self.normProbTable.shape[0]
         for ind in range(0,self.normProbTable.shape[0]):
-            newLL += sum(np.log10(self.normProbTable[ind,:])) 
+            newLL += sum(np.log10(np.multiply(self.probNormals,self.normProbTable[ind,:]))) 
             #print 'table',self.normProbTable[:,ind]## TODO: Check if there should be a multiply here.
         
-        # print newLL
+        #print newLL
         self.LL = newLL
 
     # Maximization class function that re-calculates the mean by getting the summation of the probabilies
@@ -61,6 +65,13 @@ class clusterCandidate:
         # Columns of normProbTable represents number of means or number of clusters.
         numMeans = self.normProbTable.shape[1]
         dataDim = len(dataPoints[0,:])
+
+        self.probNormals = np.zeros(numMeans)
+        for m in range(0,numMeans):
+            for n in range(0,numDataPoints):
+                self.probNormals[m] += self.normProbTable[n, m]
+        self.probNormals /= numDataPoints
+
 
         # Initialize summations to zero vector or zero.
         for j in range(0,numMeans):
@@ -78,17 +89,19 @@ class clusterCandidate:
                 summationProb += expectedValue
 
             newMean = summationProbDatapoints / summationProb
-            # print 'newMean',j,':',newMean
+            newMean = newMean[0]
 
             for i in range(0,numDataPoints):
                 expectedValue = self.normProbTable[i,j]
                 currentData = dataPoints[i,:]
-                eltCov = expectedValue * np.dot((currentData - newMean),np.transpose(currentData-newMean))
-                summationCov += eltCov
-            newCov = np.diag(np.diag(summationCov/summationProb))
+                diffMean = currentData-newMean
+                eltCov = expectedValue *np.transpose(diffMean)*diffMean
+                summationCov += np.diag(eltCov)
+            newCov = summationCov/summationProb
+
             # print 'newCov',j,':',newCov
             ### TODO: need to calculate new covariance
-            self.normals[j]= sp.multivariate_normal(newMean[0],newCov) 
+            self.normals[j]= sp.multivariate_normal(newMean,newCov) 
             # self.normals[j].cov = newCov # = sp.multivariate_normal(newMean, newCov)
                 
                 
@@ -147,6 +160,7 @@ def sortPointsWithMeans(data,meanCenters):
     clusterAssign = pointDistances.argmin(axis=1)
     ret = []
     for i in range(0,len(meanCenters)):
+        print max(clusterAssign == i)
         ret.append(data[clusterAssign == i])
 
     return ret
@@ -218,19 +232,23 @@ def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange,point
                 pointNum =random.randint(0,len(pointsIn[:,0])-1)
                 means[i,:]=pointsIn[pointNum,:]
 
-            splitPoints = sortPointsWithMeans(pointsIn,means)
-            #print 'Means: ', means
-            #plot2DClusters(splitPoints)
+            #splitPoints = sortPointsWithMeans(pointsIn,means)
             covIn = []
             for i in range(0,nClusters):
-                covIn.append(np.diag(np.var(splitPoints[i],0)))
+                varIn = []
+                #covIn.append(np.diag(np.var(splitPoints[i],0)))
+                for j in range(dataDim):
+                    varIn.append(random.uniform(5,60))
+                #print varIn
+                covIn.append(np.diag(varIn))
+                #print covIn
            
            # print 'Cov: ', covIn
 
         for i in range(0,nClusters):
             if(covOfInputData):
                # covIn = np.diag(np.var(pointsIn,0))
-                # print covIn
+                # print covIn[i]
                 _,gaussInst = genMultidimGaussianData(dataDim,1,mean=means[i],cov=covIn[i])
             else:
                 _,gaussInst = genMultidimGaussianData(dataDim,1,meanRange=meanRange,covRange=covRange)
@@ -251,7 +269,7 @@ def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange,point
             if (currentClusterCandidate.LL - lastLL < THRESHREPEAT) or (iterationCount > NUMITERATIONS) or (currentClusterCandidate.LL == -float("inf")): 
                 if currentClusterCandidate.LL - lastLL < 0:
                     print 'SHOULDN\'T HAPPEN: ', currentClusterCandidate.LL,lastLL
-                    
+                    print currentClusterCandidate.probNormals
                 runEM = False 
                 iterationCount = 0
             else:
