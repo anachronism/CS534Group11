@@ -10,7 +10,7 @@ from copy import deepcopy
 THRESHREPEAT = 0.1 # Value that LL has to improve by to keep updating EM in specific iteration
 NUMITERATIONS = 1e6 # Number of times to repeat EM before restarting again.
 f_readDataFile = True
-dataFile = 'sample EM data v2.csv' # relative path to data.
+dataFile = 'sample EM data v7.csv' # relative path to data.
 
 ## Class containing one candidate set of means and covariances.
 class clusterCandidate:
@@ -20,20 +20,27 @@ class clusterCandidate:
         self.probNormals = np.random.random(len(gaussInst)) 
         self.probNormals = self.probNormals / sum(self.probNormals)
         self.LL = logLike # 1 log likelihood value
-        self.probTable = np.full((numDataPoints,len(gaussInst)),-1,dtype=np.float64)
+        self.probTable = np.full((numDataPoints,len(gaussInst)),0,dtype=np.float64)
                         # Array of size MxN N = numDatapoints
-        self.normProbTable = np.full((numDataPoints,len(gaussInst)),-1,dtype=np.float64) 
+        self.normProbTable = np.full((numDataPoints,len(gaussInst)),1/len(gaussInst),dtype=np.float64) 
                             # Array of size MxN N = numDatapoints
         
     def expectationUpdate(self, data):
-
+        numDataPoints = data.shape[0]
         for n in range(0, numDataPoints):
+            #print n
             for m in range(0,len(self.normals)):
                 self.probTable[n,m] = self.normals[m].pdf(data[n])
             
             for m in range(0,len(self.normals)):
                 probSum = sum(np.multiply(self.probNormals,self.probTable[n]))
-                self.normProbTable[n,m] = self.probNormals[m] * self.probTable[n,m]/probSum   
+                self.normProbTable[n,m] = self.probNormals[m] * self.probTable[n,m]/probSum
+                #rint self.normProbTable[n]
+                if math.isnan(self.normProbTable[n,m]):
+                    print 'here'
+                    return -1
+
+        return 1 
                     
     # From probTable, assign point to cluster based on which has highest value:
     def updateLL(self):
@@ -87,7 +94,18 @@ class clusterCandidate:
                 summationCov += np.diag(eltCov)
             newCov = summationCov/summationProb
 
+           # print newCov
+            for elt in newCov:
+                #print elt
+                for elt2 in elt:
+                    if math.isnan(elt2):
+                        print 'will break'
+                        #print summationProb
+            if newCov[0,0] == 0:
+            	#print newCov
+            	print self.normProbTable
             self.normals[j]= sp.multivariate_normal(newMean,newCov) 
+
                              
 ### Plotting functions:
 # From probTable, assign point to cluster based on which has highest value:
@@ -212,9 +230,13 @@ def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange,point
        
         while runEM == True:
             lastLL = currentClusterCandidate.LL
-            currentClusterCandidate.expectationUpdate(pointsIn) 
-            currentClusterCandidate.maximizationUpdate(pointsIn)
-            currentClusterCandidate.updateLL() 
+            flag = currentClusterCandidate.expectationUpdate(pointsIn) 
+            if flag == -1:
+                runEM = False
+                currentClusterCandidate.LL = -float('inf')
+            else:
+                currentClusterCandidate.maximizationUpdate(pointsIn)
+                currentClusterCandidate.updateLL() 
 
             if (currentClusterCandidate.LL - lastLL < THRESHREPEAT) or (iterationCount > NUMITERATIONS): 
                 runEM = False 
@@ -240,7 +262,7 @@ parser = argparse.ArgumentParser(description='''CS 534 Assignment 3.''')
 parser.add_argument('--n',dest='nClusters',nargs=1, type=str, default='3', help='''
                                         s    Number of clusters to find. input X to have the algorithm choose.
                                             ''')
-parser.add_argument('--nRestarts',dest='nRestarts',nargs=1, type=int, default=3, help='''
+parser.add_argument('--nRestarts',dest='nRestarts',nargs=1, type=int, default=10, help='''
                                         s    Number of restarts for EM. Default is 3.
                                             ''')
 
