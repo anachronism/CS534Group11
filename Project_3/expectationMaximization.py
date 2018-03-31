@@ -10,10 +10,7 @@ from copy import deepcopy
 ### PARAMETERS
 THRESHREPEAT = 0.1 # Value that LL has to improve by to keep updating EM in specific iteration
 NUMITERATIONS = 1e6 # Number of times to repeat EM before restarting again.
-f_readDataFile = True # Flag that determines if the input data are from a file or are 
-
-
-
+f_readDataFile = True
 ## Class containing one candidate set of means and covariances.
 class clusterCandidate:
     def __init__(self,gaussInst,logLike,numDataPoints):
@@ -268,6 +265,11 @@ def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange,point
             
         print "         LL: ", currentClusterCandidate.LL
         clusterOptions.append(currentClusterCandidate)
+        
+        dataFileName = 'data1.csv'
+        dataFile = open(dataFileName, 'a')
+        dataFile.write(str(currentClusterCandidate.LL) + "\n")
+        dataFile.close()
 
     # Pick model with best log-likelihood
     savedLL = []
