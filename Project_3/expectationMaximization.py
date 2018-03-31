@@ -204,9 +204,10 @@ def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange,point
     global THRESHREPEAT
     global NUMITERATIONS
     clusterOptions = []
+    cntRestarts = 0
 
-    for i in range(0,nRestarts):
-        print '     EM Restart Number ', i
+    while cntRestarts < nRestarts:
+        print '     EM Restart Number ', cntRestarts
         iterationCount = 0
         runEM = True
         # Randomly pick N means and covariances
@@ -253,6 +254,7 @@ def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange,point
             if (currentClusterCandidate.LL - lastLL < THRESHREPEAT) or (iterationCount > NUMITERATIONS): 
                 runEM = False 
                 iterationCount = 0
+                cntRestarts = cntRestarts  + 1
             else:
                 iterationCount += 1
             
