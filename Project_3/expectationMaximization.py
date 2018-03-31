@@ -20,6 +20,9 @@ class clusterCandidate:
         self.probNormals = np.random.random(len(gaussInst)) 
         self.probNormals = self.probNormals / sum(self.probNormals)
         self.LL = logLike # log likelihood value
+        self.LLSave = []
+        self.meanSave = []
+        self.covSave = []
         # unmodified probability table that a point is from each cluster.
         self.probTable = np.full((numDataPoints,len(gaussInst)),0,dtype=np.float64)
                         # Array of size MxN N = numDatapoints
@@ -73,6 +76,8 @@ class clusterCandidate:
 
 
         # For each gaussian, recalculate mean + cov
+        meanSaveTmp = []
+        covSaveTmp = []
         for j in range(0,numMeans):
 
             # Calculate New mean:
@@ -105,7 +110,12 @@ class clusterCandidate:
             if abs(newCov[0,0]) < 1e-20:
                 return -1
             else:
+                meanSaveTmp.append(self.normals[j].mean)
+                covSaveTmp.append(self.normals[j].mean)
                 self.normals[j]= sp.multivariate_normal(newMean,newCov) 
+        
+        self.meanSave.append(meanSaveTmp)
+        self.covSave.append(covSaveTmp)
         return 1
     
 
@@ -116,6 +126,7 @@ class clusterCandidate:
         for ind in range(0,self.probTable.shape[0]):
             newLL += np.log(np.sum(np.multiply(self.probNormals,self.probTable[ind,:]))) 
 
+        self.LLSave.append(self.LL)
         self.LL = newLL
 
                   
@@ -265,7 +276,7 @@ def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange,point
             
         print "         LL: ", currentClusterCandidate.LL
         clusterOptions.append(currentClusterCandidate)
-        
+        print currentClusterCandidate.meanSave
         dataFileName = 'data1.csv'
         dataFile = open(dataFileName, 'a')
         dataFile.write(str(currentClusterCandidate.LL) + "\n")
