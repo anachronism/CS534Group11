@@ -28,18 +28,23 @@ class clusterCandidate:
         
     def expectationUpdate(self, data):
         numDataPoints = data.shape[0]
+        numNormals = len(self.normals)
         for n in range(0, numDataPoints):
             #print n
-            for m in range(0,len(self.normals)):
+            for m in range(0,numNormals):
                 self.probTable[n,m] = self.normals[m].pdf(data[n])
             
-            for m in range(0,len(self.normals)):
+            for m in range(0,numNormals):
                 probSum = sum(np.multiply(self.probNormals,self.probTable[n]))
-                self.normProbTable[n,m] = self.probNormals[m] * self.probTable[n,m]/probSum
-                #rint self.normProbTable[n]
+                if numNormals == 1:
+                    self.normProbTable[n,m] = 1
+                else:
+                    self.normProbTable[n,m] = self.probNormals[m] * self.probTable[n,m]/probSum
+
+                #print self.normProbTable[n]
                 if math.isnan(self.normProbTable[n,m]):
-                    print 'here'
                     return -1
+
 
         return 1 
                     
@@ -95,13 +100,7 @@ class clusterCandidate:
                 summationCov += np.diag(eltCov)
             newCov = summationCov/summationProb
 
-           # print newCov
-            for elt in newCov:
-                #print elt
-                for elt2 in elt:
-                    if math.isnan(elt2):
-                        print 'will break'
-                        #print summationProb
+
             if abs(newCov[0,0]) < 1e-20:
             	#print newCov
             	#print self.normProbTable
@@ -237,7 +236,6 @@ def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange,point
 
        # Initialize clusterCandidate class instance.
         currentClusterCandidate = clusterCandidate(gaussInstances,-float("inf"),len(pointsIn))
-       
         while runEM == True:
             lastLL = currentClusterCandidate.LL
             flag = currentClusterCandidate.expectationUpdate(pointsIn) 
@@ -331,7 +329,7 @@ if numClusters == 'X':
     ## EM with Bayesian information criterion.
     currentBIC = 0
     lastBIC = float("inf")
-    numClusters_tmp = 2
+    numClusters_tmp = 1 ### TODO: MAYBE MAKE SO 1 is VALID OPTION
     endThresh = 0
     oldCandidate = None
     justStarted = True
