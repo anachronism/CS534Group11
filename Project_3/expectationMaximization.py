@@ -10,8 +10,8 @@ from copy import deepcopy
 ### PARAMETERS
 THRESHREPEAT = 0.1 # Value that LL has to improve by to keep updating EM in specific iteration
 NUMITERATIONS = 1e6 # Number of times to repeat EM before restarting again.
-f_readDataFile = True
-dataFile = 'sample EM data v2.csv' # relative path to data.
+f_readDataFile = False
+dataFile = 'sample EM data v9.csv' # relative path to data.
 
 ## Class containing one candidate set of means and covariances.
 class clusterCandidate:
@@ -102,10 +102,14 @@ class clusterCandidate:
                     if math.isnan(elt2):
                         print 'will break'
                         #print summationProb
-            if newCov[0,0] == 0:
+            if abs(newCov[0,0]) < 1e-20:
             	#print newCov
-            	print self.normProbTable
-            self.normals[j]= sp.multivariate_normal(newMean,newCov) 
+            	#print self.normProbTable
+                return -1
+            else:
+                #print newCov
+                self.normals[j]= sp.multivariate_normal(newMean,newCov) 
+        return 1
 
                              
 ### Plotting functions:
@@ -215,13 +219,13 @@ def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange,point
                 means = np.zeros((nClusters,dataDim))
                 for i in range(0,nClusters):
                     ## Dumb init choice
-                    # randx = random.uniform(np.amin(pointsIn[:,0]),np.amax(pointsIn[:,0]))
-                    # randy = random.uniform(np.amin(pointsIn[:,1]),np.amax(pointsIn[:,1]))
-                    # means[i,:] = [randx,randy]
+                    randx = random.uniform(np.amin(pointsIn[:,0]),np.amax(pointsIn[:,0]))
+                    randy = random.uniform(np.amin(pointsIn[:,1]),np.amax(pointsIn[:,1]))
+                    means[i,:] = [randx,randy]
 
-                    ## smart init choice (init with point in dataset)
-                    pointNum =random.randint(0,len(pointsIn[:,0])-1)
-                    means[i,:]=pointsIn[pointNum,:]
+                    # ## smart init choice (init with point in dataset)
+                    # pointNum =random.randint(0,len(pointsIn[:,0])-1)
+                    # means[i,:]=pointsIn[pointNum,:]
                 
         # Initialize distribution estimates.
         for i in range(0,nClusters):
@@ -232,7 +236,7 @@ def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange,point
             gaussInstances.append(gaussInst)
 
        # Initialize clusterCandidate class instance.
-        currentClusterCandidate = clusterCandidate(gaussInstances,-float("inf"),numDataPoints)
+        currentClusterCandidate = clusterCandidate(gaussInstances,-float("inf"),len(pointsIn))
        
         while runEM == True:
             lastLL = currentClusterCandidate.LL
@@ -241,8 +245,12 @@ def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange,point
                 runEM = False
                 currentClusterCandidate.LL = -float('inf')
             else:
-                currentClusterCandidate.maximizationUpdate(pointsIn)
-                currentClusterCandidate.updateLL() 
+                flag2 = currentClusterCandidate.maximizationUpdate(pointsIn)
+                if flag2 == -1:
+                    runEM = False
+                    currentClusterCandidate.LL = -float('inf')
+                else:
+                    currentClusterCandidate.updateLL() 
 
             if (currentClusterCandidate.LL - lastLL < THRESHREPEAT) or (iterationCount > NUMITERATIONS): 
                 runEM = False 
@@ -302,11 +310,19 @@ if f_readDataFile:
 else:
     covOfInputData = False
     numDataPoints = 50 
-    dataMeanRange = [0,1] 
-    dataCovRange = [ 0, 0.1] 
+    dataMeanRange = [-100,100] 
+    dataCovRange = [ 10, 900] 
     dataDim = 2 
     externInput = False
-    testData,testCluster = genMultidimGaussianData(dataDim,numDataPoints,mean=[-2,2],cov=[[1,0],[0,1]])
+    numTestClusters = 2
+    testData = None
+    for elt in range(numTestClusters):
+        testDatatmp,testCluster = genMultidimGaussianData(dataDim,numDataPoints,meanRange=dataMeanRange,covRange=dataCovRange)
+        if elt == 0:
+            testData = testDatatmp
+        else:
+            testData = np.concatenate((testData,testDatatmp))
+    plot2DClusters([testData])    
 
 
 ### Run EM:
@@ -327,7 +343,6 @@ if numClusters == 'X':
             lastBIC = deepcopy(currentBIC)
         else:
             justStarted = False
-
 
         newCandidate = expectationMaximization(numRestarts,numClusters_tmp,dataDim,dataMeanRange,dataCovRange,testData,externalInputData=externInput) 
 
