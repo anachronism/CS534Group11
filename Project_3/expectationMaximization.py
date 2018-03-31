@@ -10,7 +10,7 @@ from copy import deepcopy
 ### PARAMETERS
 THRESHREPEAT = 0.1 # Value that LL has to improve by to keep updating EM in specific iteration
 NUMITERATIONS = 1e6 # Number of times to repeat EM before restarting again.
-f_readDataFile = False
+f_readDataFile = True
 dataFile = 'sample EM data v9.csv' # relative path to data.
 
 ## Class containing one candidate set of means and covariances.
