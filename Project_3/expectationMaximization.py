@@ -8,7 +8,7 @@ import random
 from copy import deepcopy
 
 ### PARAMETERS
-THRESHREPEAT = 0.1 # Value that LL has to improve by to keep updating EM in specific iteration
+THRESHREPEAT = 0.001 # Value that LL has to improve by to keep updating EM in specific iteration
 NUMITERATIONS = 1e6 # Number of times to repeat EM before restarting again.
 f_readDataFile = True
 dataFile = 'sample EM data v15.csv' # relative path to data.
@@ -250,21 +250,22 @@ def expectationMaximization(nRestarts,nClusters,dataDim,meanRange,covRange,point
                     currentClusterCandidate.LL = -float('inf')
                 else:
                     currentClusterCandidate.updateLL() 
-
+            dataFileName = 'LLDATA.csv'
+            dataFile = open(dataFileName, 'a')
+            dataFile.write(str(currentClusterCandidate.LL) + "," + str(cntRestarts)  +"\n")
+            dataFile.close()
+            
             if (currentClusterCandidate.LL - lastLL < THRESHREPEAT) or (iterationCount > NUMITERATIONS): 
                 runEM = False 
                 iterationCount = 0
                 cntRestarts = cntRestarts  + 1
             else:
                 iterationCount += 1
-            
+
         print "         LL: ", currentClusterCandidate.LL
         clusterOptions.append(currentClusterCandidate)
         
-        dataFileName = 'data1.csv'
-        dataFile = open(dataFileName, 'a')
-        dataFile.write(str(currentClusterCandidate.LL) + "\n")
-        dataFile.close()
+
 
     # Pick model with best log-likelihood
     savedLL = []
