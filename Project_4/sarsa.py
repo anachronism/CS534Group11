@@ -1,10 +1,37 @@
 import argparse
+import numpy as np 
+import random as rng
+
+
+### MAX: I think that direction should be encoded as [0,1,2,3].
+###     If you want to change it then change how this part works.
+###     Currently, assuming that the increments move clockwise.
+###     Eg. 0 -> N, 1 -> E, 2 -> S, 3 -> W
+
+def takeStep(location,map,direction):
+    P_CORRECT = 0.7
+    P_RIGHTTURN = 0.1
+    P_LEFTTURN = 0.1
+    P_EXTRASTEP = 0.1
+    extraStep = False
+
+    probDirection = rng.random()
+    if probDirection < P_CORRECT:
+        newDir = direction
+    elif probDirection < P_CORRECT + P_RIGHTTURN:
+        newDir = (direction + 1)%4
+    elif probDIrection < P_CORRECT+P_RIGHTTURN+P_LEFTTURN:
+        newDir = (direction - 1) % 4
+    else: # 1 - probDirection <= 0.1
+        newDir = direction
+        extraStep = True
+    ### TODO: ACTUALLY TAKE STEP.
+
 
 ### MAIN:
-
 # Parser:
-parser = argparse.ArgumentParser(description='''CS 534 Assignment 3.''')
-parser.add_argument('--rGoal',dest='rGoal',nargs=1, type=int, default=5 help='''
+parser = argparse.ArgumentParser(description='''CS 534 Assignment 4.''')
+parser.add_argument('--rGoal',dest='rGoal',nargs=1, type=int, default=5, help='''
                                             Reward for reaching the goal. Default is 5.
                                             ''')
 parser.add_argument('--rPit',dest='rPit',nargs=1, type=int, default=-2, help='''
@@ -33,3 +60,29 @@ args = parser.parse_args()
 # Be careful computing the recommended action from a state; 
 # there are multiple reasons you cannot simply select the 
 # neighboring state with the highest expected reward.    
+
+# Constants to make gridworld easier to be parsed.
+X = -float('inf')
+P = args.rPit
+G = args.rGoal
+
+UP = 0
+RIGHT = 1
+DOWN = 2
+LEFT = 3
+GIVEUP = 4
+
+### TODO: Not necessarily with this GRIDWORLD object, but when it starts make sure to update the gridworld to have smarter
+###         initial values.
+
+GRIDWORLD = ([X,X,X,X,X,X,X,X,X], 
+            [X,0,0,0,0,0,0,0,X],
+            [X,0,0,0,0,0,0,0,X],
+            [X,0,0,P,P,0,0,0,X],
+            [X,0,P,G,0,0,P,0,X],
+            [X,0,0,P,P,P,0,0,X],
+            [X,0,0,0,0,0,0,0,X],
+            [X,X,X,X,X,X,X,X,X])
+
+
+### TODO:: PSEUDOCODE, PLS UPDATE
