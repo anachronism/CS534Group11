@@ -13,16 +13,15 @@ class SARSA:
         self.nTrain = nTrain
         self.epsilon = epsilon
         self.gridWorld = gridWorld
-        self.gridSize = [6,7]
+        self.gridSize = [7,8]
         self.Q_table = self.initializeQ()
         
-        print self.gridSize[1]#.shape[0], gridWorld.shape[1]]
         
 
     def initializeQ(self):
-        columnNum = self.gridSize[0]
-        rowNum = self.gridSize[1]
-
+        rowNum = self.gridSize[0]
+        columnNum = self.gridSize[1]
+        
         #matrix.append([0,0,0,0,0])
         Q_table = [[0 for x in range(columnNum)] for y in range(rowNum)]
         for i in range(0, rowNum):
@@ -45,6 +44,7 @@ class SARSA:
         
         #if randomValue greater than epsilon go with the action that has largest Q_value else pick random action
         if randomValue > self.epsilon:
+            print "Qshape", len(self.Q_table),len(self.Q_table[1])
             Qvalues = self.Q_table[currentLocation[0]][currentLocation[1]]
             action = max(xrange(len(Qvalues)), key=Qvalues.__getitem__)
             return action
@@ -115,7 +115,8 @@ class SARSA:
         stateNotPicked = 1
         randomLocation = []
         while(stateNotPicked):
-            randomLocation = [rng.randint(0,(self.gridSize[0]-2)),rng.randint(0,(self.gridSize[1]-2))]
+            randomLocation = [rng.randint(0,(self.gridSize[0])),rng.randint(0,(self.gridSize[1]))]
+            print "randomLocation", randomLocation
             locationValue = self.gridWorld[randomLocation[0]][randomLocation[1]]  
             if locationValue != self.rPit and locationValue != self.rGoal and locationValue != -float('inf'):
                 stateNotPicked = 0
@@ -219,8 +220,8 @@ if __name__ == '__main__':
    
     sarsa1 = SARSA(G, P, args.rMove, args.rGiveup, args.nTrain, args.epsilon, GRIDWORLD)
     initialState = sarsa1.getRandomLocation()
-    print initialState
-    print "Next Action:", sarsa1.epsilonGreedyAction(initialState)
+    nextaction = sarsa1.epsilonGreedyAction(initialState) 
+    print "Next Action", nextaction
     ### TODO:: PSEUDOCODE, PLS UPDATE
 
     # Initialize a SARSA class objecy
