@@ -11,9 +11,10 @@ class SARSA:
         self.rMove = rMove
         self.rGiveup = rGiveup
         self.nTrain = nTrain
-        self.epsilon = epsilom
+        self.epsilon = epsilon
         self.gridWorld = gridWorld
-        self.gridSize = gridWorld.shape
+        self.gridSize = [6,7]
+        print self.gridSize[0]#.shape[0], gridWorld.shape[1]]
         
 
     def initializeQ(self):
@@ -36,28 +37,41 @@ class SARSA:
         Q_table[4][4] = [-100, -100, -100, -100, -100]
 
         Q_table[3][2] = [100, 100, 100, 100, 100]        
-        
         return Q_table
 
     def epsilonGreedyAction(self):
-
+        print
     def takeStep(self):
+        print
         # TODO: Use Max's takeStep function
 
     # Helper function that act terminating condition of the SARSA algorithm
     def terminateCondidtion(x, y, a):
-
+        print
+    def getRandomState(self):
+        stateNotPicked = 0
+        state = [0, 0]
+        while(stateNotPicked):
+            state[0,0] = [random.randint(0,gridSize[0]),random.randint(0,gridSize[1])]
+            stateValue = self.gridWorld[state[0],state[1]]  
+            if stateValue != self.rPit or stateValue != self.rGoal:
+                stateNotPicked = 1
+        return state
     # SARSA algorithm
     def runSARSA(self):
         self.Q_table = initializeQ()
+
         for numTrial in range(0,nTrain):
+            print
             # Initialize a random state s, choose a random state
+            
+
 
             # Choose action a possible from state s using epsilon-greedy
             # TODO: Make an epsilon-greedy function to choose next action...?
             # action = epsilonGreedyAction ????
-
-            while (self.terminateCondition(x,y,a)):
+        while (self.terminateCondition(x,y,a)):
+            print
                 # Get the next state s' using action a from state s
                 # Call takeStep
                 
@@ -66,11 +80,10 @@ class SARSA:
                 # Update Q(s,a) entry of the Q function table using the formula
 
                 # Set next state and next action for the next iteration
-
         return self.Q_table
 
 
-if if __name__ == '__main__':
+#if if __name__ == '__main__':
     # TODO: Put of all Max's argparse code here
 
     # Initialize a SARSA class objecy
@@ -164,4 +177,6 @@ GRIDWORLD = ([X,X,X,X,X,X,X,X,X],
             [X,X,X,X,X,X,X,X,X])
 
 
+sarsa1 = SARSA(G, P, -1, -5, 1000, 0.01, GRIDWORLD)
+print sarsa1.getRandomState()
 ### TODO:: PSEUDOCODE, PLS UPDATE
