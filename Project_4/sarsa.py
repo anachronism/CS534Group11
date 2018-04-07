@@ -17,7 +17,26 @@ class SARSA:
         
 
     def initializeQ(self):
-        Q_table = np.zeros(self.gridSize)
+        Q_table = []
+        columnNum = self.gridSize[0]
+        rowNum = self.gridSize[1]
+
+        #matrix.append([0,0,0,0,0])
+        Q_table = [[0 for x in range(columnNum)] for y in range(rowNum)]
+        for i in range(0, rowNum):
+            for j in range(0, columnNum):
+                Q_table[i][j] = [0 for x in range(5)]
+
+        Q_table[2][2] = [-100, -100, -100, -100, -100]
+        Q_table[2][3] = [-100, -100, -100, -100, -100]
+        Q_table[3][1] = [-100, -100, -100, -100, -100]
+        Q_table[3][5] = [-100, -100, -100, -100, -100]
+        Q_table[4][2] = [-100, -100, -100, -100, -100]
+        Q_table[4][3] = [-100, -100, -100, -100, -100]
+        Q_table[4][4] = [-100, -100, -100, -100, -100]
+
+        Q_table[3][2] = [100, 100, 100, 100, 100]        
+        
         return Q_table
 
     def epsilonGreedyAction(self):
@@ -48,7 +67,7 @@ class SARSA:
 
                 # Set next state and next action for the next iteration
 
-        return self.Q_function
+        return self.Q_table
 
 
 if if __name__ == '__main__':
