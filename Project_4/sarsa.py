@@ -14,11 +14,12 @@ class SARSA:
         self.epsilon = epsilon
         self.gridWorld = gridWorld
         self.gridSize = [6,7]
+        self.Q_table = self.initializeQ()
+        
         print self.gridSize[1]#.shape[0], gridWorld.shape[1]]
         
 
     def initializeQ(self):
-        Q_table = []
         columnNum = self.gridSize[0]
         rowNum = self.gridSize[1]
 
@@ -39,11 +40,21 @@ class SARSA:
         Q_table[3][2] = [100, 100, 100, 100, 100]        
         return Q_table
 
-    def epsilonGreedyAction(self):
-        print
+    def epsilonGreedyAction(self, currentLocation):
+        randomValue = rng.random()
+        print "randomValue", randomValue
+        
+        if randomValue > self.epsilon:
+            print "Current Location", currentLocation#, self.Q_table[2][5]
+            Qvalues = self.Q_table[currentLocation[0]][currentLocation[1]]
+            action = max(xrange(len(Qvalues)), key=Qvalues.__getitem__)
+            return action
+        else:
+            action = rng.randint(0,5) 
+        return action
     
 
-    def takeStep(self,location,map,direction):
+    def takeStep(self,location,direction):
         ### MAX: I think that direction should be encoded as [0,1,2,3].
         ###     If you want to change it then change how this part works.
         ###     Currently, assuming that the increments move clockwise.
@@ -83,7 +94,7 @@ class SARSA:
                 nextLocation = [prevLocation[0], prevLocation[1]-1]
 
             locationValue = self.gridWorld[nextLocation[0]][nextLocation[1]]
-            if (locationValue == -float('inf'):
+            if (locationValue == -float('inf')):
                 nextLocation = prevLocation
 
         return nextLocation
@@ -93,24 +104,25 @@ class SARSA:
     def terminateCondition(self, x, y, a):
         return (self.gridWorld[x][y] != self.rPit) or (self.gridWorld[x][y] != self.rGoal) or (a == 4)
             
-    def getRandomState(self):
+    def getRandomLocation(self):
         stateNotPicked = 1
-        state = []
+        randomLocation = []
         while(stateNotPicked):
-            state = [rng.randint(0,self.gridSize[0]),rng.randint(0,self.gridSize[1])]
-            stateValue = self.gridWorld[state[0]][state[1]]  
-            if stateValue != self.rPit and stateValue != self.rGoal and stateValue != -float('inf'):
+            randomLocation = [rng.randint(0,(self.gridSize[0]-2)),rng.randint(0,(self.gridSize[1]-2))]
+            locationValue = self.gridWorld[randomLocation[0]][randomLocation[1]]  
+            if locationValue != self.rPit and locationValue != self.rGoal and locationValue != -float('inf'):
                 stateNotPicked = 0
         
-        print "STATE VALUE", stateValue
-        return state
-        
+        print "STATE VALUE", locationValue
+        return randomLocation
+
     # SARSA algorithm
     def runSARSA(self):
         self.Q_table = initializeQ()
 
         for numTrial in range(0,nTrain):
             # Initialize a random state s, choose a random state
+            initLocation = getRandomLocation()
             
 
             # Choose action a possible from state s using epsilon-greedy
@@ -120,9 +132,9 @@ class SARSA:
             while True:
                 # Get the next state s' using action a from state s
                 # Call takeStep
-                stateLocation' = self.takeStep(stateLocation, action)
+                nextStateLocation = self.takeStep(stateLocation, action)
 
-                if (self.terminateCondition(stateLocation'[0],stateLocation'[1],action)):
+                if (self.terminateCondition(nextStateLocation[0],nextStateLocation[1],action)):
                     break                
 
                 # Choose action a' from s' using epsilon-greedy
@@ -196,9 +208,12 @@ if __name__ == '__main__':
                 [X,0,0,0,0,0,0,0,X],
                 [X,X,X,X,X,X,X,X,X])
 
-
-    sarsa1 = SARSA(G, P, -1, -5, 1000, 0.01, GRIDWORLD)
-    print sarsa1.getRandomState()
+ #def __init__(self, rGoal, rPit, rMove, rGiveup, nTrain, epsilon, gridWorld):
+   
+    sarsa1 = SARSA(G, P, args.rMove, args.rGiveup, args.nTrain, args.epsilon, GRIDWORLD)
+    initialState = sarsa1.getRandomLocation()
+    print initialState
+    print "Next Action:", sarsa1.epsilonGreedyAction(initialState)
     ### TODO:: PSEUDOCODE, PLS UPDATE
 
     # Initialize a SARSA class objecy
