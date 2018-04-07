@@ -55,6 +55,9 @@ class SARSA:
     
 
     def takeStep(self,location,direction):
+        if (direction == 4):
+            return None
+        
         ### MAX: I think that direction should be encoded as [0,1,2,3].
         ###     If you want to change it then change how this part works.
         ###     Currently, assuming that the increments move clockwise.
@@ -101,7 +104,12 @@ class SARSA:
         
 
     # Helper function that act terminating condition of the SARSA algorithm
-    def terminateCondition(self, x, y, a):
+    def terminateCondition(self, stateLocation, a):
+        if (stateLocation == None):
+            return True
+
+        x = stateLocation[0]
+        y = stateLocation[1]
         return (self.gridWorld[x][y] != self.rPit) or (self.gridWorld[x][y] != self.rGoal) or (a == 4)
             
     def getRandomLocation(self):
@@ -134,7 +142,7 @@ class SARSA:
                 # Call takeStep
                 nextStateLocation = self.takeStep(stateLocation, action)
 
-                if (self.terminateCondition(nextStateLocation[0],nextStateLocation[1],action)):
+                if (self.terminateCondition(nextStateLocation,action)):
                     break                
 
                 # Choose action a' from s' using epsilon-greedy
