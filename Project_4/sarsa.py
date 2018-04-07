@@ -12,6 +12,7 @@ class SARSA:
         self.rGiveup = rGiveup
         self.nTrain = nTrain
         self.epsilon = epsilon
+        self.stepSize = 0.5
         self.gridWorld = gridWorld
         self.gridSize = [7,8]
         self.Q_table = self.initializeQ()
@@ -124,6 +125,23 @@ class SARSA:
         print "STATE VALUE", locationValue
         return randomLocation
 
+
+    def rewardFunction(self,stateLocation):
+        return self.gridWorld[stateLocation[0]][stateLocation[1]]
+    
+    def UpdateQ(s, a, nextS, nextA):
+        Q = self.Q_table[s[0]][s[1]][a]
+        nextQ = self.Q_table[nexts[0]][nexts[1]][nextA]
+
+        alpha = self.stepSize
+        # TODO: Look into gamma value
+        gamma = 0.5
+        r = rewardFunction(s)
+
+        newQ = Q + alpha*(r + gamma*nextQ - Q)
+        self.Q_table[s[0]][s[1]][a] = newQ
+        
+    
     # SARSA algorithm
     def runSARSA(self):
         self.Q_table = initializeQ()
@@ -131,25 +149,29 @@ class SARSA:
         for numTrial in range(0,nTrain):
             # Initialize a random state s, choose a random state
             initLocation = getRandomLocation()
-            
+            stateLocation = initLocation
 
             # Choose action a possible from state s using epsilon-greedy
             # TODO: Make an epsilon-greedy function to choose next action...?
-            # action = epsilonGreedyAction ????
+            action = epsilonGreedyAction(stateLocation)
             
             while True:
                 # Get the next state s' using action a from state s
                 # Call takeStep
                 nextStateLocation = self.takeStep(stateLocation, action)
 
-                if (self.terminateCondition(nextStateLocation,action)):
-                    break                
-
                 # Choose action a' from s' using epsilon-greedy
+                nextAction = epsilonGreedyAction(nextStateLocation)
 
                 # Update Q(s,a) entry of the Q function table using the formula
-
+                self.UpdateQ(stateLocation, action, nextStateLocation, nextAction)
+                
+                if (self.terminateCondition(nextStateLocation,action)):
+                    break  
+                
                 # Set next state and next action for the next iteration
+                stateLocation = nextStateLocation
+                action = nextAction
                 
         return self.Q_table
 
