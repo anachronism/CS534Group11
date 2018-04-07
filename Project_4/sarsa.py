@@ -59,16 +59,40 @@ class SARSA:
             newDir = direction
         elif probDirection < P_CORRECT + P_RIGHTTURN:
             newDir = (direction + 1)%4
-        elif probDIrection < P_CORRECT+P_RIGHTTURN+P_LEFTTURN:
+        elif probDirection < P_CORRECT+P_RIGHTTURN+P_LEFTTURN:
             newDir = (direction - 1) % 4
         else: # 1 - probDirection <= 0.1
             newDir = direction
             extraStep = True
         ### TODO: ACTUALLY TAKE STEP.
+    
+        if (extraStep):
+            numStep = 2
+        else:
+            numStep = 1
+
+        prevLocation = [location[0], location[1]]
+        for steps in range(0, numStep):
+            if (newDir == 0):
+                nextLocation = [prevLocation[0]+1, prevLocation[1]]
+            elif (newDir == 1):
+                nextLocation = [prevLocation[0], prevLocation[1]+1]
+            elif (newDir == 2):
+                nextLocation = [prevLocation[0]-1, prevLocation[1]]
+            else:
+                nextLocation = [prevLocation[0], prevLocation[1]-1]
+
+            locationValue = self.gridWorld[nextLocation[0]][nextLocation[1]]
+            if (locationValue == -float('inf'):
+                nextLocation = prevLocation
+
+        return nextLocation
+        
 
     # Helper function that act terminating condition of the SARSA algorithm
-    def terminateCondidtion(x, y, a):
-        print
+    def terminateCondition(self, x, y, a):
+        return (self.gridWorld[x][y] != self.rPit) or (self.gridWorld[x][y] != self.rGoal) or (a == 4)
+            
     def getRandomState(self):
         stateNotPicked = 1
         state = []
@@ -80,29 +104,33 @@ class SARSA:
         
         print "STATE VALUE", stateValue
         return state
+        
     # SARSA algorithm
     def runSARSA(self):
         self.Q_table = initializeQ()
 
         for numTrial in range(0,nTrain):
-            print
             # Initialize a random state s, choose a random state
             
-
 
             # Choose action a possible from state s using epsilon-greedy
             # TODO: Make an epsilon-greedy function to choose next action...?
             # action = epsilonGreedyAction ????
-        while (self.terminateCondition(x,y,a)):
-            print
+            
+            while True:
                 # Get the next state s' using action a from state s
                 # Call takeStep
-                
+                stateLocation' = self.takeStep(stateLocation, action)
+
+                if (self.terminateCondition(stateLocation'[0],stateLocation'[1],action)):
+                    break                
+
                 # Choose action a' from s' using epsilon-greedy
 
                 # Update Q(s,a) entry of the Q function table using the formula
 
                 # Set next state and next action for the next iteration
+                
         return self.Q_table
 
 
