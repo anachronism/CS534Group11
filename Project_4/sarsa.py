@@ -42,10 +42,9 @@ class SARSA:
 
     def epsilonGreedyAction(self, currentLocation):
         randomValue = rng.random()
-        print "randomValue", randomValue
         
+        #if randomValue greater than epsilon go with the action that has largest Q_value else pick random action
         if randomValue > self.epsilon:
-            print "Current Location", currentLocation#, self.Q_table[2][5]
             Qvalues = self.Q_table[currentLocation[0]][currentLocation[1]]
             action = max(xrange(len(Qvalues)), key=Qvalues.__getitem__)
             return action
