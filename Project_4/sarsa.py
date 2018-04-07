@@ -3,6 +3,66 @@ import numpy as np
 import random as rng
 
 
+class SARSA:
+    
+    def __init__(self, rGoal, rPit, rMove, rGiveup, nTrain, epsilon, gridWorld):
+        self.rGoal = rGoal
+        self.rPit = rPit
+        self.rMove = rMove
+        self.rGiveup = rGiveup
+        self.nTrain = nTrain
+        self.epsilon = epsilom
+        self.gridWorld = gridWorld
+        self.gridSize = gridWorld.shape
+        
+
+    def initializeQ(self):
+        Q_table = np.zeros(self.gridSize)
+        return Q_table
+
+    def epsilonGreedyAction(self):
+
+    def takeStep(self):
+        # TODO: Use Max's takeStep function
+
+    # Helper function that act terminating condition of the SARSA algorithm
+    def terminateCondidtion(x, y, a):
+
+    # SARSA algorithm
+    def runSARSA(self):
+        self.Q_table = initializeQ()
+        for numTrial in range(0,nTrain):
+            # Initialize a random state s, choose a random state
+
+            # Choose action a possible from state s using epsilon-greedy
+            # TODO: Make an epsilon-greedy function to choose next action...?
+            # action = epsilonGreedyAction ????
+
+            while (self.terminateCondition(x,y,a)):
+                # Get the next state s' using action a from state s
+                # Call takeStep
+                
+                # Choose action a' from s' using epsilon-greedy
+
+                # Update Q(s,a) entry of the Q function table using the formula
+
+                # Set next state and next action for the next iteration
+
+        return self.Q_function
+
+
+if if __name__ == '__main__':
+    # TODO: Put of all Max's argparse code here
+
+    # Initialize a SARSA class objecy
+
+    # Call updatedQ = SARSA.runSARSA
+
+    # Use updated Q to get the paths and total rewards of all possible states to end states
+
+    # End of main
+
+
 ### MAX: I think that direction should be encoded as [0,1,2,3].
 ###     If you want to change it then change how this part works.
 ###     Currently, assuming that the increments move clockwise.
