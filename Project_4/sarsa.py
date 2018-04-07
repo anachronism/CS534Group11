@@ -14,7 +14,7 @@ class SARSA:
         self.epsilon = epsilon
         self.gridWorld = gridWorld
         self.gridSize = [6,7]
-        print self.gridSize[0]#.shape[0], gridWorld.shape[1]]
+        print self.gridSize[1]#.shape[0], gridWorld.shape[1]]
         
 
     def initializeQ(self):
@@ -49,13 +49,15 @@ class SARSA:
     def terminateCondidtion(x, y, a):
         print
     def getRandomState(self):
-        stateNotPicked = 0
-        state = [0, 0]
+        stateNotPicked = 1
+        state = []
         while(stateNotPicked):
-            state[0,0] = [random.randint(0,gridSize[0]),random.randint(0,gridSize[1])]
-            stateValue = self.gridWorld[state[0],state[1]]  
-            if stateValue != self.rPit or stateValue != self.rGoal:
-                stateNotPicked = 1
+            state = [rng.randint(0,self.gridSize[0]),rng.randint(0,self.gridSize[1])]
+            stateValue = self.gridWorld[state[0]][state[1]]  
+            if stateValue != self.rPit and stateValue != self.rGoal and stateValue != -float('inf'):
+                stateNotPicked = 0
+        
+        print "STATE VALUE", stateValue
         return state
     # SARSA algorithm
     def runSARSA(self):
