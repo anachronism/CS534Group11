@@ -240,14 +240,15 @@ if __name__ == '__main__':
 
  #def __init__(self, rGoal, rPit, rMove, rGiveup, nTrain, epsilon, gridWorld):
    
-    sarsa1 = SARSA(G, P, args.rMove, args.rGiveup, args.nTrain, args.epsilon, GRIDWORLD)
-    initialState = sarsa1.getRandomLocation()
-    nextaction = sarsa1.epsilonGreedyAction(initialState) 
-    print "Next Action", nextaction
     ### TODO:: PSEUDOCODE, PLS UPDATE
 
     # Initialize a SARSA class objecy
-
+    sarsa = SARSA(G, P, args.rMove, args.rGiveup, args.nTrain, args.epsilon, GRIDWORLD)
+    
+    initialState = sarsa.getRandomLocation()
+    nextaction = sarsa.epsilonGreedyAction(initialState) 
+    print "Next Action", nextaction
+    
     # Call updatedQ = SARSA.runSARSA
 
     # Use updated Q to get the paths and total rewards of all possible states to end states
