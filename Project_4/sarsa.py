@@ -144,16 +144,16 @@ class SARSA:
     
     # SARSA algorithm
     def runSARSA(self):
-        self.Q_table = initializeQ()
+        #self.Q_table = initializeQ()
 
-        for numTrial in range(0,nTrain):
+        for numTrial in range(0,self.nTrain):
             # Initialize a random state s, choose a random state
-            initLocation = getRandomLocation()
+            initLocation = self.getRandomLocation()
             stateLocation = initLocation
 
             # Choose action a possible from state s using epsilon-greedy
             # TODO: Make an epsilon-greedy function to choose next action...?
-            action = epsilonGreedyAction(stateLocation)
+            action = self.epsilonGreedyAction(stateLocation)
             
             while True:
                 # Get the next state s' using action a from state s
@@ -161,7 +161,7 @@ class SARSA:
                 nextStateLocation = self.takeStep(stateLocation, action)
 
                 # Choose action a' from s' using epsilon-greedy
-                nextAction = epsilonGreedyAction(nextStateLocation)
+                nextAction = self.epsilonGreedyAction(nextStateLocation)
 
                 # Update Q(s,a) entry of the Q function table using the formula
                 self.UpdateQ(stateLocation, action, nextStateLocation, nextAction)
@@ -247,6 +247,7 @@ if __name__ == '__main__':
     
     initialState = sarsa.getRandomLocation()
     nextaction = sarsa.epsilonGreedyAction(initialState) 
+    sarsa.runSARSA()
     print "Next Action", nextaction
     
     # Call updatedQ = SARSA.runSARSA
