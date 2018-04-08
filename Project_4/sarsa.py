@@ -129,14 +129,14 @@ class SARSA:
     def rewardFunction(self,stateLocation):
         return self.gridWorld[stateLocation[0]][stateLocation[1]]
     
-    def UpdateQ(s, a, nextS, nextA):
+    def UpdateQ(self, s, a, nextS, nextA):
         Q = self.Q_table[s[0]][s[1]][a]
-        nextQ = self.Q_table[nexts[0]][nexts[1]][nextA]
+        nextQ = self.Q_table[nextS[0]][nextS[1]][nextA]
 
         alpha = self.stepSize
         # TODO: Look into gamma value
         gamma = 0.5
-        r = rewardFunction(s)
+        r = self.rewardFunction(s)
 
         newQ = Q + alpha*(r + gamma*nextQ - Q)
         self.Q_table[s[0]][s[1]][a] = newQ
