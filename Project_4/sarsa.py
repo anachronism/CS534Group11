@@ -192,10 +192,40 @@ class SARSA:
                 
         return self.Q_table
 
-    
-    '''def output(self):
-        for row in range(0,self.gridSize[0])
-            for col in range(0,self.gridSize'''
+
+    # Helper function to help us draw the actions when making the outputs
+    def drawAction(self, action):
+        if (action == 0): return '^'
+        elif (action == 1): return '>'
+        elif (action == 2): return 'v'
+        elif (action == 3): return '<'
+        else: return 'X'
+
+
+    # Output function returns the grid of recommended actions from every state of the grid world and
+    # the future expected reward for that state under the learned policy.
+    def output(self):
+        recommendedActions = np.chararray((self.gridSize[0]-2, self.gridSize[1]-2))
+        expectedRewards = np.zeros((self.gridSize[0]-2, self.gridSize[1]-2))
+        
+        for row in range(1,self.gridSize[0]-1):
+            for col in range(1,self.gridSize[1]-1):
+                Q_values = self.Q_table[row][col]
+                max_Q = max(Q_values)
+                action = Q_values.index(max(Q_values))
+
+                expectedRewards[row-1][col-1] = max_Q
+                
+                if (self.gridWorld[row,col] == self.rPit):
+                    recommendedActions[row-1][col-1] = 'P'
+                elif (self.gridWorld[row,col] == self.rGoal):
+                    recommendedActions[row-1][col-1] = 'G'
+                else:
+                    recommendedActions[row-1][col-1] = self.drawAction(action)
+                
+        print expectedRewards
+        print recommendedActions
+        #print self.gridWorld
 
 
 ### MAIN ########################################################################################
@@ -271,6 +301,8 @@ if __name__ == '__main__':
     nextaction = sarsa.epsilonGreedyAction(initialState) 
     result = sarsa.runSARSA()
     print "Next Action", nextaction
+
+    sarsa.output()
     
     # Call updatedQ = SARSA.runSARSA
 
