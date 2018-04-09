@@ -83,14 +83,13 @@ class SARSA:
         if probDirection < P_CORRECT:
             newDir = action
         elif probDirection < P_CORRECT + P_RIGHTTURN:
-            newDir = (action + 1)%4
+            newDir = (action + 1) % 4
         elif probDirection < P_CORRECT+P_RIGHTTURN+P_LEFTTURN:
             newDir = (action - 1) % 4
         else: # 1 - probDirection <= 0.1
             newDir = action
             extraStep = True
-        ### TODO: ACTUALLY TAKE STEP.
-    
+        
         if (extraStep):
             numStep = 2
         else:
@@ -110,7 +109,7 @@ class SARSA:
             locationValue = self.gridWorld[nextLocation[0], nextLocation[1]]
             if (locationValue == -float('inf')):
                 nextLocation = prevLocation
-
+            ### Need to process if 2 step into a hole.
         return nextLocation
         
 
