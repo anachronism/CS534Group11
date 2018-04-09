@@ -1,7 +1,7 @@
 import argparse
 import numpy as np 
 import random as rng
-
+from copy import deepcopy
 
 class SARSA:
     
@@ -14,7 +14,7 @@ class SARSA:
         self.epsilon = epsilon
         self.stepSize = 0.5
         self.gridWorld = gridWorld
-        print "CONSTRUCTOR", self.gridWorld.shape
+        #print "CONSTRUCTOR", self.gridWorld.shape
         #self.gridSize = [7,8]
         self.gridSize = self.gridWorld.shape
         self.Q_table = self.initializeQ()
@@ -28,7 +28,7 @@ class SARSA:
         #matrix.append([0,0,0,0,0])
         #Q_table = [[0 for x in range(columnNum)] for y in range(rowNum)]
         Q_table = np.zeros((rowNum, columnNum), dtype=object)
-        print "INITILIZA Q:", Q_table.shape
+        #print "INITILIZE Q:", Q_table.shape
         for i in range(0, rowNum):
             for j in range(0, columnNum):
                 Q_table[i][j] = [0 for x in range(5)]
@@ -51,13 +51,13 @@ class SARSA:
         if randomValue > self.epsilon:
             #print "Qshape", len(self.Q_table),len(self.Q_table[1])
             Q_values = self.Q_table[currentLocation[0]][currentLocation[1]]
-            #print "QVALUES*****", Qvalues
+            #print "QVALUES*****", Q_values
 
             #ERROR: TypeError: 'NoneType' object has no attribute '__getitem__' 
             #action = max(xrange(len(Q_values)), key=Q_values.__getitem__)
 
             action = Q_values.index(max(Q_values))
-            
+            # print 'action ', action
             return action
         else:
             action = rng.randint(0,4) 
@@ -128,12 +128,12 @@ class SARSA:
         randomLocation = []
         while(stateNotPicked):
             randomLocation = [rng.randint(0,(self.gridSize[0])-1), rng.randint(0,(self.gridSize[1])-1)]
-            print "randomLocation", randomLocation
-            locationValue = self.gridWorld[randomLocation[0], randomLocation[1]]  
+            #print "randomLocation", randomLocation
+            locationValue = self.rewardFunction(randomLocation)  
             if locationValue != self.rPit and locationValue != self.rGoal and locationValue != -float('inf'):
                 stateNotPicked = 0
         
-        print "STATE VALUE", locationValue
+        #print "STATE VALUE", locationValue
         return randomLocation
 
 
@@ -148,7 +148,7 @@ class SARSA:
         nextQ = self.Q_table[nextS[0]][nextS[1]][nextA]
 
         alpha = self.stepSize
-        # TODO: Look into gamma value
+        ### TODO: Look into gamma value
         gamma = 1
         r = self.rewardFunction(s)
 
@@ -163,7 +163,7 @@ class SARSA:
         for numTrial in range(0,self.nTrain):
             # Initialize a random state s, choose a random state
             initLocation = self.getRandomLocation()
-            stateLocation = initLocation
+            stateLocation = deepcopy(initLocation)
 
             # Choose action a possible from state s using epsilon-greedy
             # TODO: Make an epsilon-greedy function to choose next action...?
@@ -215,9 +215,9 @@ class SARSA:
 
                 expectedRewards[row-1][col-1] = max_Q
                 
-                if (self.gridWorld[row,col] == self.rPit):
+                if (self.rewardFunction([row,col]) == self.rPit):
                     recommendedActions[row-1][col-1] = 'P'
-                elif (self.gridWorld[row,col] == self.rGoal):
+                elif (self.rewardFunction([row,col]) == self.rGoal):
                     recommendedActions[row-1][col-1] = 'G'
                 else:
                     recommendedActions[row-1][col-1] = self.drawAction(action)
@@ -280,12 +280,21 @@ if __name__ == '__main__':
     ### TODO: Not necessarily with this GRIDWORLD object, but when it starts make sure to update the gridworld to have smarter
     ###         initial values.
 
+    # GRIDWORLD = np.matrix([[X,X,X,X,X,X,X,X,X], 
+    #                        [X,M,M,M,M,M,M,M,X],
+    #                        [X,M,M,M,M,M,M,M,X],
+    #                        [X,M,M,P,P,M,M,M,X],
+    #                        [X,M,P,G,M,M,P,M,X],
+    #                        [X,M,M,P,P,P,M,M,X],
+    #                        [X,M,M,M,M,M,M,M,X],
+    #                        [X,X,X,X,X,X,X,X,X]])
+
     GRIDWORLD = np.matrix([[X,X,X,X,X,X,X,X,X], 
                            [X,M,M,M,M,M,M,M,X],
                            [X,M,M,M,M,M,M,M,X],
-                           [X,M,M,P,P,M,M,M,X],
-                           [X,M,P,G,M,M,P,M,X],
-                           [X,M,M,P,P,P,M,M,X],
+                           [X,M,M,M,M,M,M,M,X],
+                           [X,M,M,G,M,M,M,M,X],
+                           [X,M,M,M,M,M,M,M,X],
                            [X,M,M,M,M,M,M,M,X],
                            [X,X,X,X,X,X,X,X,X]])
 
@@ -293,7 +302,7 @@ if __name__ == '__main__':
    
     ### TODO:: PSEUDOCODE, PLS UPDATE
 
-    # Initialize a SARSA class objecy
+    # Initialize a SARSA class object
     sarsa = SARSA(G, P, args.rMove, args.rGiveup, args.nTrain, args.epsilon, GRIDWORLD)
     
     initialState = sarsa.getRandomLocation()
