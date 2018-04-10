@@ -2,6 +2,7 @@ import argparse
 import numpy as np 
 import random as rng
 from copy import deepcopy
+import matplotlib.pyplot as plt
 
 class SARSA:
     
@@ -18,6 +19,7 @@ class SARSA:
         #self.gridSize = [7,8]
         self.gridSize = self.gridWorld.shape
         self.Q_table = self.initializeQ()
+        self.rewardsPerTrial = []
         
         
 
@@ -109,7 +111,12 @@ class SARSA:
             locationValue = self.gridWorld[nextLocation[0], nextLocation[1]]
             if (locationValue == -float('inf')):
                 nextLocation = prevLocation
-            ### Need to process if 2 step into a hole.
+
+            # As soon as we step into a pit where we take one or two steps,
+            # end the function by returning the pit location
+            if (locationValue == self.rPit):
+                return nextLocation
+            
         return nextLocation
         
 
@@ -121,7 +128,7 @@ class SARSA:
 
         x = stateLocation[0]
         y = stateLocation[1]
-        return (self.gridWorld[x,y] != self.rPit) or (self.gridWorld[x,y] != self.rGoal) or (a == 4)
+        return (self.gridWorld[x,y] == self.rPit) or (self.gridWorld[x,y] == self.rGoal) or (a == 4)
             
     def getRandomLocation(self):
         stateNotPicked = 1
@@ -141,10 +148,10 @@ class SARSA:
         return self.gridWorld[stateLocation[0],stateLocation[1]]
     
     def UpdateQ(self, s, a, nextS, nextA):
-        print "A IN UPDATEQ:", a
+        #print "A IN UPDATEQ:", a
         Q = self.Q_table[s[0]][s[1]][a]
-        test = self.Q_table[s[0]][s[1]]
-        print "TEST:", test
+        #test = self.Q_table[s[0]][s[1]]
+        #print "TEST:", test
         nextQ = self.Q_table[nextS[0]][nextS[1]][nextA]
 
         alpha = self.stepSize
@@ -154,6 +161,8 @@ class SARSA:
 
         newQ = Q + alpha*(r + gamma*nextQ - Q)
         self.Q_table[s[0]][s[1]][a] = newQ
+
+        return r
         
     
     # SARSA algorithm
@@ -168,8 +177,10 @@ class SARSA:
             # Choose action a possible from state s using epsilon-greedy
             # TODO: Make an epsilon-greedy function to choose next action...?
             action = self.epsilonGreedyAction(stateLocation)
-            
-            while True:
+
+            rewardSum = 0
+            runTrial = True
+            while (runTrial):
                 # Get the next state s' using action a from state s
                 # Call takeStep
                 # If the current action is Giveup, then just return the same stateLocation
@@ -180,14 +191,21 @@ class SARSA:
                 nextAction = self.epsilonGreedyAction(nextStateLocation)
 
                 # Update Q(s,a) entry of the Q function table using the formula
-                self.UpdateQ(stateLocation, action, nextStateLocation, nextAction)
-                
+                reward = self.UpdateQ(stateLocation, action, nextStateLocation, nextAction)
+                print "IN WHILE LOOP", reward
+
+                rewardSum += reward
+
+                # End the trial if the current state location is terminal (goal or pit)
+                # or if the current action is Giveup
                 if (self.terminateCondition(stateLocation,action)):
-                    break  
+                    runTrial = False  
                 
                 # Set next state and next action for the next iteration
                 stateLocation = nextStateLocation
                 action = nextAction
+
+            self.rewardsPerTrial.append(rewardSum)
                 
         return self.Q_table
 
@@ -203,7 +221,7 @@ class SARSA:
 
     # Output function returns the grid of recommended actions from every state of the grid world and
     # the future expected reward for that state under the learned policy.
-    def output(self):
+    def plotOutputs(self):
         recommendedActions = np.chararray((self.gridSize[0]-2, self.gridSize[1]-2))
         expectedRewards = np.zeros((self.gridSize[0]-2, self.gridSize[1]-2))
         
@@ -224,7 +242,6 @@ class SARSA:
                 
         print expectedRewards
         print recommendedActions
-        #print self.gridWorld
 
 
 ### MAIN ########################################################################################
@@ -310,7 +327,7 @@ if __name__ == '__main__':
     result = sarsa.runSARSA()
     print "Next Action", nextaction
 
-    sarsa.output()
+    sarsa.plotOutputs()
     
     # Call updatedQ = SARSA.runSARSA
 
