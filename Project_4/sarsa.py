@@ -7,14 +7,14 @@ import math
 
 class SARSA:
     
-    def __init__(self, rGoal, rPit, rMove, rGiveup, nTrain, epsilon, gridWorld):
+    def __init__(self, rGoal, rPit, rMove, rGiveup, stepSize,nTrain, epsilon, gridWorld):
         self.rGoal = rGoal
         self.rPit = rPit
         self.rMove = rMove
         self.rGiveup = rGiveup
         self.nTrain = nTrain
         self.epsilon = epsilon
-        self.stepSize = 0.05
+        self.stepSize = stepSize
         self.gridWorld = gridWorld
         #print "CONSTRUCTOR", self.gridWorld.shape
         #self.gridSize = [7,8]
@@ -35,24 +35,17 @@ class SARSA:
         #print "INITILIZE Q:", Q_table.shape
         for i in range(0, rowNum):
             for j in range(0, columnNum):
-                if self.gridWorld[i,j] == P:
-                    Q_table[i][j] = [-100 for x in range(5)]
-                elif self.gridWorld[i,j] == G:
-                    Q_table[i][j] = [100 for x in range(5)]
-                elif self.gridWorld[i,j] == -float("inf"):
+                # if self.gridWorld[i,j] == P:
+                #     Q_table[i][j] = [-100 for x in range(5)]
+                # elif self.gridWorld[i,j] == G:
+                #     Q_table[i][j] = [100 for x in range(5)]
+                # elif self.gridWorld[i,j] == -float("inf"):
+                #     Q_table[i][j] = [-float("inf") for x in range(5)]
+                if self.gridWorld[i,j] == -float("inf"):
                     Q_table[i][j] = [-float("inf") for x in range(5)]
                 else:
                     Q_table[i][j] = [0 for x in range(5)]
-
-        # Q_table[2][2] = [-100, -100, -100, -100, -100]
-        # Q_table[2][3] = [-100, -100, -100, -100, -100]
-        # Q_table[3][1] = [-100, -100, -100, -100, -100]
-        # Q_table[3][5] = [-100, -100, -100, -100, -100]
-        # Q_table[4][2] = [-100, -100, -100, -100, -100]
-        # Q_table[4][3] = [-100, -100, -100, -100, -100]
-        # Q_table[4][4] = [-100, -100, -100, -100, -100]
-
-        # Q_table[3][2] = [100, 100, 100, 100, 100]    
+ 
 
         return Q_table
 
@@ -64,12 +57,11 @@ class SARSA:
             #print "Qshape", len(self.Q_table),len(self.Q_table[1])
             Q_values = self.Q_table[currentLocation[0]][currentLocation[1]]
             #print "QVALUES*****", Q_values
-
             action = Q_values.index(max(Q_values)) 
             # print 'action ', action
             return action
         else:
-            # The action should not be able to take 
+            # The action should not be able to take an action that will put it into a wall.
             action = rng.randint(0,4)
             while self.Q_table[currentLocation[0]][currentLocation[1]][action] == -float('inf'):
                 action = rng.randint(0,4) 
@@ -328,7 +320,7 @@ if __name__ == '__main__':
     parser.add_argument('--rPit',dest='rPit',nargs=1, type=int, default=[-2], help='''
                                                 Reward for falling into a pit. Default is -2.
                                                 ''')
-    parser.add_argument('--rMove',dest='rMove',nargs=1,type=int,default=[-0.1], help = '''
+    parser.add_argument('--rMove',dest='rMove',nargs=1,type=float,default=[-0.1], help = '''
                                                 Reward for moving. Default is -0.1.
                                                 ''')
     parser.add_argument('--rGiveup',dest='rGiveup',nargs=1,type=int,default=[-3], help = '''
@@ -337,9 +329,13 @@ if __name__ == '__main__':
     parser.add_argument('--nTrain',dest='nTrain',nargs=1,type=int,default=[10000], help = '''
                                                 Number of trials to train agent for. Default is 10000.
                                                 ''')
-    parser.add_argument('--epsilon',dest='epsilon',nargs=1,type=int,default=[0.1], help = '''
+    parser.add_argument('--epsilon',dest='epsilon',nargs=1,type=float,default=[0.1], help = '''
                                                 Epsilon, for e-greedy exploration. Default is 0.1.
                                                 ''')
+    parser.add_argument('--stepSize',dest='stepSize',nargs=1,type=float,default=[0.1], help = '''
+                                                Step size for Q updating. Default is 0.1.
+                                                ''')
+
 
     args = parser.parse_args()
 
@@ -396,7 +392,7 @@ if __name__ == '__main__':
     ### TODO:: PSEUDOCODE, PLS UPDATE
 
     # Initialize a SARSA class object
-    sarsa = SARSA(G, P, M, args.rGiveup[0], args.nTrain[0], args.epsilon[0], GRIDWORLD)
+    sarsa = SARSA(G, P, M, args.rGiveup[0], args.stepSize[0],args.nTrain[0], args.epsilon[0], GRIDWORLD)
 
     # Call updatedQ = SARSA.runSARSA
     updatedQ = sarsa.runSARSA()
