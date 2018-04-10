@@ -3,6 +3,7 @@ import numpy as np
 import random as rng
 from copy import deepcopy
 import matplotlib.pyplot as plt
+import math
 
 class SARSA:
     
@@ -192,7 +193,6 @@ class SARSA:
 
                 # Update Q(s,a) entry of the Q function table using the formula
                 reward = self.UpdateQ(stateLocation, action, nextStateLocation, nextAction)
-                print "IN WHILE LOOP", reward
 
                 rewardSum += reward
 
@@ -216,12 +216,12 @@ class SARSA:
         elif (action == 1): return '>'
         elif (action == 2): return 'v'
         elif (action == 3): return '<'
-        else: return 'X'
+        else: return '?'
 
 
     # Output function returns the grid of recommended actions from every state of the grid world and
     # the future expected reward for that state under the learned policy.
-    def plotOutputs(self):
+    def plotAllOutputs(self):
         recommendedActions = np.chararray((self.gridSize[0]-2, self.gridSize[1]-2))
         expectedRewards = np.zeros((self.gridSize[0]-2, self.gridSize[1]-2))
         
@@ -231,7 +231,7 @@ class SARSA:
                 max_Q = max(Q_values)
                 action = Q_values.index(max(Q_values))
 
-                expectedRewards[row-1][col-1] = max_Q
+                expectedRewards[row-1][col-1] = math.ceil(max_Q*100)/100
                 
                 if (self.rewardFunction([row,col]) == self.rPit):
                     recommendedActions[row-1][col-1] = 'P'
@@ -242,6 +242,63 @@ class SARSA:
                 
         print expectedRewards
         print recommendedActions
+
+
+        # Figure 1 plots all recommended actions of each state #####################################
+        w = 7
+        h = 6
+        plt.figure(1, figsize=(w, h))
+        tb = plt.table(cellText=recommendedActions, loc=(0,0), cellLoc='center')
+
+        tc = tb.properties()['child_artists']
+        for cell in tc: 
+            cell.set_height(1.0/recommendedActions.shape[0])
+            cell.set_width(1.0/recommendedActions.shape[1])
+
+        ax = plt.gca()
+        ax.set_xticks([])
+        ax.set_yticks([])
+        plt.title("Recommended Actions From Each State")
+
+        
+        # Figure 2 plots all future expected rewards of each state #################################
+        plt.figure(2, figsize=(w, h))
+        tb = plt.table(cellText=expectedRewards, loc=(0,0), cellLoc='center')
+
+        tc = tb.properties()['child_artists']
+        for cell in tc: 
+            cell.set_height(1.0/expectedRewards.shape[0])
+            cell.set_width(1.0/expectedRewards.shape[1])
+
+        ax = plt.gca()
+        ax.set_xticks([])
+        ax.set_yticks([])
+        plt.title("Expected Future Rewards")
+
+        
+        # Figure 3 plots the average rewards for every 50 trials ###################################
+        plt.figure(3)
+        numTrialsPerInterval = 50
+        numIntervals = len(self.rewardsPerTrial) / numTrialsPerInterval
+        rewardsReshaped = np.reshape(np.matrix(self.rewardsPerTrial), (numIntervals, numTrialsPerInterval))
+
+        averageRewardList = []
+        for i in range(0, rewardsReshaped.shape[0]):
+            rewardSum = 0
+            for j in range(0, rewardsReshaped.shape[1]):
+                reward = rewardsReshaped[i,j]
+                rewardSum += reward
+
+            averageReward = rewardSum / numTrialsPerInterval
+            averageRewardList.append(averageReward)
+            
+        plt.plot(averageRewardList)
+        plt.title("Average Reward Per Every 50 Trials")
+
+        # Show all three plots
+        plt.show()
+
+
 
 
 ### MAIN ########################################################################################
@@ -323,14 +380,15 @@ if __name__ == '__main__':
     sarsa = SARSA(G, P, args.rMove, args.rGiveup, args.nTrain, args.epsilon, GRIDWORLD)
     
     initialState = sarsa.getRandomLocation()
-    nextaction = sarsa.epsilonGreedyAction(initialState) 
-    result = sarsa.runSARSA()
+    nextaction = sarsa.epsilonGreedyAction(initialState)
     print "Next Action", nextaction
 
-    sarsa.plotOutputs()
-    
-    # Call updatedQ = SARSA.runSARSA
 
-    # Use updated Q to get the paths and total rewards of all possible states to end states
+    # Call updatedQ = SARSA.runSARSA
+    updatedQ = sarsa.runSARSA()
+
+    # Use updated Q to get the recommended and total rewards of all possible states
+    # and also plots rewards per trial
+    sarsa.plotAllOutputs()
 
     # End of main
