@@ -14,7 +14,7 @@ class SARSA:
         self.rGiveup = rGiveup
         self.nTrain = nTrain
         self.epsilon = epsilon
-        self.stepSize = 0.5
+        self.stepSize = 0.05
         self.gridWorld = gridWorld
         #print "CONSTRUCTOR", self.gridWorld.shape
         #self.gridSize = [7,8]
@@ -25,6 +25,7 @@ class SARSA:
         
 
     def initializeQ(self):
+        global G,P
         rowNum = self.gridSize[0]
         columnNum = self.gridSize[1]
         
@@ -34,17 +35,25 @@ class SARSA:
         #print "INITILIZE Q:", Q_table.shape
         for i in range(0, rowNum):
             for j in range(0, columnNum):
-                Q_table[i][j] = [0 for x in range(5)]
+                if self.gridWorld[i,j] == P:
+                    Q_table[i][j] = [-100 for x in range(5)]
+                elif self.gridWorld[i,j] == G:
+                    Q_table[i][j] = [100 for x in range(5)]
+                elif self.gridWorld[i,j] == -float("inf"):
+                    Q_table[i][j] = [-float("inf") for x in range(5)]
+                else:
+                    Q_table[i][j] = [0 for x in range(5)]
 
-        Q_table[2][2] = [-100, -100, -100, -100, -100]
-        Q_table[2][3] = [-100, -100, -100, -100, -100]
-        Q_table[3][1] = [-100, -100, -100, -100, -100]
-        Q_table[3][5] = [-100, -100, -100, -100, -100]
-        Q_table[4][2] = [-100, -100, -100, -100, -100]
-        Q_table[4][3] = [-100, -100, -100, -100, -100]
-        Q_table[4][4] = [-100, -100, -100, -100, -100]
+        # Q_table[2][2] = [-100, -100, -100, -100, -100]
+        # Q_table[2][3] = [-100, -100, -100, -100, -100]
+        # Q_table[3][1] = [-100, -100, -100, -100, -100]
+        # Q_table[3][5] = [-100, -100, -100, -100, -100]
+        # Q_table[4][2] = [-100, -100, -100, -100, -100]
+        # Q_table[4][3] = [-100, -100, -100, -100, -100]
+        # Q_table[4][4] = [-100, -100, -100, -100, -100]
 
-        Q_table[3][2] = [100, 100, 100, 100, 100]        
+        # Q_table[3][2] = [100, 100, 100, 100, 100]    
+
         return Q_table
 
     def epsilonGreedyAction(self, currentLocation):
@@ -56,15 +65,15 @@ class SARSA:
             Q_values = self.Q_table[currentLocation[0]][currentLocation[1]]
             #print "QVALUES*****", Q_values
 
-            #ERROR: TypeError: 'NoneType' object has no attribute '__getitem__' 
-            #action = max(xrange(len(Q_values)), key=Q_values.__getitem__)
-
-            action = Q_values.index(max(Q_values))
+            action = Q_values.index(max(Q_values)) 
             # print 'action ', action
             return action
         else:
-            action = rng.randint(0,4) 
-        return action
+            # The action should not be able to take 
+            action = rng.randint(0,4)
+            while self.Q_table[currentLocation[0]][currentLocation[1]][action] == -float('inf'):
+                action = rng.randint(0,4) 
+            return action
     
 
     def takeStep(self,location,action):
@@ -101,23 +110,25 @@ class SARSA:
         prevLocation = [location[0], location[1]]
         for steps in range(0, numStep):
             if (newDir == 0):
-                nextLocation = [prevLocation[0]+1, prevLocation[1]]
+                nextLocation = [prevLocation[0]-1, prevLocation[1]]
             elif (newDir == 1):
                 nextLocation = [prevLocation[0], prevLocation[1]+1]
             elif (newDir == 2):
-                nextLocation = [prevLocation[0]-1, prevLocation[1]]
+                nextLocation = [prevLocation[0]+1, prevLocation[1]]
             else:
                 nextLocation = [prevLocation[0], prevLocation[1]-1]
 
             locationValue = self.gridWorld[nextLocation[0], nextLocation[1]]
             if (locationValue == -float('inf')):
                 nextLocation = prevLocation
-
             # As soon as we step into a pit where we take one or two steps,
             # end the function by returning the pit location
-            if (locationValue == self.rPit):
+            elif (locationValue == self.rPit):
                 return nextLocation
-            
+            else:
+                prevLocation = nextLocation
+
+
         return nextLocation
         
 
@@ -136,12 +147,12 @@ class SARSA:
         randomLocation = []
         while(stateNotPicked):
             randomLocation = [rng.randint(0,(self.gridSize[0])-1), rng.randint(0,(self.gridSize[1])-1)]
-            #print "randomLocation", randomLocation
             locationValue = self.rewardFunction(randomLocation)  
             if locationValue != self.rPit and locationValue != self.rGoal and locationValue != -float('inf'):
                 stateNotPicked = 0
         
         #print "STATE VALUE", locationValue
+        # print "randomlocation: ", randomLocation
         return randomLocation
 
 
@@ -186,6 +197,8 @@ class SARSA:
                 # Call takeStep
                 # If the current action is Giveup, then just return the same stateLocation
                 # since we still need to update the Q function
+
+                # should be getting reward from this step.
                 nextStateLocation = self.takeStep(stateLocation, action)
 
                 # Choose action a' from s' using epsilon-greedy
@@ -309,22 +322,22 @@ if __name__ == '__main__':
     ### MAIN:
     # Parser:
     parser = argparse.ArgumentParser(description='''CS 534 Assignment 4.''')
-    parser.add_argument('--rGoal',dest='rGoal',nargs=1, type=int, default=5, help='''
+    parser.add_argument('--rGoal',dest='rGoal',nargs=1, type=int, default=[5], help='''
                                                 Reward for reaching the goal. Default is 5.
                                                 ''')
-    parser.add_argument('--rPit',dest='rPit',nargs=1, type=int, default=-2, help='''
+    parser.add_argument('--rPit',dest='rPit',nargs=1, type=int, default=[-2], help='''
                                                 Reward for falling into a pit. Default is -2.
                                                 ''')
-    parser.add_argument('--rMove',dest='rMove',nargs=1,type=int,default=-0.1, help = '''
+    parser.add_argument('--rMove',dest='rMove',nargs=1,type=int,default=[-0.1], help = '''
                                                 Reward for moving. Default is -0.1.
                                                 ''')
-    parser.add_argument('--rGiveup',dest='rGiveup',nargs=1,type=int,default=-3, help = '''
+    parser.add_argument('--rGiveup',dest='rGiveup',nargs=1,type=int,default=[-3], help = '''
                                                 Reward for giving up. Default is -3.
                                                 ''')
-    parser.add_argument('--nTrain',dest='nTrain',nargs=1,type=int,default=10000, help = '''
+    parser.add_argument('--nTrain',dest='nTrain',nargs=1,type=int,default=[10000], help = '''
                                                 Number of trials to train agent for. Default is 10000.
                                                 ''')
-    parser.add_argument('--epsilon',dest='epsilon',nargs=1,type=int,default=0.1, help = '''
+    parser.add_argument('--epsilon',dest='epsilon',nargs=1,type=int,default=[0.1], help = '''
                                                 Epsilon, for e-greedy exploration. Default is 0.1.
                                                 ''')
 
@@ -341,9 +354,9 @@ if __name__ == '__main__':
 
     # Constants to make gridworld easier to be parsed.
     X = -float('inf')
-    P = args.rPit
-    G = args.rGoal
-    M = args.rMove
+    P = args.rPit[0]
+    G = args.rGoal[0]
+    M = args.rMove[0]
 
     UP = 0
     RIGHT = 1
@@ -363,6 +376,12 @@ if __name__ == '__main__':
     #                        [X,M,M,M,M,M,M,M,X],
     #                        [X,X,X,X,X,X,X,X,X]])
 
+    # GRIDWORLD = np.matrix([[X,X,X,X,X], 
+    #                        [X,P,P,P,X],
+    #                        [X,M,M,M,X],
+    #                        [X,M,M,G,X],
+    #                        [X,X,X,X,X]])
+
     GRIDWORLD = np.matrix([[X,X,X,X,X,X,X,X,X], 
                            [X,M,M,M,M,M,M,M,X],
                            [X,M,M,M,M,M,M,M,X],
@@ -377,12 +396,7 @@ if __name__ == '__main__':
     ### TODO:: PSEUDOCODE, PLS UPDATE
 
     # Initialize a SARSA class object
-    sarsa = SARSA(G, P, args.rMove, args.rGiveup, args.nTrain, args.epsilon, GRIDWORLD)
-    
-    initialState = sarsa.getRandomLocation()
-    nextaction = sarsa.epsilonGreedyAction(initialState)
-    print "Next Action", nextaction
-
+    sarsa = SARSA(G, P, M, args.rGiveup[0], args.nTrain[0], args.epsilon[0], GRIDWORLD)
 
     # Call updatedQ = SARSA.runSARSA
     updatedQ = sarsa.runSARSA()
