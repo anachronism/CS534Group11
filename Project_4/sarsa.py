@@ -153,7 +153,10 @@ class SARSA:
     
     def UpdateQ(self, s, a, nextS, nextA):
         #print "A IN UPDATEQ:", a
+
+
         Q = self.Q_table[s[0]][s[1]][a]
+        if s == [1,4] and a == 1:
         #test = self.Q_table[s[0]][s[1]]
         #print "TEST:", test
         nextQ = self.Q_table[nextS[0]][nextS[1]][nextA]
@@ -163,7 +166,13 @@ class SARSA:
         gamma = 1
         r = self.rewardFunction(s)
 
-        newQ = Q + alpha*(r + gamma*nextQ - Q)
+        if self.terminateCondition(s,a) and a != 4:
+            newQ = Q + alpha * r
+
+        else:
+            newQ = Q + alpha*(r + gamma*nextQ - Q)
+        
+        
         self.Q_table[s[0]][s[1]][a] = newQ
 
         return r
@@ -363,29 +372,34 @@ if __name__ == '__main__':
     ### TODO: Not necessarily with this GRIDWORLD object, but when it starts make sure to update the gridworld to have smarter
     ###         initial values.
 
-    # GRIDWORLD = np.matrix([[X,X,X,X,X,X,X,X,X], 
-    #                        [X,M,M,M,M,M,M,M,X],
-    #                        [X,M,M,M,M,M,M,M,X],
-    #                        [X,M,M,P,P,M,M,M,X],
-    #                        [X,M,P,G,M,M,P,M,X],
-    #                        [X,M,M,P,P,P,M,M,X],
-    #                        [X,M,M,M,M,M,M,M,X],
-    #                        [X,X,X,X,X,X,X,X,X]])
+    GRIDWORLD = np.matrix([[X,X,X,X,X,X,X,X,X], 
+                           [X,M,M,M,M,M,M,M,X],
+                           [X,M,M,M,M,M,M,M,X],
+                           [X,M,M,P,P,M,M,M,X],
+                           [X,M,P,G,M,M,P,M,X],
+                           [X,M,M,P,P,P,M,M,X],
+                           [X,M,M,M,M,M,M,M,X],
+                           [X,X,X,X,X,X,X,X,X]])
 
     # GRIDWORLD = np.matrix([[X,X,X,X,X], 
     #                        [X,P,P,P,X],
     #                        [X,M,M,M,X],
     #                        [X,M,M,G,X],
     #                        [X,X,X,X,X]])
+    # GRIDWORLD = np.matrix([[X,X,X,X,X,X], 
+    #                        [X,P,P,P,M,X],
+    #                        [X,G,M,M,M,X],
+    #                        [X,P,M,M,M,X],
+    #                        [X,X,X,X,X,X]])
 
-    GRIDWORLD = np.matrix([[X,X,X,X,X,X,X,X,X], 
-                           [X,M,M,M,M,M,M,M,X],
-                           [X,M,M,M,M,M,M,M,X],
-                           [X,M,M,M,M,M,M,M,X],
-                           [X,M,M,G,M,M,M,M,X],
-                           [X,M,M,M,M,M,M,M,X],
-                           [X,M,M,M,M,M,M,M,X],
-                           [X,X,X,X,X,X,X,X,X]])
+    # GRIDWORLD = np.matrix([[X,X,X,X,X,X,X,X,X], 
+    #                        [X,M,M,M,M,M,M,M,X],
+    #                        [X,M,M,M,M,M,M,M,X],
+    #                        [X,M,M,M,M,M,M,M,X],
+    #                        [X,M,M,G,M,M,M,M,X],
+    #                        [X,M,M,M,M,M,M,M,X],
+    #                        [X,M,M,M,M,M,M,M,X],
+    #                        [X,X,X,X,X,X,X,X,X]])
 
  #def __init__(self, rGoal, rPit, rMove, rGiveup, nTrain, epsilon, gridWorld):
    
@@ -396,7 +410,7 @@ if __name__ == '__main__':
 
     # Call updatedQ = SARSA.runSARSA
     updatedQ = sarsa.runSARSA()
-
+    #print 'updated, :',updatedQ[3][3]
     # Use updated Q to get the recommended and total rewards of all possible states
     # and also plots rewards per trial
     sarsa.plotAllOutputs()
