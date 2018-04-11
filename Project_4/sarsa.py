@@ -5,6 +5,12 @@ from copy import deepcopy
 import matplotlib.pyplot as plt
 import math
 
+
+### NOTES: MAX
+# https://ai.stackexchange.com/questions/3758/how-should-i-handle-action-selection-in-the-terminal-state-when-implementing-sar
+# Instead of having pit be the terminal state / give up be a terminal state / reward be a terminal state, maybe we should make them 
+# just lead to a terminal state with P = 1.
+
 class SARSA:
     
     def __init__(self, rGoal, rPit, rMove, rGiveup, stepSize,nTrain, epsilon, gridWorld):
