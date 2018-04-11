@@ -156,7 +156,6 @@ class SARSA:
 
 
         Q = self.Q_table[s[0]][s[1]][a]
-        if s == [1,4] and a == 1:
         #test = self.Q_table[s[0]][s[1]]
         #print "TEST:", test
         nextQ = self.Q_table[nextS[0]][nextS[1]][nextA]
