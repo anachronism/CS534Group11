@@ -165,8 +165,8 @@ class SARSA:
         gamma = 1
         r = self.rewardFunction(s)
 
-        if self.terminateCondition(s,a) and a != 4:
-            newQ = Q + alpha * r
+        if self.terminateCondition(s,a) :
+            newQ =  Q + alpha * r # NOT SURE THIS IS CORRECT, I THINK FIX THIS AND THE WHOLE THING WORKS.
 
         else:
             newQ = Q + alpha*(r + gamma*nextQ - Q)
