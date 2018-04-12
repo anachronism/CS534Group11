@@ -5,15 +5,10 @@ from copy import deepcopy
 import matplotlib.pyplot as plt
 import math
 
-
-### NOTES: MAX
-# https://ai.stackexchange.com/questions/3758/how-should-i-handle-action-selection-in-the-terminal-state-when-implementing-sar
-# Instead of having pit be the terminal state / give up be a terminal state / reward be a terminal state, maybe we should make them 
-# just lead to a terminal state with P = 1.
-
+## Class containing all learning functions and parameters.
 class SARSA:
     
-    def __init__(self, rGoal, rPit, rMove, rGiveup, stepSize,nTrain, epsilon, gridWorld):
+    def __init__(self, rGoal, rPit, rMove, rGiveup, stepSize,nTrain, epsilon,gamma, gridWorld):
         self.rGoal = rGoal
         self.rPit = rPit
         self.rMove = rMove
@@ -22,8 +17,7 @@ class SARSA:
         self.epsilon = epsilon
         self.stepSize = stepSize
         self.gridWorld = gridWorld
-        #print "CONSTRUCTOR", self.gridWorld.shape
-        #self.gridSize = [7,8]
+        self.gamma = gamma
         self.gridSize = self.gridWorld.shape
         self.Q_table = self.initializeQ()
         self.rewardsPerTrial = []
@@ -35,18 +29,9 @@ class SARSA:
         rowNum = self.gridSize[0]
         columnNum = self.gridSize[1]
         
-        #matrix.append([0,0,0,0,0])
-        #Q_table = [[0 for x in range(columnNum)] for y in range(rowNum)]
         Q_table = np.zeros((rowNum, columnNum), dtype=object)
-        #print "INITILIZE Q:", Q_table.shape
         for i in range(0, rowNum):
             for j in range(0, columnNum):
-                # if self.gridWorld[i,j] == P:
-                #     Q_table[i][j] = [-100 for x in range(5)]
-                # elif self.gridWorld[i,j] == G:
-                #     Q_table[i][j] = [100 for x in range(5)]
-                # elif self.gridWorld[i,j] == -float("inf"):
-                #     Q_table[i][j] = [-float("inf") for x in range(5)]
                 if self.gridWorld[i,j] == -float("inf"):
                     Q_table[i][j] = [-float("inf") for x in range(5)]
                 else:
@@ -60,14 +45,11 @@ class SARSA:
         
         # if randomValue greater than epsilon go with the action that has largest Q_value else pick random action
         if randomValue > self.epsilon:
-            #print "Qshape", len(self.Q_table),len(self.Q_table[1])
             Q_values = self.Q_table[currentLocation[0]][currentLocation[1]]
-            #print "QVALUES*****", Q_values
             action = Q_values.index(max(Q_values)) 
-            # print 'action ', action
             return action
         else:
-            # The action should not be able to take an action that will put it into a wall.
+            # Randomly pick an action, so long as the action doesn't pass through walls.
             action = rng.randint(0,4)
             while self.Q_table[currentLocation[0]][currentLocation[1]][action] == -float('inf'):
                 action = rng.randint(0,4) 
@@ -75,37 +57,40 @@ class SARSA:
     
 
     def takeStep(self,location,action):
-        if (action == 4):
-            #return None
+        global GIVEUP
+        if (action == GIVEUP):
             return location
-        
-        ### MAX: I think that direction should be encoded as [0,1,2,3].
-        ###     If you want to change it then change how this part works.
-        ###     Currently, assuming that the increments move clockwise.
-        ###     Eg. 0 -> N, 1 -> E, 2 -> S, 3 -> W
+
         P_CORRECT = 0.7
         P_RIGHTTURN = 0.1
         P_LEFTTURN = 0.1
         P_EXTRASTEP = 0.1
         extraStep = False
 
+        # Check if step works correctly or not.
         probDirection = rng.random()
+        # Correct step:
         if probDirection < P_CORRECT:
             newDir = action
+        # 90 deg right:
         elif probDirection < P_CORRECT + P_RIGHTTURN:
             newDir = (action + 1) % 4
+        # 90 deg Left:
         elif probDirection < P_CORRECT+P_RIGHTTURN+P_LEFTTURN:
             newDir = (action - 1) % 4
+        # extra step:   
         else: # 1 - probDirection <= 0.1
             newDir = action
             extraStep = True
         
+        # Accoutn for extra step
         if (extraStep):
             numStep = 2
         else:
             numStep = 1
 
         prevLocation = [location[0], location[1]]
+        # Take as many steps as needed.
         for steps in range(0, numStep):
             if (newDir == 0):
                 nextLocation = [prevLocation[0]-1, prevLocation[1]]
@@ -119,8 +104,8 @@ class SARSA:
             locationValue = self.gridWorld[nextLocation[0], nextLocation[1]]
             if (locationValue == -float('inf')):
                 nextLocation = prevLocation
-            # As soon as we step into a pit where we take one or two steps,
-            # end the function by returning the pit location
+            # As soon as we step into a pit or goal where we take one or two steps,
+            # end the function by returning the location
             elif (locationValue == self.rPit) or (locationValue == self.rGoal):
                 return nextLocation
             else:
@@ -132,14 +117,11 @@ class SARSA:
 
     # Helper function that act terminating condition of the SARSA algorithm
     def terminateCondition(self, stateLocation, a):
-        # Not needed anymore
-        #if (stateLocation == None):
-        #    return True
-
         x = stateLocation[0]
         y = stateLocation[1]
         return (self.gridWorld[x,y] == self.rPit) or (self.gridWorld[x,y] == self.rGoal) or (a == 4)
             
+    # Get random location that isn't a goal, pit, or wall
     def getRandomLocation(self):
         stateNotPicked = 1
         randomLocation = []
@@ -148,44 +130,43 @@ class SARSA:
             locationValue = self.rewardFunction(randomLocation)  
             if locationValue != self.rPit and locationValue != self.rGoal and locationValue != -float('inf'):
                 stateNotPicked = 0
-        
-        #print "STATE VALUE", locationValue
-        # print "randomlocation: ", randomLocation
         return randomLocation
 
-
+    # Helper function that gets the reward of a given state.
     def rewardFunction(self,stateLocation):
         return self.gridWorld[stateLocation[0],stateLocation[1]]
     
+    # Update the Q of the current location based on the current, next S,A
     def UpdateQ(self, s, a, nextS, nextA):
-        #print "A IN UPDATEQ:", a
+
         global TERMINALACTION
         global GIVEUP
+        
+        # Get current Q
         Q = self.Q_table[s[0]][s[1]][a]
-        #test = self.Q_table[s[0]][s[1]]
-        #print "TEST:", test
-        # if a == GIVEUP: # If action is to give up, ignore a thats fed in.
-        #     nextA = TERMINALACTION
 
+        # If the next action is the termination state, there's no nextQ.
         if nextA != TERMINALACTION:
             nextQ = self.Q_table[nextS[0]][nextS[1]][nextA]
         else:
             nextQ = 0
 
         alpha = self.stepSize
-        ### TODO: Look into gamma value
-        gamma = 1
+        gamma = self.gamma
+
+        # If action is giveup, ignore the reward at given state and just use giveUpreward.
         if a  == GIVEUP:
             r = self.rGiveup
         else:
             r = self.rewardFunction(s)
 
+        # If Q is uninitialized, set as reward at current spot.
         if Q == 0:
             newQ = r
         else:
             newQ = Q + alpha*(r + gamma*nextQ - Q)
         
-        
+        # Update Q
         self.Q_table[s[0]][s[1]][a] = newQ
 
         return r
@@ -193,15 +174,14 @@ class SARSA:
     
     # SARSA algorithm
     def runSARSA(self):
-        #self.Q_table = initializeQ()
+
         global TERMINALACTION
         for numTrial in range(0,self.nTrain):
-            # Initialize a random state s, choose a random state
+            # Initialize with a random state s.
             initLocation = self.getRandomLocation()
             stateLocation = deepcopy(initLocation)
 
             # Choose action a possible from state s using epsilon-greedy
-            # TODO: Make an epsilon-greedy function to choose next action...?
             action = self.epsilonGreedyAction(stateLocation)
 
             rewardSum = 0
@@ -209,11 +189,12 @@ class SARSA:
             while (runTrial):
                 # Get the next state s' using action a from state s
                 # Call takeStep
-                # If the current action is Giveup, then just return the same stateLocation
-                # since we still need to update the Q function
+
+                # If current step is an end state, make the next action to be terminal.
                 if (self.terminateCondition(stateLocation,action)):
                     nextStateLocation = stateLocation
                     nextAction = TERMINALACTION
+                # Otherwise take step and next action normally.
                 else:
                     # should be getting reward from this step.
                     nextStateLocation = self.takeStep(stateLocation, action)
@@ -226,20 +207,17 @@ class SARSA:
                 # Update Q(s,a) entry of the Q function table using the formula
                 reward = self.UpdateQ(stateLocation, action, nextStateLocation, nextAction)
 
+                # Add to reward.
                 rewardSum += reward
 
-                # End the trial if the current state location is terminal (goal or pit)
-                # or if the current action is Giveup
-                # if (self.terminateCondition(stateLocation,action)):
-                #     runTrial = False  
-                
                 # Set next state and next action for the next iteration
                 stateLocation = nextStateLocation
                 action = nextAction
+                # If the next iteration is the terminal state, end this loop.
                 if action == TERMINALACTION:
                     runTrial = False
 
-
+            # Add reward to history.
             self.rewardsPerTrial.append(rewardSum)
                 
         return self.Q_table
@@ -264,10 +242,11 @@ class SARSA:
             for col in range(1,self.gridSize[1]-1):
                 Q_values = self.Q_table[row][col]
                 max_Q = max(Q_values)
-                action = Q_values.index(max(Q_values))
+                action = Q_values.index(max(Q_values)) # Pick best action from Q table.
 
                 expectedRewards[row-1][col-1] = math.ceil(max_Q*100)/100
                 
+                # Draw best action.
                 if (self.rewardFunction([row,col]) == self.rPit):
                     recommendedActions[row-1][col-1] = 'P'
                 elif (self.rewardFunction([row,col]) == self.rGoal):
@@ -339,7 +318,6 @@ class SARSA:
 ### MAIN ########################################################################################
     
 if __name__ == '__main__':
-    # TODO: Put of all Max's argparse code here
 
     ### MAIN:
     # Parser:
@@ -366,17 +344,11 @@ if __name__ == '__main__':
                                                 Step size for Q updating. Default is 0.1.
                                                 ''')
 
+    parser.add_argument('--gamma',dest='gamma',nargs=1,type=float,default=[1], help = '''
+                                                Rate to discount future Q values in update function. Default is 1.
+                                                ''')
 
-    args = parser.parse_args()
-
-    ## OUTPUT:
-    # A gridworld, where each non terminal state has:
-        # Recommended action from that state
-        # Future expected reward for that state under learned policy.
-
-    # Be careful computing the recommended action from a state; 
-    # there are multiple reasons you cannot simply select the 
-    # neighboring state with the highest expected reward.    
+    args = parser.parse_args()   
 
     # Constants to make gridworld easier to be parsed.
     X = -float('inf')
@@ -384,15 +356,16 @@ if __name__ == '__main__':
     G = args.rGoal[0]
     M = args.rMove[0]
 
+    # Encoding of moves in Q table, other contexts.
     UP = 0
     RIGHT = 1
     DOWN = 2
     LEFT = 3
     GIVEUP = 4
-    TERMINALACTION = 1000000
-    ### TODO: Not necessarily with this GRIDWORLD object, but when it starts make sure to update the gridworld to have smarter
-    ###         initial values.
+    TERMINALACTION = 1000000 # arbitrarily picked number, shouldn't matter what it is. An enumerate of some sort could probably work.
 
+    # grid world representation.
+    # The way this gridworld is written, it indexes backwards (in that lower number goes up, higher number goes down)
     GRIDWORLD = np.matrix([[X,X,X,X,X,X,X,X,X], 
                            [X,M,M,M,M,M,M,M,X],
                            [X,M,M,M,M,M,M,M,X],
@@ -402,37 +375,11 @@ if __name__ == '__main__':
                            [X,M,M,M,M,M,M,M,X],
                            [X,X,X,X,X,X,X,X,X]])
 
-    # GRIDWORLD = np.matrix([[X,X,X,X,X], 
-    #                        [X,P,P,P,X],
-    #                        [X,M,M,M,X],
-    #                        [X,M,M,G,X],
-    #                        [X,X,X,X,X]])
-    # GRIDWORLD = np.matrix([[X,X,X,X,X,X], 
-    #                        [X,P,P,P,M,X],
-    #                        [X,G,M,M,M,X],
-    #                        [X,P,M,M,M,X],
-    #                        [X,X,X,X,X,X]])
-
-    # GRIDWORLD = np.matrix([[X,X,X,X,X,X,X,X,X], 
-    #                        [X,M,M,M,M,M,M,M,X],
-    #                        [X,M,M,M,M,M,M,M,X],
-    #                        [X,M,M,M,M,M,M,M,X],
-    #                        [X,M,M,G,M,M,M,M,X],
-    #                        [X,M,M,M,M,M,M,M,X],
-    #                        [X,M,M,M,M,M,M,M,X],
-    #                        [X,X,X,X,X,X,X,X,X]])
-
- #def __init__(self, rGoal, rPit, rMove, rGiveup, nTrain, epsilon, gridWorld):
-   
-    ### TODO:: PSEUDOCODE, PLS UPDATE
-
     # Initialize a SARSA class object
-    sarsa = SARSA(G, P, M, args.rGiveup[0], args.stepSize[0],args.nTrain[0], args.epsilon[0], GRIDWORLD)
+    sarsa = SARSA(G, P, M, args.rGiveup[0], args.stepSize[0],args.nTrain[0], args.epsilon[0],args.gamma[0], GRIDWORLD)
 
     # Call updatedQ = SARSA.runSARSA
     updatedQ = sarsa.runSARSA()
-    #print 'updated, :',updatedQ[3][3]
-    print updatedQ
     # Use updated Q to get the recommended and total rewards of all possible states
     # and also plots rewards per trial
     sarsa.plotAllOutputs()
