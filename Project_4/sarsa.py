@@ -8,13 +8,14 @@ import math
 ## Class containing all learning functions and parameters.
 class SARSA:
     
-    def __init__(self, rGoal, rPit, rMove, rGiveup, stepSize,nTrain, epsilon,gamma, gridWorld):
+    def __init__(self, rGoal, rPit, rMove, rGiveup, stepSize,nTrain, epsilon,smartEpsilon,gamma, gridWorld):
         self.rGoal = rGoal
         self.rPit = rPit
         self.rMove = rMove
         self.rGiveup = rGiveup
         self.nTrain = nTrain
         self.epsilon = epsilon
+        self.smartEpsilon = smartEpsilon
         self.stepSize = stepSize
         self.gridWorld = gridWorld
         self.gamma = gamma
@@ -176,11 +177,14 @@ class SARSA:
     def runSARSA(self):
 
         global TERMINALACTION
+        global EPSILONRESETLIM
+        self.initEpsilon = self.epsilon
         for numTrial in range(0,self.nTrain):
             # Initialize with a random state s.
             initLocation = self.getRandomLocation()
             stateLocation = deepcopy(initLocation)
-
+            self.initEpsilon = self.epsilon
+            epsilonCnt = 0
             # Choose action a possible from state s using epsilon-greedy
             action = self.epsilonGreedyAction(stateLocation)
 
@@ -217,6 +221,13 @@ class SARSA:
                 if action == TERMINALACTION:
                     runTrial = False
 
+                # Update epsilon.
+                if self.smartEpsilon == True:
+                    epsilonCnt +=1
+                    self.epsilon = self.initEpsilon / epsilonCnt 
+                    if self.epsilon < EPSILONRESETLIM:
+                        self.epsilon = self.initEpsilon
+                        epsilonCnt = 1
             # Add reward to history.
             self.rewardsPerTrial.append(rewardSum)
                 
@@ -340,12 +351,16 @@ if __name__ == '__main__':
     parser.add_argument('--epsilon',dest='epsilon',nargs=1,type=float,default=[0.1], help = '''
                                                 Epsilon, for e-greedy exploration. Default is 0.1.
                                                 ''')
+
+    parser.add_argument('--gamma',dest='gamma',nargs=1,type=float,default=[1], help = '''
+                                                Rate to discount future Q values in update function. Default is 1.
+                                                ''')
     parser.add_argument('--stepSize',dest='stepSize',nargs=1,type=float,default=[0.1], help = '''
                                                 Step size for Q updating. Default is 0.1.
                                                 ''')
 
-    parser.add_argument('--gamma',dest='gamma',nargs=1,type=float,default=[1], help = '''
-                                                Rate to discount future Q values in update function. Default is 1.
+    parser.add_argument('--smartEpsilon',dest='smartEpsilon',nargs=1,type=bool,default=[False], help = '''
+                                                Smart epsilon update flag. Default is False.
                                                 ''')
 
     args = parser.parse_args()   
@@ -363,7 +378,7 @@ if __name__ == '__main__':
     LEFT = 3
     GIVEUP = 4
     TERMINALACTION = 1000000 # arbitrarily picked number, shouldn't matter what it is. An enumerate of some sort could probably work.
-
+    EPSILONRESETLIM = 1e-6
     # grid world representation.
     # The way this gridworld is written, it indexes backwards (in that lower number goes up, higher number goes down)
     GRIDWORLD = np.matrix([[X,X,X,X,X,X,X,X,X], 
@@ -376,7 +391,7 @@ if __name__ == '__main__':
                            [X,X,X,X,X,X,X,X,X]])
 
     # Initialize a SARSA class object
-    sarsa = SARSA(G, P, M, args.rGiveup[0], args.stepSize[0],args.nTrain[0], args.epsilon[0],args.gamma[0], GRIDWORLD)
+    sarsa = SARSA(G, P, M, args.rGiveup[0], args.stepSize[0],args.nTrain[0], args.epsilon[0],args.smartEpsilon[0],args.gamma[0], GRIDWORLD)
 
     # Call updatedQ = SARSA.runSARSA
     updatedQ = sarsa.runSARSA()
