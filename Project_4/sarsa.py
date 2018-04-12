@@ -164,6 +164,9 @@ class SARSA:
         Q = self.Q_table[s[0]][s[1]][a]
         #test = self.Q_table[s[0]][s[1]]
         #print "TEST:", test
+        if a == GIVEUP: # If action is to give up, ignore a thats fed in.
+            nextA = TERMINALACTION
+
         if nextA != TERMINALACTION:
             nextQ = self.Q_table[nextS[0]][nextS[1]][nextA]
         else:
@@ -172,13 +175,16 @@ class SARSA:
         alpha = self.stepSize
         ### TODO: Look into gamma value
         gamma = 1
-        r = self.rewardFunction(s)
-
-        if self.terminateCondition(s,a) :
-            newQ =  Q + alpha * r # NOT SURE THIS IS CORRECT, I THINK FIX THIS AND THE WHOLE THING WORKS.
-
+        if a  == GIVEUP:
+            r = self.rGiveup
         else:
-            newQ = Q + alpha*(r + gamma*nextQ - Q)
+            r = self.rewardFunction(s)
+
+        # if self.terminateCondition(s,a) :
+        #     newQ =  Q + alpha * r # NOT SURE THIS IS CORRECT, I THINK FIX THIS AND THE WHOLE THING WORKS.
+
+#        else:
+        newQ = Q + alpha*(r + gamma*nextQ - Q)
         
         
         self.Q_table[s[0]][s[1]][a] = newQ
@@ -215,7 +221,7 @@ class SARSA:
 
                     # Choose action a' from s' using epsilon-greedy
                     nextAction = self.epsilonGreedyAction(nextStateLocation)
-                    
+
 
 
                 # Update Q(s,a) entry of the Q function table using the formula
