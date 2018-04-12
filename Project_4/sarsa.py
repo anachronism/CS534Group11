@@ -159,12 +159,15 @@ class SARSA:
     
     def UpdateQ(self, s, a, nextS, nextA):
         #print "A IN UPDATEQ:", a
-
+        global TERMINALACTION
 
         Q = self.Q_table[s[0]][s[1]][a]
         #test = self.Q_table[s[0]][s[1]]
         #print "TEST:", test
-        nextQ = self.Q_table[nextS[0]][nextS[1]][nextA]
+        if nextA != TERMINALACTION:
+            nextQ = self.Q_table[nextS[0]][nextS[1]][nextA]
+        else:
+            nextQ = 0
 
         alpha = self.stepSize
         ### TODO: Look into gamma value
@@ -186,7 +189,7 @@ class SARSA:
     # SARSA algorithm
     def runSARSA(self):
         #self.Q_table = initializeQ()
-
+        global TERMINALACTION
         for numTrial in range(0,self.nTrain):
             # Initialize a random state s, choose a random state
             initLocation = self.getRandomLocation()
@@ -203,12 +206,17 @@ class SARSA:
                 # Call takeStep
                 # If the current action is Giveup, then just return the same stateLocation
                 # since we still need to update the Q function
+                if (self.terminateCondition(stateLocation,action)):
+                    nextStateLocation = stateLocation
+                    nextAction = TERMINALACTION
+                else:
+                    # should be getting reward from this step.
+                    nextStateLocation = self.takeStep(stateLocation, action)
 
-                # should be getting reward from this step.
-                nextStateLocation = self.takeStep(stateLocation, action)
+                    # Choose action a' from s' using epsilon-greedy
+                    nextAction = self.epsilonGreedyAction(nextStateLocation)
+                    
 
-                # Choose action a' from s' using epsilon-greedy
-                nextAction = self.epsilonGreedyAction(nextStateLocation)
 
                 # Update Q(s,a) entry of the Q function table using the formula
                 reward = self.UpdateQ(stateLocation, action, nextStateLocation, nextAction)
@@ -217,12 +225,15 @@ class SARSA:
 
                 # End the trial if the current state location is terminal (goal or pit)
                 # or if the current action is Giveup
-                if (self.terminateCondition(stateLocation,action)):
-                    runTrial = False  
+                # if (self.terminateCondition(stateLocation,action)):
+                #     runTrial = False  
                 
                 # Set next state and next action for the next iteration
                 stateLocation = nextStateLocation
                 action = nextAction
+                if action == TERMINALACTION:
+                    runTrial = False
+
 
             self.rewardsPerTrial.append(rewardSum)
                 
@@ -373,7 +384,7 @@ if __name__ == '__main__':
     DOWN = 2
     LEFT = 3
     GIVEUP = 4
-
+    TERMINALACTION = 1000000
     ### TODO: Not necessarily with this GRIDWORLD object, but when it starts make sure to update the gridworld to have smarter
     ###         initial values.
 
