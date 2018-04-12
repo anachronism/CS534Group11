@@ -121,7 +121,7 @@ class SARSA:
                 nextLocation = prevLocation
             # As soon as we step into a pit where we take one or two steps,
             # end the function by returning the pit location
-            elif (locationValue == self.rPit):
+            elif (locationValue == self.rPit) or (locationValue == self.rGoal):
                 return nextLocation
             else:
                 prevLocation = nextLocation
@@ -160,12 +160,12 @@ class SARSA:
     def UpdateQ(self, s, a, nextS, nextA):
         #print "A IN UPDATEQ:", a
         global TERMINALACTION
-
+        global GIVEUP
         Q = self.Q_table[s[0]][s[1]][a]
         #test = self.Q_table[s[0]][s[1]]
         #print "TEST:", test
-        if a == GIVEUP: # If action is to give up, ignore a thats fed in.
-            nextA = TERMINALACTION
+        # if a == GIVEUP: # If action is to give up, ignore a thats fed in.
+        #     nextA = TERMINALACTION
 
         if nextA != TERMINALACTION:
             nextQ = self.Q_table[nextS[0]][nextS[1]][nextA]
@@ -180,11 +180,10 @@ class SARSA:
         else:
             r = self.rewardFunction(s)
 
-        # if self.terminateCondition(s,a) :
-        #     newQ =  Q + alpha * r # NOT SURE THIS IS CORRECT, I THINK FIX THIS AND THE WHOLE THING WORKS.
-
-#        else:
-        newQ = Q + alpha*(r + gamma*nextQ - Q)
+        if Q == 0:
+            newQ = r
+        else:
+            newQ = Q + alpha*(r + gamma*nextQ - Q)
         
         
         self.Q_table[s[0]][s[1]][a] = newQ
@@ -345,16 +344,16 @@ if __name__ == '__main__':
     ### MAIN:
     # Parser:
     parser = argparse.ArgumentParser(description='''CS 534 Assignment 4.''')
-    parser.add_argument('--rGoal',dest='rGoal',nargs=1, type=int, default=[5], help='''
+    parser.add_argument('--rGoal',dest='rGoal',nargs=1, type=float, default=[5], help='''
                                                 Reward for reaching the goal. Default is 5.
                                                 ''')
-    parser.add_argument('--rPit',dest='rPit',nargs=1, type=int, default=[-2], help='''
+    parser.add_argument('--rPit',dest='rPit',nargs=1, type=float, default=[-2], help='''
                                                 Reward for falling into a pit. Default is -2.
                                                 ''')
     parser.add_argument('--rMove',dest='rMove',nargs=1,type=float,default=[-0.1], help = '''
                                                 Reward for moving. Default is -0.1.
                                                 ''')
-    parser.add_argument('--rGiveup',dest='rGiveup',nargs=1,type=int,default=[-3], help = '''
+    parser.add_argument('--rGiveup',dest='rGiveup',nargs=1,type=float,default=[-3], help = '''
                                                 Reward for giving up. Default is -3.
                                                 ''')
     parser.add_argument('--nTrain',dest='nTrain',nargs=1,type=int,default=[10000], help = '''
@@ -433,6 +432,7 @@ if __name__ == '__main__':
     # Call updatedQ = SARSA.runSARSA
     updatedQ = sarsa.runSARSA()
     #print 'updated, :',updatedQ[3][3]
+    print updatedQ
     # Use updated Q to get the recommended and total rewards of all possible states
     # and also plots rewards per trial
     sarsa.plotAllOutputs()
